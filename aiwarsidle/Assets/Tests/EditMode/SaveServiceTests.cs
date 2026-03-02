@@ -15,6 +15,7 @@ namespace AIWarsIdle.Tests
             return new SaveDataV1
             {
                 SoftCurrency = 123.45,
+                LifetimeEarnedSoftCurrency = 1000.0,
                 PremiumCurrency = 7,
                 PrestigeCount = 2,
                 PermanentUpgradeLevel = 1,
@@ -108,4 +109,3 @@ namespace AIWarsIdle.Tests
         }
     }
 }
-

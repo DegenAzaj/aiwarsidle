@@ -36,3 +36,23 @@ Repo/notes + projekt Unity: `aiwarsidle/` (Unity 6.3, Android-only, uGUI).
 - Wersjonowanie/migracje: `SaveDataMigrator` (stub pod kolejne wersje) w `aiwarsidle/Assets/Persistence/Services/SaveDataMigrator.cs`.
 - Autosave: `AutosaveRunner` (tick + save on pause/quit; do podpięcia w bootstrapperze) w `aiwarsidle/Assets/Persistence/Services/AutosaveRunner.cs`.
 - Testy EditMode: Save→Load roundtrip + corrupt save fallback w `aiwarsidle/Assets/Tests/EditMode/SaveServiceTests.cs`.
+
+### EPIC 3 — Ekonomia idle (bez UI) (DONE)
+
+- Dodany `BalanceConfig` (ScriptableObject) + walidacja runtime fail-fast w `aiwarsidle/Assets/GameCore/Config/BalanceConfig.cs`.
+- Ekonomia oparta o **lifetime CP**:
+  - `GameState.LifetimeEarnedSoftCurrency` w `aiwarsidle/Assets/GameCore/Domain/GameState.cs`.
+  - `SaveDataV1.LifetimeEarnedSoftCurrency` + `Normalize()` w `aiwarsidle/Assets/Persistence/Domain/SaveDataV1.cs`.
+- `GlobalMultiplier` jest **wyliczany**, nie trzymany w stanie (helper `PrestigeMath`) w `aiwarsidle/Assets/GameCore/Services/PrestigeMath.cs`.
+- Serwisy core (bez MonoBehaviour / bez UI):
+  - `EconomyService` (`AddCurrency`/`SpendCurrency`) + domenowy event `CurrencyChangedEvent` w `aiwarsidle/Assets/GameCore/Services/EconomyService.cs`.
+  - `ProductionService` (PPS, tick, offline cap 12h) w `aiwarsidle/Assets/GameCore/Services/ProductionService.cs`.
+  - `UpgradeService` (koszt `baseCost * pow(growthFactor, level)` + x1/x10/max) w `aiwarsidle/Assets/GameCore/Services/UpgradeService.cs`.
+  - `PrestigeService` (próg od lifetime CP, reset generatorów, permanent cap) w `aiwarsidle/Assets/GameCore/Services/PrestigeService.cs`.
+  - `OfflineClaimService` (pending offline gain + `Claim(multiplier)` pod przyszłe rewarded x2; claim nabija też lifetime) w `aiwarsidle/Assets/GameCore/Services/OfflineClaimService.cs`.
+- Lekki `EventBus` (core→UI/telemetria) w `aiwarsidle/Assets/GameCore/Services/EventBus.cs`.
+- Testy EditMode pokrywające EPIC 3 dodane/rozszerzone w `aiwarsidle/Assets/Tests/EditMode/DomainModelValidationTests.cs`.
+
+## Notatka (lokalne buildy bez sieci)
+
+- Repo zawiera `aiwarsidle/NuGet.Config`, który czyści `packageSources`, żeby `dotnet restore/build` działało w środowiskach bez dostępu do `nuget.org`.

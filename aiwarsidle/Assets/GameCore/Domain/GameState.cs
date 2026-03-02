@@ -7,9 +7,9 @@ namespace AIWarsIdle.GameCore.Domain
         public const int GeneratorCount = 5;
 
         public double SoftCurrency;
+        public double LifetimeEarnedSoftCurrency;
         public int PremiumCurrency;
         public int[] GeneratorLevels;
-        public float GlobalMultiplier;
         public int PrestigeCount;
         public int PermanentUpgradeLevel;
 
@@ -31,8 +31,6 @@ namespace AIWarsIdle.GameCore.Domain
             GeneratorLevels = new int[GeneratorCount];
             MapState = new MapState();
             Overclock = new OverclockState();
-            GlobalMultiplier = 1f;
         }
     }
 }
-

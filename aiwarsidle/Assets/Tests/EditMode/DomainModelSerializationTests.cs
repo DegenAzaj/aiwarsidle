@@ -12,10 +12,10 @@ namespace AIWarsIdle.Tests
             var state = new GameState
             {
                 SoftCurrency = 123.45,
+                LifetimeEarnedSoftCurrency = 500.0,
                 PremiumCurrency = 7,
                 PrestigeCount = 2,
                 PermanentUpgradeLevel = 1,
-                GlobalMultiplier = 1.5f,
                 LeagueSeasonId = 10,
                 League = 3,
                 SeasonPoints = 42,
@@ -32,10 +32,10 @@ namespace AIWarsIdle.Tests
 
             Assert.NotNull(loaded);
             Assert.AreEqual(state.SoftCurrency, loaded!.SoftCurrency);
+            Assert.AreEqual(state.LifetimeEarnedSoftCurrency, loaded.LifetimeEarnedSoftCurrency);
             Assert.AreEqual(state.PremiumCurrency, loaded.PremiumCurrency);
             Assert.AreEqual(state.PrestigeCount, loaded.PrestigeCount);
             Assert.AreEqual(state.PermanentUpgradeLevel, loaded.PermanentUpgradeLevel);
-            Assert.AreEqual(state.GlobalMultiplier, loaded.GlobalMultiplier);
             Assert.AreEqual(state.LeagueSeasonId, loaded.LeagueSeasonId);
             Assert.AreEqual(state.League, loaded.League);
             Assert.AreEqual(state.SeasonPoints, loaded.SeasonPoints);
@@ -53,4 +53,3 @@ namespace AIWarsIdle.Tests
         }
     }
 }
-

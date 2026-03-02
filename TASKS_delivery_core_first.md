@@ -99,53 +99,53 @@ Założenia testów:
 
 ## STORY 3.1 — BalanceConfig (ScriptableObjects)
 
-* [ ] `BalanceConfig` (koszty, produkcje, growth factors, prestige threshold base+growth, permanent upgrade cap, offline cap)
-* [ ] Wartości przykładowe pod MVP (tylko do testów wewnętrznych)
+* [x] `BalanceConfig` (koszty, produkcje, growth factors, prestige threshold base+growth, permanent upgrade cap, offline cap)
+* [x] Wartości przykładowe pod MVP (tylko do testów wewnętrznych)
 
 **TESTS**
-* [ ] Testy walidacji configu (np. 5 generatorów, brak zer/ujemnych growth factors)
+* [x] Testy walidacji configu (np. 5 generatorów, brak zer/ujemnych growth factors)
 
 ## STORY 3.2 — EconomyService
 
-* [ ] `AddCurrency(amount)` i `SpendCurrency(amount)` z walidacją
-* [ ] Eventy domenowe (np. `CurrencyChanged`) bez zależności od UI
+* [x] `AddCurrency(amount)` i `SpendCurrency(amount)` z walidacją
+* [x] Eventy domenowe (np. `CurrencyChanged`) bez zależności od UI
 
 **TESTS**
-* [ ] Spend > balance → fail (bez zmian stanu)
-* [ ] Add/Spend z wartościami skrajnymi (0, bardzo małe, bardzo duże)
+* [x] Spend > balance → fail (bez zmian stanu)
+* [x] Add/Spend z wartościami skrajnymi (0, bardzo małe, bardzo duże)
 
 ## STORY 3.3 — ProductionService
 
-* [ ] `CalculateProductionPerSecond()`
-* [ ] Tick co 1s (bez MonoBehaviour w serwisie; tick wywoływany przez bootstrap)
-* [ ] Offline gain z capem 12h
+* [x] `CalculateProductionPerSecond()`
+* [x] Tick co 1s (bez MonoBehaviour w serwisie; tick wywoływany przez bootstrap)
+* [x] Offline gain z capem 12h
 
 **TESTS**
-* [ ] PPS rośnie po upgrade
-* [ ] Offline gain: cap działa (np. 20h → liczy tylko 12h)
-* [ ] Determinizm: te same wejścia → te same wyniki
+* [x] PPS rośnie po upgrade
+* [x] Offline gain: cap działa (np. 20h → liczy tylko 12h)
+* [x] Determinizm: te same wejścia → te same wyniki
 
 Uwaga: bonusy z sektorów + maintenance (anti-snowball) można spiąć po EPIC 6, żeby nie wprowadzać zależności Map→Core za wcześnie.
 
 ## STORY 3.4 — UpgradeService
 
-* [ ] Koszt: `baseCost * pow(growthFactor, level)`
-* [ ] `GetUpgradeCost(generatorId)` + `UpgradeGenerator(generatorId)`
-* [ ] Obsługa x1/x10/max (logika, bez UI)
+* [x] Koszt: `baseCost * pow(growthFactor, level)`
+* [x] `GetUpgradeCost(generatorId)` + `UpgradeGenerator(generatorId)`
+* [x] Obsługa x1/x10/max (logika, bez UI)
 
 **TESTS**
-* [ ] Koszt rośnie wykładniczo
-* [ ] Upgrade bez środków → brak zmian
-* [ ] Upgrade x10 nie przekracza limitów i liczy poprawnie sumaryczny koszt (jeśli implementowane)
+* [x] Koszt rośnie wykładniczo
+* [x] Upgrade bez środków → brak zmian
+* [x] Upgrade x10 nie przekracza limitów i liczy poprawnie sumaryczny koszt (jeśli implementowane)
 
 ## STORY 3.5 — PrestigeService
 
-* [ ] `CanPrestige()` (threshold)
-* [ ] `ExecutePrestige()` reset generatorów, inkrement permanent upgrade, zwiększ multiplier
+* [x] `CanPrestige()` (threshold)
+* [x] `ExecutePrestige()` reset generatorów, inkrement permanent upgrade, zwiększ multiplier
 
 **TESTS**
-* [ ] Prestige resetuje tylko to co trzeba (waluty? generatory? zgodnie z designem)
-* [ ] Permanent upgrade nie przekracza max 10 (clamp)
+* [x] Prestige resetuje tylko to co trzeba (waluty? generatory? zgodnie z designem)
+* [x] Permanent upgrade nie przekracza max 10 (clamp)
 
 ---
 
