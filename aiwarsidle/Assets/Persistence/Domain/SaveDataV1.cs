@@ -88,8 +88,6 @@ namespace AIWarsIdle.Persistence.Domain
 
     public sealed class OverclockSaveData
     {
-        public const int MaxCharges = 2;
-
         public int Charges = 2;
         public long ActiveUntilUnixSeconds;
         public long NextChargeAtUnixSeconds;
@@ -97,7 +95,6 @@ namespace AIWarsIdle.Persistence.Domain
         public void Normalize()
         {
             if (Charges < 0) Charges = 0;
-            if (Charges > MaxCharges) Charges = MaxCharges;
 
             if (ActiveUntilUnixSeconds < 0) ActiveUntilUnixSeconds = 0;
             if (NextChargeAtUnixSeconds < 0) NextChargeAtUnixSeconds = 0;

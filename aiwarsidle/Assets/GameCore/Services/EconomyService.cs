@@ -38,12 +38,20 @@ namespace AIWarsIdle.GameCore.Services
             if (amount < 0) throw new ArgumentOutOfRangeException(nameof(amount), "Amount must be >= 0.");
             if (amount == 0) return true;
 
-            if (amount > _state.SoftCurrency)
+            var balance = _state.SoftCurrency;
+            if (amount > balance)
             {
-                return false;
+                var diff = amount - balance;
+                const double machineEpsilon = 2.220446049250313e-16; // 2^-52
+                var scale = Math.Max(Math.Abs(balance), Math.Abs(amount));
+                var tolerance = Math.Max(1e-9, 16 * machineEpsilon * scale);
+                if (diff > tolerance)
+                {
+                    return false;
+                }
             }
 
-            _state.SoftCurrency -= amount;
+            _state.SoftCurrency = balance - amount;
             if (_state.SoftCurrency < 0) _state.SoftCurrency = 0;
 
             _eventBus?.Publish(new CurrencyChangedEvent(_state.SoftCurrency, _state.LifetimeEarnedSoftCurrency, -amount, source));

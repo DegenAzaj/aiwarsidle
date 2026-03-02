@@ -9,13 +9,15 @@ namespace AIWarsIdle.GameCore.Services
         private readonly GameState _state;
         private readonly BalanceConfig _config;
         private readonly EconomyService _economy;
+        private readonly OverclockService _overclock;
         private double _carrySeconds;
 
-        public ProductionService(GameState state, BalanceConfig config, EconomyService economy)
+        public ProductionService(GameState state, BalanceConfig config, EconomyService economy, OverclockService overclock = null)
         {
             _state = state ?? throw new ArgumentNullException(nameof(state));
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _economy = economy ?? throw new ArgumentNullException(nameof(economy));
+            _overclock = overclock;
 
             _config.ValidateOrThrow();
         }
@@ -23,6 +25,14 @@ namespace AIWarsIdle.GameCore.Services
         public double CalculateProductionPerSecond()
         {
             return CalculateBaseProductionPerSecondWithoutSubscription();
+        }
+
+        public double CalculateProductionPerSecond(long nowUnixSeconds)
+        {
+            if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");
+            var basePps = CalculateBaseProductionPerSecondWithoutSubscription();
+            var multiplier = _overclock?.GetProductionMultiplier(nowUnixSeconds) ?? 1.0;
+            return basePps * multiplier;
         }
 
         public double CalculateBaseProductionPerSecondWithoutSubscription()
@@ -58,10 +68,16 @@ namespace AIWarsIdle.GameCore.Services
 
         public void Tick(double deltaSeconds)
         {
+            Tick(nowUnixSeconds: 0, deltaSeconds);
+        }
+
+        public void Tick(long nowUnixSeconds, double deltaSeconds)
+        {
             if (double.IsNaN(deltaSeconds) || double.IsInfinity(deltaSeconds))
             {
                 throw new ArgumentOutOfRangeException(nameof(deltaSeconds), "Delta seconds must be finite.");
             }
+            if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");
 
             if (deltaSeconds <= 0) return;
 
@@ -73,7 +89,15 @@ namespace AIWarsIdle.GameCore.Services
 
             for (var i = 0; i < wholeSeconds; i++)
             {
-                var pps = CalculateProductionPerSecond();
+                long tickNowUnixSeconds = nowUnixSeconds;
+                if (wholeSeconds > 1 && nowUnixSeconds > 0)
+                {
+                    var offset = wholeSeconds - 1 - i;
+                    tickNowUnixSeconds = nowUnixSeconds - offset;
+                    if (tickNowUnixSeconds < 0) tickNowUnixSeconds = 0;
+                }
+
+                var pps = _overclock == null ? CalculateProductionPerSecond() : CalculateProductionPerSecond(tickNowUnixSeconds);
                 if (pps <= 0) continue;
                 _economy.AddCurrency(pps, CurrencySource.OnlineProduction);
             }
@@ -91,4 +115,3 @@ namespace AIWarsIdle.GameCore.Services
         }
     }
 }
-

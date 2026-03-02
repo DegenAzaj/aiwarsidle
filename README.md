@@ -56,3 +56,15 @@ Repo/notes + projekt Unity: `aiwarsidle/` (Unity 6.3, Android-only, uGUI).
 ## Notatka (lokalne buildy bez sieci)
 
 - Repo zawiera `aiwarsidle/NuGet.Config`, który czyści `packageSources`, żeby `dotnet restore/build` działało w środowiskach bez dostępu do `nuget.org`.
+
+---
+
+## EPIC 4 — Overclock (core) (DONE)
+
+- Dodany `OverclockConfig` (ScriptableObject) + walidacja runtime (`ValidateOrThrow`) w `aiwarsidle/Assets/GameCore/Config/OverclockConfig.cs`.
+- Dodany `OverclockService` (ładunki, aktywność, regen, multipliery) w `aiwarsidle/Assets/GameCore/Services/OverclockService.cs`.
+- Dodane eventy domenowe pod telemetrię: `OverclockActivatedEvent`, `OverclockChargeSpentEvent`, `OverclockChargeGainedEvent` w `aiwarsidle/Assets/GameCore/Services/OverclockEvents.cs` (mapowanie na eventy analytics w EPIC 9).
+- Integracja ekonomii: `ProductionService` uwzględnia mnożnik produkcji z Overclock przy podaniu `nowUnixSeconds` w `aiwarsidle/Assets/GameCore/Services/ProductionService.cs`.
+- Integracje PvP/Mapa (bez UI): minimalne `BattleSimService` i `MapService` uwzględniają boosty Overclock (atak i wzrost stability świeżo zdobytego sektora) w `aiwarsidle/Assets/PvP/`.
+- Testy EditMode dla EPIC 4 w `aiwarsidle/Assets/Tests/EditMode/OverclockEpic4Tests.cs`.
+- Save: usunięty twardy clamp Overclock do 2 ładunków w `aiwarsidle/Assets/Persistence/Domain/SaveDataV1.cs` (max ładunków jest konfigurowalny przez `OverclockConfig`).

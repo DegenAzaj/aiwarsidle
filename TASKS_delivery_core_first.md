@@ -162,40 +162,40 @@ Parametry MVP (config):
 
 ## STORY 4.1 — OverclockConfig
 
-* [ ] `OverclockConfig` (czas trwania, cooldown/regen, max charges, mnożniki)
+* [x] `OverclockConfig` (czas trwania, cooldown/regen, max charges, mnożniki)
 
 **TESTS**
-* [ ] Walidacja configu: czasy > 0, mnożniki w sensownych zakresach (guardrails)
+* [x] Walidacja configu: czasy > 0, mnożniki w sensownych zakresach (guardrails)
 
 ## STORY 4.2 — OverclockService
 
-* [ ] Stan runtime: ładunki, `ActiveUntil`, cooldown/regen
-* [ ] `CanActivate(now)` + `Activate(now)`
-* [ ] `Tick(now)` (regen ładunków, kończenie aktywności)
-* [ ] Interfejs do innych serwisów:
-  * `GetProductionMultiplier(now)` (×3 gdy aktywny)
-  * `GetPvpAttackMultiplier(now)` (+20% gdy aktywny)
-  * `GetFreshCaptureStabilityGrowthMultiplier(now)` (+10% gdy aktywny)
+* [x] Stan runtime: ładunki, `ActiveUntil`, cooldown/regen
+* [x] `CanActivate(now)` + `Activate(now)`
+* [x] `Tick(now)` (regen ładunków, kończenie aktywności)
+* [x] Interfejs do innych serwisów:
+  * [x] `GetProductionMultiplier(now)` (×3 gdy aktywny)
+  * [x] `GetPvpAttackMultiplier(now)` (+20% gdy aktywny)
+  * [x] `GetFreshCaptureStabilityGrowthMultiplier(now)` (+10% gdy aktywny)
 
 **TESTS**
-* [ ] Activate zużywa ładunek i ustawia `ActiveUntil`
-* [ ] Brak ładunków → nie da się aktywować
-* [ ] Regen: 1 ładunek co 90s, clamp do max 2
-* [ ] Cooldown/regen nie “stackuje się” i nie daje > max ładunków
-* [ ] Multipliery działają tylko w oknie aktywności
+* [x] Activate zużywa ładunek i ustawia `ActiveUntil`
+* [x] Brak ładunków → nie da się aktywować
+* [x] Regen: 1 ładunek co 90s, clamp do max 2
+* [x] Cooldown/regen nie “stackuje się” i nie daje > max ładunków
+* [x] Multipliery działają tylko w oknie aktywności
 
 ## STORY 4.3 — Integracje (bez UI)
 
-* [ ] `ProductionService` uwzględnia multiplier z Overclock (w kalkulacji PPS i ticku)
-* [ ] `BattleSimService` uwzględnia bonus attack power z Overclock (na atakującym)
-* [ ] `MapService.TickStability` uwzględnia +10% wzrostu stability dla **świeżo zdobytych** sektorów, gdy Overclock aktywny
+* [x] `ProductionService` uwzględnia multiplier z Overclock (w kalkulacji PPS i ticku)
+* [x] `BattleSimService` uwzględnia bonus attack power z Overclock (na atakującym)
+* [x] `MapService.TickStability` uwzględnia +10% wzrostu stability dla **świeżo zdobytych** sektorów, gdy Overclock aktywny
   * “Świeżo zdobyty” = sektor przejęty w ostatnich `FreshCaptureWindowSeconds` (config)
-* [ ] Telemetria: `overclock_activate`, `overclock_charge_spent`, `overclock_charge_gain`
+* [x] Telemetria: `overclock_activate`, `overclock_charge_spent`, `overclock_charge_gain` (domenowe eventy; mapowanie do analytics w EPIC 9)
 
 **TESTS**
-* [ ] Włączony Overclock → PPS rośnie ×3
-* [ ] Włączony Overclock → wyższa szansa wygranej w identycznych warunkach (deterministyczny seed)
-* [ ] Włączony Overclock → stability świeżo przejętego sektora rośnie szybciej (przy tym samym czasie)
+* [x] Włączony Overclock → PPS rośnie ×3
+* [x] Włączony Overclock → wyższa szansa wygranej w identycznych warunkach (deterministyczny seed)
+* [x] Włączony Overclock → stability świeżo przejętego sektora rośnie szybciej (przy tym samym czasie)
 
 ---
 

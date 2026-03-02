@@ -53,6 +53,21 @@ namespace AIWarsIdle.Tests
         }
 
         [Test]
+        public void OverclockSaveData_Normalize_DoesNotClamp_Charges_To_Two()
+        {
+            var overclock = new OverclockSaveData
+            {
+                Charges = 999,
+                ActiveUntilUnixSeconds = 0,
+                NextChargeAtUnixSeconds = 0
+            };
+
+            overclock.Normalize();
+
+            Assert.AreEqual(999, overclock.Charges);
+        }
+
+        [Test]
         public void SaveDataV1_Normalize_Fixes_Nulls_And_Negative_Timestamps()
         {
             var save = new SaveDataV1
