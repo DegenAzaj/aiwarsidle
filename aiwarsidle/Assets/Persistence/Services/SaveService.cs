@@ -94,6 +94,7 @@ namespace AIWarsIdle.Persistence.Services
                 try
                 {
                     File.Replace(_paths.TempPath, _paths.SavePath, _paths.BackupPath, ignoreMetadataErrors: true);
+                    TryCopySaveToBackupBestEffort();
                     return;
                 }
                 catch
@@ -117,6 +118,7 @@ namespace AIWarsIdle.Persistence.Services
                 }
 
                 File.Move(_paths.TempPath, _paths.SavePath);
+                TryCopySaveToBackupBestEffort();
             }
             finally
             {
@@ -142,6 +144,20 @@ namespace AIWarsIdle.Persistence.Services
             writer.Flush();
             stream.Flush(flushToDisk: true);
         }
+
+        private void TryCopySaveToBackupBestEffort()
+        {
+            try
+            {
+                if (File.Exists(_paths.SavePath))
+                {
+                    File.Copy(_paths.SavePath, _paths.BackupPath, overwrite: true);
+                }
+            }
+            catch
+            {
+                // ignore best-effort backup failures
+            }
+        }
     }
 }
-
