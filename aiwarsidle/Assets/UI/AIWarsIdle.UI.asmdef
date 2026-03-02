@@ -1,0 +1,21 @@
+{
+  "name": "AIWarsIdle.UI",
+  "rootNamespace": "AIWarsIdle.UI",
+  "references": [
+    "AIWarsIdle.GameCore",
+    "AIWarsIdle.PvP",
+    "AIWarsIdle.Persistence",
+    "AIWarsIdle.Analytics",
+    "AIWarsIdle.Monetization"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
+

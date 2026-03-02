@@ -1,0 +1,17 @@
+{
+  "name": "AIWarsIdle.Monetization",
+  "rootNamespace": "AIWarsIdle.Monetization",
+  "references": [
+    "AIWarsIdle.GameCore"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
+

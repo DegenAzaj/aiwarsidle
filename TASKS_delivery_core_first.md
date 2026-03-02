@@ -6,8 +6,31 @@ Cel: dowieźć działające MVP zgodne z `DESIGN.md` i `TECH_SPEC.md`, budując 
 
 ### Ustalenia projektu (pinned)
 * Silnik: **Unity 6.3**
-* Usługi backend/SDK: **Firebase** (szczegóły integracji doprecyzować per EPIC 8–9–11)
 * UI tech: **uGUI** (Canvas-based). Powód: istnieją gotowe prefab’y pod uGUI.
+* Platforma docelowa (MVP): **Android-only**
+* Identyfikator aplikacji (Android package name):
+  * Internal test: `com.aiwarsidle.game.dev`
+  * Soft launch / prod: `com.aiwarsidle.game` (po testach usuwamy suffix `.dev`)
+* Usługi backend/SDK: **Firebase**
+  * Auth: **Anonymous** na MVP, w przyszłości **link do Google**
+  * Analytics + Crashlytics + Remote Config: **włączone** (MVP i dalej)
+  * Pod przyszły Cloud Save: **Firestore** (przechowywanie save jako wersjonowany payload)
+* Save/Load (długofalowo + pod Cloud Save):
+  * Format: **JSON (Newtonsoft)** + jawne `SaveDataV1`/wersjonowanie i migracje
+  * Lokalnie: `Application.persistentDataPath` + zapis atomowy + backup (odporność na corrupt)
+  * Cloud Save w przyszłości: ten sam JSON payload (lub skompresowany), sync per userId z Firebase Auth
+* Czas i timestampy:
+  * Jednostka: **UnixTimeSeconds (UTC)** w `long` (spójnie: offline, regen, stability, cooldowny)
+* Typy liczb:
+  * SoftCurrency i kalkulacje ekonomii: **double** (zgodnie z `TECH_SPEC.md`), unikać `float` w walutach
+* Event system (domena → UI/telemetria):
+  * W core: **lekki EventBus / domenowe eventy** (bez zależności od UI), testowalny przez fake/mock
+* Walidacja configów:
+  * ScriptableObject configi walidowane **również runtime (fail-fast)** + testy walidacji
+* Resume / “single entry” przez Splash:
+  * Jeśli app była w tle **>= 10 minut**, na powrót pokazujemy **Splash screen** (traktowany jako jedyne wejście do apki).
+  * Jeśli app wraca szybciej niż 10 minut: **bez splash**, zostajemy w bieżącym stanie.
+  * Po splash zawsze routing do: **Hub**.
 
 Założenia testów:
 * Unity Test Framework
@@ -21,12 +44,12 @@ Założenia testów:
 
 ## STORY 0.1 — Konwencje, build, test harness
 
-* [ ] Ustalić foldery zgodnie z `TECH_SPEC.md` (`/GameCore`, `/PvP`, `/Persistence`, `/Data`, `/Analytics`, `/Monetization`, `/UI`)
-* [ ] Dodać assembly definition (asmdef) dla warstw core (żeby testy nie ciągnęły UI)
-* [ ] Skonfigurować Unity Test Runner (EditMode + PlayMode)
+* [x] Ustalić foldery zgodnie z `TECH_SPEC.md` (`/GameCore`, `/PvP`, `/Persistence`, `/Data`, `/Analytics`, `/Monetization`, `/UI`)
+* [x] Dodać assembly definition (asmdef) dla warstw core (żeby testy nie ciągnęły UI)
+* [x] Skonfigurować Unity Test Runner (EditMode + PlayMode)
 
 **TESTS**
-* [ ] Smoke test: uruchomienie EditMode test suite (pusta) na CI/local
+* [x] Smoke test: uruchomienie EditMode + PlayMode test suite na local
 
 ---
 
@@ -377,6 +400,14 @@ Parametry MVP (config):
 # EPIC 11 — UI (na końcu)
 
 Zasada: UI jest cienką warstwą, tylko prezentacja + input → wywołania serwisów.
+
+## STORY 11.0 — Splash screen (UI entry)
+
+* [ ] Splash screen: po starcie/resume (wg ustaleń “single entry”) sprawdza **Update Required** (np. minimalna wersja z Firebase Remote Config) i w razie potrzeby blokuje wejście do gry (CTA do update).
+
+**TESTS**
+* [ ] PlayMode: UpdateRequired=true → brak przejścia do Hub
+* [ ] PlayMode: UpdateRequired=false → przejście do Hub
 
 ## STORY 11.1 — UIRouter + ekrany
 

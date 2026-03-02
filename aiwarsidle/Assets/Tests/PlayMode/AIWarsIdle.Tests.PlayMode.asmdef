@@ -1,0 +1,24 @@
+{
+  "name": "AIWarsIdle.Tests.PlayMode",
+  "rootNamespace": "AIWarsIdle.Tests",
+  "references": [
+    "AIWarsIdle.GameCore",
+    "AIWarsIdle.PvP",
+    "AIWarsIdle.Persistence",
+    "AIWarsIdle.Analytics",
+    "AIWarsIdle.Monetization",
+    "AIWarsIdle.UI"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

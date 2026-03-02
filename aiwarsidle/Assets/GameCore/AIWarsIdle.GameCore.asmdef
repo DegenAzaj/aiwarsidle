@@ -1,0 +1,15 @@
+{
+  "name": "AIWarsIdle.GameCore",
+  "rootNamespace": "AIWarsIdle.GameCore",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
+

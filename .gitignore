@@ -1,0 +1,50 @@
+# Unity (AI Wars Idle)
+#
+# Keep:
+# - Assets/
+# - Packages/manifest.json
+# - Packages/packages-lock.json
+# - ProjectSettings/
+#
+
+# OS / Editor noise
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vs/
+.vscode/
+.idea/
+*.user
+*.userprefs
+*.suo
+*.tmp
+*.log
+
+# Unity generated folders
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Ll]ogs/
+[Uu]serSettings/
+[Mm]emoryCaptures/
+
+# Builds
+[Bb]uild/
+[Bb]uilds/
+
+# Unity auto-generated solution/project files
+*.csproj
+*.unityproj
+*.sln
+*.slnx
+*.mdb
+*.opendb
+*.VC.db
+
+# Crash/diagnostics
+sysinfo.txt
+
+# Addressables / StreamingAssets caches (optional, safe to ignore)
+**/[Aa]ssets/[Aa]ddressableAssetsData/*/*.bin*
+**/[Aa]ssets/[Aa]ddressableAssetsData/*/*.json
