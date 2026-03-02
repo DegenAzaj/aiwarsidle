@@ -1,0 +1,38 @@
+using System;
+
+namespace AIWarsIdle.GameCore.Domain
+{
+    public sealed class GameState
+    {
+        public const int GeneratorCount = 5;
+
+        public double SoftCurrency;
+        public int PremiumCurrency;
+        public int[] GeneratorLevels;
+        public float GlobalMultiplier;
+        public int PrestigeCount;
+        public int PermanentUpgradeLevel;
+
+        public int LeagueSeasonId;
+        public int League;
+        public int SeasonPoints;
+
+        public int PvpAttacksRemaining;
+        public long LastPvpAttackRegenUnixSeconds;
+        public long LastPvpAdAttackClaimUnixSeconds;
+
+        public MapState MapState;
+        public OverclockState Overclock;
+
+        public long LastLoginUnixSeconds;
+
+        public GameState()
+        {
+            GeneratorLevels = new int[GeneratorCount];
+            MapState = new MapState();
+            Overclock = new OverclockState();
+            GlobalMultiplier = 1f;
+        }
+    }
+}
+

@@ -57,15 +57,15 @@ Założenia testów:
 
 ## STORY 1.1 — Modele i typy (bez logiki)
 
-* [ ] `GameState` (runtime) zgodnie z `TECH_SPEC.md`
-* [ ] `PvpSnapshot`, `BattleResult`
-* [ ] Map PvP modele: `MapState`, `SectorState`, `AttackStrategy`, `AttackPreview`, `CombatResult`
-* [ ] Overclock modele: `OverclockState` (ładunki, cooldown, aktywność)
+* [x] `GameState` (runtime) zgodnie z `TECH_SPEC.md`
+* [x] `PvpSnapshot`, `BattleResult`
+* [x] Map PvP modele: `MapState`, `SectorState`, `AttackStrategy`, `AttackPreview`, `CombatResult`
+* [x] Overclock modele: `OverclockState` (ładunki, cooldown, aktywność)
 
 **TESTS**
-* [ ] Test serializacji/roundtrip (jeśli modele będą serializowane) dla kluczowych pól
-* [ ] Testy walidacji zakresów: `Stability` zawsze 0..100, `SectorId` poprawny, itp.
-* [ ] Testy walidacji Overclock: charges 0..max, brak ujemnych timestampów
+* [x] Test serializacji/roundtrip (jeśli modele będą serializowane) dla kluczowych pól
+* [x] Testy walidacji zakresów: `Stability` zawsze 0..100, `SectorId` poprawny, itp.
+* [x] Testy walidacji Overclock: charges 0..max, brak ujemnych timestampów
 
 ---
 
