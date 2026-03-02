@@ -17,14 +17,11 @@ namespace AIWarsIdle.GameCore.Config
         public int MaxCharges = 2;
 
         [Header("Multipliers")]
-        [Min(1f)]
-        public float ProductionMultiplier = 3f;
+        public double ProductionMultiplier = 3.0;
 
-        [Min(1f)]
-        public float PvpAttackMultiplier = 1.2f;
+        public double PvpAttackMultiplier = 1.2;
 
-        [Min(1f)]
-        public float FreshCaptureStabilityGrowthMultiplier = 1.1f;
+        public double FreshCaptureStabilityGrowthMultiplier = 1.1;
 
         public void ValidateOrThrow()
         {
@@ -37,18 +34,17 @@ namespace AIWarsIdle.GameCore.Config
             ValidateMultiplierOrThrow(FreshCaptureStabilityGrowthMultiplier, nameof(FreshCaptureStabilityGrowthMultiplier));
         }
 
-        private static void ValidateMultiplierOrThrow(float value, string name)
+        private static void ValidateMultiplierOrThrow(double value, string name)
         {
-            if (float.IsNaN(value) || float.IsInfinity(value))
+            if (double.IsNaN(value) || double.IsInfinity(value))
             {
                 throw new InvalidOperationException($"{name} must be finite.");
             }
 
-            if (value < 1f)
+            if (value < 1.0)
             {
                 throw new InvalidOperationException($"{name} must be >= 1.");
             }
         }
     }
 }
-

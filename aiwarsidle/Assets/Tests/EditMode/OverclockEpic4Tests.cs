@@ -27,7 +27,7 @@ namespace AIWarsIdle.Tests
             Assert.Throws<InvalidOperationException>(() => cfg.ValidateOrThrow());
 
             cfg.MaxCharges = 2;
-            cfg.ProductionMultiplier = 0.5f;
+            cfg.ProductionMultiplier = 0.5;
             Assert.Throws<InvalidOperationException>(() => cfg.ValidateOrThrow());
         }
 
@@ -39,9 +39,9 @@ namespace AIWarsIdle.Tests
             cfg.DurationSeconds = 10;
             cfg.RegenSeconds = 90;
             cfg.MaxCharges = 2;
-            cfg.ProductionMultiplier = 3f;
-            cfg.PvpAttackMultiplier = 1.2f;
-            cfg.FreshCaptureStabilityGrowthMultiplier = 1.1f;
+            cfg.ProductionMultiplier = 3.0;
+            cfg.PvpAttackMultiplier = 1.2;
+            cfg.FreshCaptureStabilityGrowthMultiplier = 1.1;
 
             var service = new OverclockService(state, cfg);
             state.Overclock.Charges = 2;
@@ -61,9 +61,9 @@ namespace AIWarsIdle.Tests
             cfg.DurationSeconds = 10;
             cfg.RegenSeconds = 90;
             cfg.MaxCharges = 2;
-            cfg.ProductionMultiplier = 3f;
-            cfg.PvpAttackMultiplier = 1.2f;
-            cfg.FreshCaptureStabilityGrowthMultiplier = 1.1f;
+            cfg.ProductionMultiplier = 3.0;
+            cfg.PvpAttackMultiplier = 1.2;
+            cfg.FreshCaptureStabilityGrowthMultiplier = 1.1;
 
             var service = new OverclockService(state, cfg);
             state.Overclock.Charges = 2;
@@ -81,9 +81,9 @@ namespace AIWarsIdle.Tests
             cfg.DurationSeconds = 10;
             cfg.RegenSeconds = 90;
             cfg.MaxCharges = 2;
-            cfg.ProductionMultiplier = 3f;
-            cfg.PvpAttackMultiplier = 1.2f;
-            cfg.FreshCaptureStabilityGrowthMultiplier = 1.1f;
+            cfg.ProductionMultiplier = 3.0;
+            cfg.PvpAttackMultiplier = 1.2;
+            cfg.FreshCaptureStabilityGrowthMultiplier = 1.1;
 
             var service = new OverclockService(state, cfg);
 
@@ -110,9 +110,9 @@ namespace AIWarsIdle.Tests
             cfg.DurationSeconds = 10;
             cfg.RegenSeconds = 90;
             cfg.MaxCharges = 2;
-            cfg.ProductionMultiplier = 3f;
-            cfg.PvpAttackMultiplier = 1.2f;
-            cfg.FreshCaptureStabilityGrowthMultiplier = 1.1f;
+            cfg.ProductionMultiplier = 3.0;
+            cfg.PvpAttackMultiplier = 1.2;
+            cfg.FreshCaptureStabilityGrowthMultiplier = 1.1;
 
             var service = new OverclockService(state, cfg);
             state.Overclock.Charges = 1;
@@ -152,11 +152,12 @@ namespace AIWarsIdle.Tests
             overclockCfg.DurationSeconds = 10;
             overclockCfg.RegenSeconds = 90;
             overclockCfg.MaxCharges = 2;
-            overclockCfg.ProductionMultiplier = 3f;
-            overclockCfg.PvpAttackMultiplier = 1.2f;
-            overclockCfg.FreshCaptureStabilityGrowthMultiplier = 1.1f;
+            overclockCfg.ProductionMultiplier = 3.0;
+            overclockCfg.PvpAttackMultiplier = 1.2;
+            overclockCfg.FreshCaptureStabilityGrowthMultiplier = 1.1;
 
             var overclock = new OverclockService(state, overclockCfg);
+            state.Overclock.Charges = overclockCfg.MaxCharges;
             var production = new ProductionService(state, balance, economy, overclock);
 
             var basePps = production.CalculateProductionPerSecond(nowUnixSeconds: 1000);
@@ -184,9 +185,9 @@ namespace AIWarsIdle.Tests
             overclockCfg.DurationSeconds = 10;
             overclockCfg.RegenSeconds = 90;
             overclockCfg.MaxCharges = 2;
-            overclockCfg.ProductionMultiplier = 3f;
-            overclockCfg.PvpAttackMultiplier = 1.2f;
-            overclockCfg.FreshCaptureStabilityGrowthMultiplier = 1.1f;
+            overclockCfg.ProductionMultiplier = 3.0;
+            overclockCfg.PvpAttackMultiplier = 1.2;
+            overclockCfg.FreshCaptureStabilityGrowthMultiplier = 1.1;
 
             var overclock = new OverclockService(game, overclockCfg);
             game.Overclock.Charges = 1;
@@ -210,9 +211,9 @@ namespace AIWarsIdle.Tests
             overclockCfg.DurationSeconds = 10;
             overclockCfg.RegenSeconds = 90;
             overclockCfg.MaxCharges = 2;
-            overclockCfg.ProductionMultiplier = 3f;
-            overclockCfg.PvpAttackMultiplier = 1.2f;
-            overclockCfg.FreshCaptureStabilityGrowthMultiplier = 1.1f;
+            overclockCfg.ProductionMultiplier = 3.0;
+            overclockCfg.PvpAttackMultiplier = 1.2;
+            overclockCfg.FreshCaptureStabilityGrowthMultiplier = 1.1;
 
             var overclock = new OverclockService(game, overclockCfg);
             game.Overclock.Charges = 2;
