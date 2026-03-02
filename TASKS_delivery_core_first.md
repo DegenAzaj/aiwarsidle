@@ -84,14 +84,14 @@ Założenia testów:
 
 ## STORY 2.2 — SaveService
 
-* [ ] `SaveService.Load()` (tworzy nowe dane jeśli brak)
-* [ ] `SaveService.Save()` (atomowy zapis; brak corruptu przy przerwaniu)
-* [ ] Autosave co 30s + zapis on pause/quit (hook na bootstrapie, nie w UI)
-* [ ] Wersjonowanie + migracje (stub pod v2, nawet jeśli MVP tylko v1)
+* [x] `SaveService.Load()` (tworzy nowe dane jeśli brak)
+* [x] `SaveService.Save()` (atomowy zapis; brak corruptu przy przerwaniu)
+* [x] Autosave co 30s + zapis on pause/quit (hook na bootstrapie, nie w UI)
+* [x] Wersjonowanie + migracje (stub pod v2, nawet jeśli MVP tylko v1)
 
 **TESTS**
-* [ ] Save→Load: stan identyczny (w tym sektory mapy)
-* [ ] Test odporności: uszkodzony plik save → fallback do nowego save (lub backup) bez crasha
+* [x] Save→Load: stan identyczny (w tym sektory mapy)
+* [x] Test odporności: uszkodzony plik save → fallback do nowego save (lub backup) bez crasha
 
 ---
 
