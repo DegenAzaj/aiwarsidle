@@ -21,3 +21,11 @@ Repo/notes + projekt Unity: `aiwarsidle/` (Unity 6.3, Android-only, uGUI).
 - Dodana walidacja zakresów (stability 0..100, timestampy >= 0, charges 0..max) w `aiwarsidle/Assets/GameCore/Validation/DomainValidation.cs`.
 - Testy EditMode: walidacje + JSON roundtrip `GameState` w `aiwarsidle/Assets/Tests/EditMode/`.
 - Dodana paczka `com.unity.nuget.newtonsoft-json` (używana w testach i później pod save/load).
+
+### EPIC 2 — Persistence (Save/Load) + migracje
+
+#### STORY 2.1 — SaveData schema v1 (DONE)
+
+- Dodany schema model `SaveDataV1` + `SectorSaveData` + `OverclockSaveData` w `aiwarsidle/Assets/Persistence/Domain/SaveDataV1.cs`.
+- Dodana normalizacja/clamp danych (`Normalize()`): brak nulli, `Stability` 0..100, timestampy >= 0, Overclock charges 0..2.
+- Testy EditMode schemy w `aiwarsidle/Assets/Tests/EditMode/SaveDataV1SchemaTests.cs`.

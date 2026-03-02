@@ -73,14 +73,14 @@ Założenia testów:
 
 ## STORY 2.1 — SaveData schema v1
 
-* [ ] `SaveDataV1` zgodny z `TECH_SPEC.md` (waluty, generatory, prestige, liga, season points, ataki z regenem, `leagueSeasonId`, `mapSeasonId`, sektory)
-* [ ] `SectorSaveData` (właściciel, owner snapshot minimalny, stability, timestampy)
-* [ ] `OverclockSaveData` (ładunki, cooldown, aktywność)
+* [x] `SaveDataV1` zgodny z `TECH_SPEC.md` (waluty, generatory, prestige, liga, season points, ataki z regenem, `leagueSeasonId`, `mapSeasonId`, sektory)
+* [x] `SectorSaveData` (właściciel, owner snapshot minimalny, stability, timestampy)
+* [x] `OverclockSaveData` (ładunki, cooldown, aktywność)
 
 **TESTS**
-* [ ] SaveDataV1: poprawne domyślne wartości (np. brak nulli, poprawne długości tablic)
-* [ ] Sektor: clamp stability, brak ujemnych timestampów
-* [ ] Overclock: poprawne wartości startowe (np. 2 ładunki, brak aktywności)
+* [x] SaveDataV1: poprawne domyślne wartości (np. brak nulli, poprawne długości tablic)
+* [x] Sektor: clamp stability, brak ujemnych timestampów
+* [x] Overclock: poprawne wartości startowe (np. 2 ładunki, brak aktywności)
 
 ## STORY 2.2 — SaveService
 
