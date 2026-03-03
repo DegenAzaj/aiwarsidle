@@ -409,12 +409,32 @@ Zasada: UI jest cienką warstwą, tylko prezentacja + input → wywołania serwi
 * [ ] PlayMode: UpdateRequired=true → brak przejścia do Hub
 * [ ] PlayMode: UpdateRequired=false → przejście do Hub
 
+## STORY 11.0b — Resume policy (10 min → Splash)
+
+* [ ] Jeśli app wraca z tła po **>= 10 minutach** → pokazujemy Splash (jedyny entry) i dopiero potem routing do Hub.
+* [ ] Jeśli app wraca szybciej → bez Splash, zostajemy w bieżącym ekranie/stanie.
+
+**TESTS**
+* [ ] PlayMode: resume po >= 10 min → przejście przez Splash → Hub
+* [ ] PlayMode: resume po < 10 min → brak Splash, brak resetu routingu
+
 ## STORY 11.1 — UIRouter + ekrany
 
 * [ ] `UIRouter` i nawigacja: Hub / Generatory / Mapa PvP / Sklep / Event
 
 **TESTS**
 * [ ] PlayMode: przełączanie paneli nie gubi stanu, brak crashy
+
+## STORY 11.1b — Stany UI + feedback (fail-safe)
+
+* [ ] Wszystkie akcje UI mają bezpieczne guardy + feedback:
+  * przyciski disabled gdy akcja niedozwolona (brak waluty, brak charge’y, cooldown, brak adjacency)
+  * toast/tooltip z powodem (np. “Brak ataków”, “Cooldown”, “Nie sąsiaduje z Twoim sektorem”)
+  * brak wyjątków / brak spamowania klikami (debounce/throttle na krytycznych akcjach)
+
+**TESTS**
+* [ ] PlayMode: klik “zablokowanej” akcji nie zmienia stanu i pokazuje powód
+* [ ] PlayMode: spam tap (np. 20 klików/sek) nie crashuje i nie powoduje wielokrotnego wywołania use-case’u
 
 ## STORY 11.2 — Hub + Generatory
 
@@ -427,6 +447,21 @@ Zasada: UI jest cienką warstwą, tylko prezentacja + input → wywołania serwi
 **TESTS**
 * [ ] PlayMode: klik upgrade → rośnie level i PPS na HUD
 * [ ] PlayMode: klik Overclock → PPS wzrasta ×3 na czas aktywności i wraca po 10s
+
+## STORY 11.2b — Offline claim modal (pending gain)
+
+* [ ] Na wejściu do Hub (po starcie/resume przez Splash): jeśli `PendingOfflineGain > 0` → modal:
+  * pokazuje kwotę + wyjaśnienie skąd (czas offline, cap 12h)
+  * `Claim x1` → `OfflineClaimService.Claim(1)`
+  * `Claim x2` (rewarded) → pokazuje rewarded (`offline_x2`) i po sukcesie `OfflineClaimService.Claim(2)`
+  * “Not now” → zamyka modal bez claim (pending zostaje, crash-safe)
+* [ ] Po claim: HUD odświeżony (waluta + lifetime), modal znika
+
+**TESTS**
+* [ ] PlayMode: PendingOfflineGain>0 → modal się pokazuje
+* [ ] PlayMode: Claim x1 czyści pending i dodaje poprawną walutę
+* [ ] PlayMode: rewarded success → Claim x2 czyści pending i dodaje ×2
+* [ ] PlayMode: “Not now” → brak zmian stanu, pending zostaje
 
 ## STORY 11.3 — Prestige modal
 
@@ -450,6 +485,22 @@ Zasada: UI jest cienką warstwą, tylko prezentacja + input → wywołania serwi
 * [ ] PlayMode: Overclock aktywny przed atakiem wpływa na wynik/preview (w granicach widełek)
 * [ ] PlayMode: klik info/tooltip pokazuje i chowa opis `PvpPower` (bez crasha)
 
+## STORY 11.4b — PvP HUD + statusy (ataki/regen/season)
+
+* [ ] Na ekranie mapy:
+  * licznik `PvPAttacksRemaining` + timer do kolejnego regen (jeśli < cap)
+  * aktualna liga + `SeasonPoints`
+  * stan sezonu (np. “Season reset soon” / id) lub chociaż informacja o resetach (żeby uniknąć “why it reset?”)
+* [ ] Panel sektora pokazuje (oprócz istniejących wymagań):
+  * `Stability` + tempo zmian (jeśli jest) lub przynajmniej wartość + “meaning”
+  * cooldown do kolejnego ataku (jeśli aktywny)
+  * powód braku możliwości ataku (brak adjacency, home sector, sektor już jest Twój, brak ataków, cooldown, season reset)
+
+**TESTS**
+* [ ] PlayMode: po ataku zmienia się `PvPAttacksRemaining` i HUD się odświeża
+* [ ] PlayMode: regen ataków aktualizuje HUD po upływie czasu
+* [ ] PlayMode: cooldown sektora blokuje atak i UI pokazuje powód
+
 ## STORY 11.5 — Sklep + Ads + Sub
 
 * [ ] Button rewarded: x2 offline claim, +1 atak/dzień
@@ -458,6 +509,15 @@ Zasada: UI jest cienką warstwą, tylko prezentacja + input → wywołania serwi
 **TESTS**
 * [ ] PlayMode: rewarded success zwiększa ataki i jest widoczne na map screen
 * [ ] PlayMode: rewarded +1 Overclock charge jest widoczne na HUD
+
+## STORY 11.5b — PremiumCurrency (MVP: prezentacja + placeholder)
+
+* [ ] HUD pokazuje `PremiumCurrency` (jeśli jest w `GameState`)
+* [ ] Jeśli w MVP nie dowozimy zakupów premium: przyciski są placeholder (disabled) + opis “coming later” (bez błędów)
+* [ ] Jeśli dowozimy minimalny flow: osobny stub “grant premium” tylko dla dev build (żeby testować UI zależne od premium)
+
+**TESTS**
+* [ ] PlayMode: PremiumCurrency jest poprawnie wyświetlane i nie powoduje crashy przy zmianie wartości
 
 ---
 

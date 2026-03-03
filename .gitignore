@@ -45,6 +45,22 @@ Thumbs.db
 # Crash/diagnostics
 sysinfo.txt
 
+# External Dependency Manager (EDM4U) / Firebase resolver outputs (regenerable)
+**/[Aa]ssets/[Gg]eneratedLocalRepo/
+**/[Aa]ssets/[Gg]eneratedLocalRepo.meta
+**/[Pp]roject[Ss]ettings/AndroidResolverDependencies.xml
+**/[Pp]roject[Ss]ettings/GvhProjectSettings.xml
+
+# Android / iOS signing & local config (never commit)
+*.keystore
+*.jks
+*.p12
+*.mobileprovision
+**/local.properties
+
+# Gradle caches (if any exported projects are created)
+**/.gradle/
+
 # Addressables / StreamingAssets caches (optional, safe to ignore)
 **/[Aa]ssets/[Aa]ddressableAssetsData/*/*.bin*
 **/[Aa]ssets/[Aa]ddressableAssetsData/*/*.json
