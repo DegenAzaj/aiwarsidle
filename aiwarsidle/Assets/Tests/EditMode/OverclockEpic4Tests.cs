@@ -178,6 +178,11 @@ namespace AIWarsIdle.Tests
             pvp.StrategyMultiplierRisky = 1.0f;
             pvp.StabilityMultiplierMin = 1.0f;
             pvp.StabilityMultiplierMax = 1.0f;
+            pvp.PrestigePvpPowerPerPrestige = 1.0;
+            pvp.PermanentPvpPowerPerLevel = 1.0;
+            pvp.SectorPvpPowerPerSector = 1.0;
+            pvp.ProdToPvpMaxBonus = 0.0;
+            pvp.ProdToPvpHalfCapPps = 1.0;
             pvp.ValidateOrThrow();
 
             var game = new GameState();

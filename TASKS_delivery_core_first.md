@@ -203,31 +203,31 @@ Parametry MVP (config):
 
 ## STORY 5.1 — SnapshotService
 
-* [ ] Budowa `PvpSnapshot` z aktualnego `GameState`
-* [ ] `PvpPower` liczony z osobnej statystyki (sub ×2 nie działa bezpośrednio)
+* [x] Budowa `PvpSnapshot` z aktualnego `GameState`
+* [x] `PvpPower` liczony z osobnej statystyki (sub ×2 nie działa bezpośrednio)
   * core progression: prestige, permanent upgrades, sektory
   * + mały udział z produkcji przez soft-cap (z `BaseProductionPpsWithoutSubscription`)
-* [ ] Konfiguracja w `PvpConfig`:
+* [x] Konfiguracja w `PvpConfig`:
   * `PrestigePvpPowerPerPrestige`, `PermanentPvpPowerPerLevel`, `SectorPvpPowerPerSector`
   * `ProdToPvpMaxBonus`, `ProdToPvpHalfCapPps`
 
 **TESTS**
-* [ ] Snapshot `PvpPower` nie zmienia się po włączeniu subskrypcji (bezpośrednio)
-* [ ] Snapshot `PvpPower` rośnie po prestiżu / permanent upgrade / sektorach
+* [x] Snapshot `PvpPower` nie zmienia się po włączeniu subskrypcji (bezpośrednio) *(MVP: dowód przez użycie `BaseProductionPpsWithoutSubscription`; test pokryty przez brak wpływu tymczasowego boosta produkcji / Overclock)*
+* [x] Snapshot `PvpPower` rośnie po prestiżu / permanent upgrade / sektorach
 
 ## STORY 5.2 — LeagueService (Season Points)
 
-* [ ] Progi lig w `LeagueConfig`
-* [ ] Dodawanie punktów sezonu + awans/spadek
-* [ ] Reset sezonu ligi (30 dni; date-based / `leagueSeasonId`) — w logice domenowej, bez UI
+* [x] Progi lig w `LeagueConfig`
+* [x] Dodawanie punktów sezonu + awans/spadek
+* [x] Reset sezonu ligi (30 dni; date-based / `leagueSeasonId`) — w logice domenowej, bez UI *(MVP: sezon jako miesiąc kalendarzowy UTC; możliwy tryb fixed-days do przyszłej rekonfiguracji)*
 
 **TESTS**
-* [ ] Punkty → prawidłowa liga (progi)
-* [ ] Reset sezonu ligi zeruje punkty i odświeża `leagueSeasonId`
+* [x] Punkty → prawidłowa liga (progi)
+* [x] Reset sezonu ligi zeruje punkty i odświeża `leagueSeasonId`
 
 ## STORY 5.3 — PvpConfig (walidacja i guardrails)
 
-* [ ] Walidacja `PvpConfig` (ScriptableObject) na starcie gry / w testach:
+* [x] Walidacja `PvpConfig` (ScriptableObject) na starcie gry / w testach:
   * `PowerVarianceMin > 0` i `PowerVarianceMin <= PowerVarianceMax`
   * `StrategyMultiplier* > 0`
   * `StabilityMultiplierMin > 0` i `StabilityMultiplierMin <= StabilityMultiplierMax`
@@ -236,8 +236,8 @@ Parametry MVP (config):
   * `ProdToPvpHalfCapPps > 0`
 
 **TESTS**
-* [ ] Nieprawidłowy config → błąd walidacji (fail fast) lub bezpieczny fallback (zależnie od decyzji)
-* [ ] Poprawny config → przechodzi walidację
+* [x] Nieprawidłowy config → błąd walidacji (fail fast) lub bezpieczny fallback (zależnie od decyzji)
+* [x] Poprawny config → przechodzi walidację
 
 ---
 

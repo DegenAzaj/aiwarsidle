@@ -30,6 +30,18 @@ namespace AIWarsIdle.PvP.Config
         [Min(0.01f)]
         public float StabilityMultiplierMax = 1.20f;
 
+        [Header("PvpPower progression")]
+        public double PrestigePvpPowerPerPrestige = 1.0;
+        public double PermanentPvpPowerPerLevel = 1.0;
+        public double SectorPvpPowerPerSector = 1.0;
+
+        [Header("Production to PvpPower")]
+        [Tooltip("Max bonus applied multiplicatively to core power. 0..1 means up to +0%..+100%.")]
+        public double ProdToPvpMaxBonus = 0.20;
+
+        [Tooltip("Soft-cap PPS point: when base PPS equals this value, production-derived bonus reaches half of ProdToPvpMaxBonus.")]
+        public double ProdToPvpHalfCapPps = 100.0;
+
         public void ValidateOrThrow()
         {
             ValidateFinitePositiveOrThrow(PowerVarianceMin, nameof(PowerVarianceMin));
@@ -49,6 +61,18 @@ namespace AIWarsIdle.PvP.Config
             {
                 throw new InvalidOperationException($"{nameof(StabilityMultiplierMin)} must be <= {nameof(StabilityMultiplierMax)}.");
             }
+
+            ValidateFiniteNonNegativeOrThrow(PrestigePvpPowerPerPrestige, nameof(PrestigePvpPowerPerPrestige));
+            ValidateFiniteNonNegativeOrThrow(PermanentPvpPowerPerLevel, nameof(PermanentPvpPowerPerLevel));
+            ValidateFiniteNonNegativeOrThrow(SectorPvpPowerPerSector, nameof(SectorPvpPowerPerSector));
+
+            ValidateFiniteNonNegativeOrThrow(ProdToPvpMaxBonus, nameof(ProdToPvpMaxBonus));
+            if (ProdToPvpMaxBonus > 1.0)
+            {
+                throw new InvalidOperationException($"{nameof(ProdToPvpMaxBonus)} must be <= 1.");
+            }
+
+            ValidateFinitePositiveOrThrow(ProdToPvpHalfCapPps, nameof(ProdToPvpHalfCapPps));
         }
 
         private static void ValidateFinitePositiveOrThrow(float value, string name)
@@ -63,6 +87,31 @@ namespace AIWarsIdle.PvP.Config
                 throw new InvalidOperationException($"{name} must be > 0.");
             }
         }
+
+        private static void ValidateFinitePositiveOrThrow(double value, string name)
+        {
+            if (double.IsNaN(value) || double.IsInfinity(value))
+            {
+                throw new InvalidOperationException($"{name} must be finite.");
+            }
+
+            if (value <= 0.0)
+            {
+                throw new InvalidOperationException($"{name} must be > 0.");
+            }
+        }
+
+        private static void ValidateFiniteNonNegativeOrThrow(double value, string name)
+        {
+            if (double.IsNaN(value) || double.IsInfinity(value))
+            {
+                throw new InvalidOperationException($"{name} must be finite.");
+            }
+
+            if (value < 0.0)
+            {
+                throw new InvalidOperationException($"{name} must be >= 0.");
+            }
+        }
     }
 }
-

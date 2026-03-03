@@ -68,3 +68,16 @@ Repo/notes + projekt Unity: `aiwarsidle/` (Unity 6.3, Android-only, uGUI).
 - Integracje PvP/Mapa (bez UI): minimalne `BattleSimService` i `MapService` uwzględniają boosty Overclock (atak i wzrost stability świeżo zdobytego sektora) w `aiwarsidle/Assets/PvP/`.
 - Testy EditMode dla EPIC 4 w `aiwarsidle/Assets/Tests/EditMode/OverclockEpic4Tests.cs`.
 - Save: usunięty twardy clamp Overclock do 2 ładunków w `aiwarsidle/Assets/Persistence/Domain/SaveDataV1.cs` (max ładunków jest konfigurowalny przez `OverclockConfig`).
+
+---
+
+## EPIC 5 — PvP: Snapshot + Ligi (bez mapy jeszcze) (DONE)
+
+- Snapshot PvP:
+  - `SnapshotService` buduje `PvpSnapshot` oraz liczy `PvpPower` z core progression (prestige/permanent/sektory) + soft-cap bonus z `BaseProductionPerSecondWithoutSubscription` w `aiwarsidle/Assets/PvP/Services/SnapshotService.cs`.
+  - `PvpConfig` rozszerzony o parametry do liczenia `PvpPower` + walidacje guardrails (w tym `ProdToPvpMaxBonus` 0..1, `ProdToPvpHalfCapPps > 0`) w `aiwarsidle/Assets/PvP/Config/PvpConfig.cs`.
+- Liga / Season Points:
+  - `LeagueConfig` z progami lig jako tablica (łatwe do zmiany) + tryb sezonu `CalendarMonthUtc` lub `FixedDays` w `aiwarsidle/Assets/PvP/Config/LeagueConfig.cs`.
+  - `LeagueService` (punkty sezonu, awans/spadek, reset sezonu przez `leagueSeasonId`) w `aiwarsidle/Assets/PvP/Services/LeagueService.cs`.
+  - W configu i kodzie jest wzmianka o bezpiecznym rollout’cie zmian schematu sezonu (“apply from next season”), żeby uniknąć resetów w środku sezonu.
+- Testy EditMode dla EPIC 5 w `aiwarsidle/Assets/Tests/EditMode/Epic5SnapshotLeagueTests.cs`.
