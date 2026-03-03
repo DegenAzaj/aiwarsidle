@@ -317,23 +317,23 @@ Parametry MVP (config):
 
 ## STORY 7.1 — Attack charges + regen
 
-* [ ] Serwis w domenie: ataki jako charge’e (0..5) z regenem 1 co 2h (clamp do 5)
-* [ ] Integracja z `LastPvpAttackRegenTimestamp` (uwzględnij offline/nieobecność)
-* [ ] Premium: możliwość dokupienia dodatkowych ataków (kontrakt + walidacja, bez UI)
+* [x] Serwis w domenie: ataki jako charge’e (0..5) z regenem 1 co 2h (clamp do 5)
+* [x] Integracja z `LastPvpAttackRegenTimestamp` (uwzględnij offline/nieobecność)
+* [x] Premium: możliwość dokupienia dodatkowych ataków (kontrakt + walidacja, bez UI)
 
 **TESTS**
-* [ ] Regen przed upływem 2h → brak zmian
-* [ ] Regen po 2h → +1 atak (z clampem do 5)
-* [ ] Długi offline → regen naliczony poprawnie, ale nie przekracza 5
+* [x] Regen przed upływem 2h → brak zmian
+* [x] Regen po 2h → +1 atak (z clampem do 5)
+* [x] Długi offline → regen naliczony poprawnie, ale nie przekracza 5
 
 ## STORY 7.2 — AdsService (stub + kontrakt)
 
-* [ ] Interfejs `AdsService.ShowRewardedAd(onSuccess)`
-* [ ] Integracja: +1 atak/dzień (rewarded), x2 offline claim (logika domenowa)
+* [x] Interfejs `AdsService.ShowRewardedAd(onSuccess)`
+* [x] Integracja: +1 atak/dzień (rewarded), x2 offline claim (logika domenowa)
 
 **TESTS**
-* [ ] “Reward success” zwiększa ataki o 1 (z clampem)
-* [ ] Offline claim x2: podwaja nagrodę i loguje event analityczny
+* [x] “Reward success” zwiększa ataki o 1 (z clampem)
+* [x] Offline claim x2: podwaja nagrodę i loguje event analityczny
 
 ---
 

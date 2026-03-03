@@ -50,6 +50,18 @@ namespace AIWarsIdle.Tests.EditMode
             return cfg;
         }
 
+        private static PvpAttacksConfig CreateDefaultPvpAttacksConfig(int maxAttacks = 5, int regenSeconds = 2 * 60 * 60)
+        {
+            var cfg = ScriptableObject.CreateInstance<PvpAttacksConfig>();
+            cfg.MaxAttacks = maxAttacks;
+            cfg.RegenSeconds = regenSeconds;
+            cfg.AdExtraAttacksPerDay = 1;
+            cfg.PremiumExtraAttacksPerPurchase = 0;
+            cfg.PremiumCurrencyCostPerPurchase = 0;
+            cfg.ValidateOrThrow();
+            return cfg;
+        }
+
         private static LeagueConfig CreateValidLeagueConfig()
         {
             var cfg = ScriptableObject.CreateInstance<LeagueConfig>();
@@ -237,7 +249,8 @@ namespace AIWarsIdle.Tests.EditMode
             var league = new LeagueService(state, CreateValidLeagueConfig());
             var sim = new BattleSimService(pvp);
             var matchmaking = new MatchmakingService(mapCfg);
-            var combat = new PvpMapCombatService(state, map, mapCfg, snapshot, matchmaking, sim, economy, league);
+            var attacks = new PvpAttackChargesService(state, CreateDefaultPvpAttacksConfig());
+            var combat = new PvpMapCombatService(state, map, mapCfg, attacks, snapshot, matchmaking, sim, economy, league);
 
             var before = map.GetSector(2);
             var beforeOwner = before.OwnerPlayerId;
@@ -271,7 +284,8 @@ namespace AIWarsIdle.Tests.EditMode
             var league = new LeagueService(state, CreateValidLeagueConfig());
             var sim = new BattleSimService(pvp);
             var matchmaking = new MatchmakingService(mapCfg);
-            var combat = new PvpMapCombatService(state, map, mapCfg, snapshot, matchmaking, sim, economy, league);
+            var attacks = new PvpAttackChargesService(state, CreateDefaultPvpAttacksConfig());
+            var combat = new PvpMapCombatService(state, map, mapCfg, attacks, snapshot, matchmaking, sim, economy, league);
 
             var before = map.GetSector(1);
             var beforeOwner = before.OwnerPlayerId;
@@ -312,7 +326,8 @@ namespace AIWarsIdle.Tests.EditMode
             var league = new LeagueService(state, CreateValidLeagueConfig());
             var sim = new BattleSimService(pvp);
             var matchmaking = new MatchmakingService(mapCfg);
-            var combat = new PvpMapCombatService(state, map, mapCfg, snapshot, matchmaking, sim, economy, league);
+            var attacks = new PvpAttackChargesService(state, CreateDefaultPvpAttacksConfig());
+            var combat = new PvpMapCombatService(state, map, mapCfg, attacks, snapshot, matchmaking, sim, economy, league);
 
             var before = map.GetSector(1);
             var beforeLastCombat = before.LastCombatUnixSeconds;
@@ -342,7 +357,8 @@ namespace AIWarsIdle.Tests.EditMode
             var league = new LeagueService(state, CreateValidLeagueConfig());
             var sim = new BattleSimService(pvp);
             var matchmaking = new MatchmakingService(mapCfg);
-            var combat = new PvpMapCombatService(state, map, mapCfg, snapshot, matchmaking, sim, economy, league);
+            var attacks = new PvpAttackChargesService(state, CreateDefaultPvpAttacksConfig());
+            var combat = new PvpMapCombatService(state, map, mapCfg, attacks, snapshot, matchmaking, sim, economy, league);
 
             var now = 1001L;
             var result = combat.AttackSector(sectorId: 1, strategy: AttackStrategy.Aggressive, nowUnixSeconds: now, seed: 7);
@@ -378,7 +394,8 @@ namespace AIWarsIdle.Tests.EditMode
             var league = new LeagueService(state, CreateValidLeagueConfig());
             var sim = new BattleSimService(pvp);
             var matchmaking = new MatchmakingService(mapCfg);
-            var combat = new PvpMapCombatService(state, map, mapCfg, snapshot, matchmaking, sim, economy, league);
+            var attacks = new PvpAttackChargesService(state, CreateDefaultPvpAttacksConfig());
+            var combat = new PvpMapCombatService(state, map, mapCfg, attacks, snapshot, matchmaking, sim, economy, league);
 
             var sectorBefore = map.GetSector(1);
             var stabilityBefore = sectorBefore.Stability;
@@ -416,7 +433,8 @@ namespace AIWarsIdle.Tests.EditMode
             var league = new LeagueService(state, CreateValidLeagueConfig());
             var sim = new BattleSimService(pvp);
             var matchmaking = new MatchmakingService(mapCfg);
-            var combat = new PvpMapCombatService(state, map, mapCfg, snapshot, matchmaking, sim, economy, league);
+            var attacks = new PvpAttackChargesService(state, CreateDefaultPvpAttacksConfig());
+            var combat = new PvpMapCombatService(state, map, mapCfg, attacks, snapshot, matchmaking, sim, economy, league);
 
             var preview = combat.GetAttackPreview(sectorId: 1, strategy: AttackStrategy.Stable, nowUnixSeconds: 1001, seedBase: 123);
 

@@ -21,6 +21,7 @@ namespace AIWarsIdle.Tests
                 SeasonPoints = 42,
                 PvpAttacksRemaining = 5,
                 LastPvpAttackRegenUnixSeconds = 100,
+                NextPvpAttackRegenAtUnixSeconds = 150,
                 LastPvpAdAttackClaimUnixSeconds = 200,
                 LastLoginUnixSeconds = 300
             };
@@ -41,6 +42,7 @@ namespace AIWarsIdle.Tests
             Assert.AreEqual(state.SeasonPoints, loaded.SeasonPoints);
             Assert.AreEqual(state.PvpAttacksRemaining, loaded.PvpAttacksRemaining);
             Assert.AreEqual(state.LastPvpAttackRegenUnixSeconds, loaded.LastPvpAttackRegenUnixSeconds);
+            Assert.AreEqual(state.NextPvpAttackRegenAtUnixSeconds, loaded.NextPvpAttackRegenAtUnixSeconds);
             Assert.AreEqual(state.LastPvpAdAttackClaimUnixSeconds, loaded.LastPvpAdAttackClaimUnixSeconds);
             Assert.AreEqual(state.LastLoginUnixSeconds, loaded.LastLoginUnixSeconds);
 

@@ -78,7 +78,8 @@ namespace AIWarsIdle.Tests
                 LifetimeEarnedSoftCurrency = -1,
                 LastLoginUnixSeconds = -1,
                 LastPvpAdAttackClaimUnixSeconds = -2,
-                LastPvpAttackRegenUnixSeconds = -3
+                LastPvpAttackRegenUnixSeconds = -3,
+                NextPvpAttackRegenAtUnixSeconds = -4
             };
 
             save.Normalize();
@@ -92,6 +93,7 @@ namespace AIWarsIdle.Tests
             Assert.AreEqual(0, save.LastLoginUnixSeconds);
             Assert.AreEqual(0, save.LastPvpAdAttackClaimUnixSeconds);
             Assert.AreEqual(0, save.LastPvpAttackRegenUnixSeconds);
+            Assert.AreEqual(0, save.NextPvpAttackRegenAtUnixSeconds);
         }
     }
 }

@@ -20,6 +20,7 @@ namespace AIWarsIdle.Persistence.Domain
 
         public int PvpAttacksRemaining;
         public long LastPvpAttackRegenUnixSeconds;
+        public long NextPvpAttackRegenAtUnixSeconds;
         public long LastPvpAdAttackClaimUnixSeconds;
 
         public int MapSeasonId;
@@ -58,6 +59,7 @@ namespace AIWarsIdle.Persistence.Domain
 
             if (LifetimeEarnedSoftCurrency < 0) LifetimeEarnedSoftCurrency = 0;
             if (LastPvpAttackRegenUnixSeconds < 0) LastPvpAttackRegenUnixSeconds = 0;
+            if (NextPvpAttackRegenAtUnixSeconds < 0) NextPvpAttackRegenAtUnixSeconds = 0;
             if (LastPvpAdAttackClaimUnixSeconds < 0) LastPvpAdAttackClaimUnixSeconds = 0;
             if (LastLoginUnixSeconds < 0) LastLoginUnixSeconds = 0;
         }

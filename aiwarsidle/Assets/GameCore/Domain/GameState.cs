@@ -19,6 +19,7 @@ namespace AIWarsIdle.GameCore.Domain
 
         public int PvpAttacksRemaining;
         public long LastPvpAttackRegenUnixSeconds;
+        public long NextPvpAttackRegenAtUnixSeconds;
         public long LastPvpAdAttackClaimUnixSeconds;
 
         public MapState MapState;

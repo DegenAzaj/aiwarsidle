@@ -109,3 +109,21 @@ Założenie MVP: na starcie gracz ma **Home Sector**, którego nie może straci�
   - Implementacja mnożnika z mapy: `MapProductionBonusProvider` w `aiwarsidle/Assets/PvP/Services/MapProductionBonusProvider.cs`.
 
 Testy EditMode dla EPIC 6: `aiwarsidle/Assets/Tests/EditMode/Epic6MapCoreTests.cs`.
+
+---
+
+## EPIC 7 — Ataki (regen) + Rewarded Ads (core) (DONE)
+
+- PvP attack charges (regen, offline, clamp do capu, bez bankowania czasu na capie):
+  - Balans: `PvpAttacksConfig` w `aiwarsidle/Assets/PvP/Config/PvpAttacksConfig.cs`.
+  - Logika domenowa: `PvpAttackChargesService` w `aiwarsidle/Assets/PvP/Services/PvpAttackChargesService.cs`.
+  - Stan: dodane `NextPvpAttackRegenAtUnixSeconds` do `GameState` + save schema w `aiwarsidle/Assets/Persistence/Domain/SaveDataV1.cs`.
+  - Integracja w PvP: `PvpMapCombatService` zużywa ataki przez serwis (a nie przez bezpośrednią mutację stanu).
+- Rewarded ads (core kontrakty + use-case’y):
+  - Kontrakt `IAdsService.ShowRewardedAd(Action onSuccess)` w `aiwarsidle/Assets/GameCore/Services/IAdsService.cs` + stub `AdsService` w `aiwarsidle/Assets/Monetization/AdsService.cs`.
+  - Kontrakt analytics: `IAnalyticsService.Track(...)` w `aiwarsidle/Assets/GameCore/Services/IAnalyticsService.cs` (fake w testach).
+  - Use-case serwis: `RewardedAdsUseCaseService` (`offline_x2`, `pvp_attack_daily`) w `aiwarsidle/Assets/PvP/Services/RewardedAdsUseCaseService.cs`.
+  - Daily claim liczone po **UTC day boundary**; `LastPvpAdAttackClaimUnixSeconds = 0` oznacza “nigdy nie claimowano”.
+- Testy EditMode:
+  - EPIC 7 charges/regen: `aiwarsidle/Assets/Tests/EditMode/Epic7PvpAttackChargesTests.cs`.
+  - EPIC 7 rewarded use-case: `aiwarsidle/Assets/Tests/EditMode/Epic7RewardedAdsUseCaseTests.cs`.

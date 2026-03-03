@@ -24,6 +24,7 @@ namespace AIWarsIdle.Tests
                 SeasonPoints = 42,
                 PvpAttacksRemaining = 4,
                 LastPvpAttackRegenUnixSeconds = 100,
+                NextPvpAttackRegenAtUnixSeconds = 150,
                 LastPvpAdAttackClaimUnixSeconds = 200,
                 MapSeasonId = 5,
                 Sectors = new[]

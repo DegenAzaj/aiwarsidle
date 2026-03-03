@@ -10,6 +10,7 @@ namespace AIWarsIdle.PvP.Services
         private readonly GameState _state;
         private readonly MapService _map;
         private readonly MapConfig _mapConfig;
+        private readonly PvpAttackChargesService _attacks;
         private readonly SnapshotService _snapshotService;
         private readonly MatchmakingService _matchmakingService;
         private readonly BattleSimService _battleSim;
@@ -20,6 +21,7 @@ namespace AIWarsIdle.PvP.Services
             GameState state,
             MapService map,
             MapConfig mapConfig,
+            PvpAttackChargesService attacks,
             SnapshotService snapshotService,
             MatchmakingService matchmakingService,
             BattleSimService battleSim,
@@ -29,6 +31,7 @@ namespace AIWarsIdle.PvP.Services
             _state = state ?? throw new ArgumentNullException(nameof(state));
             _map = map ?? throw new ArgumentNullException(nameof(map));
             _mapConfig = mapConfig ?? throw new ArgumentNullException(nameof(mapConfig));
+            _attacks = attacks ?? throw new ArgumentNullException(nameof(attacks));
             _snapshotService = snapshotService ?? throw new ArgumentNullException(nameof(snapshotService));
             _matchmakingService = matchmakingService ?? throw new ArgumentNullException(nameof(matchmakingService));
             _battleSim = battleSim ?? throw new ArgumentNullException(nameof(battleSim));
@@ -113,7 +116,7 @@ namespace AIWarsIdle.PvP.Services
                 return new CombatResult { SectorId = sectorId, Win = false, Battle = new BattleResult(), UpdatedSector = CloneSector(sector) };
             }
 
-            if (_state.PvpAttacksRemaining <= 0)
+            if (_attacks.GetRemaining(nowUnixSeconds) <= 0)
             {
                 return new CombatResult { SectorId = sectorId, Win = false, Battle = new BattleResult(), UpdatedSector = CloneSector(sector) };
             }
@@ -125,8 +128,7 @@ namespace AIWarsIdle.PvP.Services
 
             var win = battle.Win;
 
-            _state.PvpAttacksRemaining--;
-            if (_state.PvpAttacksRemaining < 0) _state.PvpAttacksRemaining = 0;
+            _attacks.TrySpendOne(nowUnixSeconds);
 
             sector.LastCombatUnixSeconds = nowUnixSeconds;
 
