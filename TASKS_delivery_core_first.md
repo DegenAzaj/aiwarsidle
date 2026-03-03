@@ -354,13 +354,13 @@ Parametry MVP (config):
 
 ## STORY 9.1 — AnalyticsService wrapper
 
-* [ ] Wrapper `Track(name, params...)` nieblokujący gameplay
-* [ ] Eventy z `DESIGN.md`/`TECH_SPEC.md`: `map_open`, `sector_view`, `sector_attack`, `sector_result`, itd.
-* [ ] Eventy Overclock: `overclock_activate`, `overclock_charge_gain`, `overclock_charge_spent`
+* [x] Wrapper `Track(name, params...)` nieblokujący gameplay
+* [x] Eventy z `DESIGN.md`/`TECH_SPEC.md`: `map_open`, `sector_view`, `sector_attack`, `sector_result`, itd.
+* [x] Eventy Overclock: `overclock_activate`, `overclock_charge_gain`, `overclock_charge_spent`
 
 **TESTS**
-* [ ] Track nie rzuca wyjątków przy null/empty params
-* [ ] Krytyczne ścieżki (offline claim, attack) wywołują Track (przez mock/fake)
+* [x] Track nie rzuca wyjątków przy null/empty params
+* [x] Krytyczne ścieżki (offline claim, attack) wywołują Track (przez mock/fake)
 
 ---
 

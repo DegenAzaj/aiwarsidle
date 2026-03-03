@@ -10,15 +10,22 @@ namespace AIWarsIdle.GameCore.Services
         private readonly BalanceConfig _config;
         private readonly ProductionService _production;
         private readonly EconomyService _economy;
+        private readonly IEventBus _eventBus;
 
         public double PendingOfflineGain { get; private set; }
 
-        public OfflineClaimService(GameState state, BalanceConfig config, ProductionService production, EconomyService economy)
+        public OfflineClaimService(
+            GameState state,
+            BalanceConfig config,
+            ProductionService production,
+            EconomyService economy,
+            IEventBus eventBus = null)
         {
             _state = state ?? throw new ArgumentNullException(nameof(state));
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _production = production ?? throw new ArgumentNullException(nameof(production));
             _economy = economy ?? throw new ArgumentNullException(nameof(economy));
+            _eventBus = eventBus;
 
             _config.ValidateOrThrow();
         }
@@ -58,7 +65,10 @@ namespace AIWarsIdle.GameCore.Services
                 return;
             }
 
-            _economy.AddCurrency(PendingOfflineGain * multiplier, CurrencySource.OfflineClaim);
+            var baseAmount = PendingOfflineGain;
+            var finalAmount = baseAmount * multiplier;
+            _economy.AddCurrency(finalAmount, CurrencySource.OfflineClaim);
+            _eventBus?.Publish(new OfflineClaimedEvent(baseAmount, multiplier));
             PendingOfflineGain = 0;
         }
 
@@ -69,4 +79,3 @@ namespace AIWarsIdle.GameCore.Services
         }
     }
 }
-

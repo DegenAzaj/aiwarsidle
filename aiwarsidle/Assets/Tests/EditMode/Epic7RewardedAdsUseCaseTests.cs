@@ -1,6 +1,7 @@
 using AIWarsIdle.GameCore.Config;
 using AIWarsIdle.GameCore.Domain;
 using AIWarsIdle.GameCore.Services;
+using AIWarsIdle.Analytics;
 using AIWarsIdle.PvP.Config;
 using AIWarsIdle.PvP.Services;
 using NUnit.Framework;
@@ -18,18 +19,6 @@ namespace AIWarsIdle.Tests.EditMode
             {
                 ShowCalls++;
                 onSuccess?.Invoke();
-            }
-        }
-
-        private sealed class FakeAnalyticsService : IAnalyticsService
-        {
-            public int TrackCalls { get; private set; }
-            public string LastEventName { get; private set; }
-
-            public void Track(string name, params AnalyticsParam[] parameters)
-            {
-                TrackCalls++;
-                LastEventName = name;
             }
         }
 
@@ -68,6 +57,11 @@ namespace AIWarsIdle.Tests.EditMode
         [Test]
         public void OfflineX2Rewarded_ClaimsDoubleAndTracks()
         {
+            var eventBus = new EventBus();
+            var sink = new InMemoryAnalyticsSink();
+            var analytics = new BufferedAnalyticsService(sink);
+            using var bridge = new AnalyticsEventBusBridge(eventBus, analytics);
+
             var state = new GameState();
             state.GeneratorLevels[0] = 1;
             state.LastLoginUnixSeconds = 0;
@@ -75,37 +69,43 @@ namespace AIWarsIdle.Tests.EditMode
             var economy = new EconomyService(state);
             var balance = CreateValidBalanceConfig(generatorOutput: 10);
             var production = new ProductionService(state, balance, economy);
-            var offline = new OfflineClaimService(state, balance, production, economy);
+            var offline = new OfflineClaimService(state, balance, production, economy, eventBus);
 
             offline.RecalculatePending(nowUnixSeconds: 100); // pending = 10 * 100 = 1000
             Assert.AreEqual(1000.0, offline.PendingOfflineGain);
 
             var attacks = new PvpAttackChargesService(state, CreatePvpAttacksConfig());
             var ads = new FakeAdsService();
-            var analytics = new FakeAnalyticsService();
 
-            var uc = new RewardedAdsUseCaseService(ads, offline, attacks, analytics);
+            var uc = new RewardedAdsUseCaseService(ads, offline, attacks, eventBus);
 
             Assert.IsTrue(uc.TryShowOfflineClaimX2(nowUnixSeconds: 100));
             Assert.AreEqual(1, ads.ShowCalls);
             Assert.AreEqual(2000.0, economy.Balance);
-            Assert.GreaterOrEqual(analytics.TrackCalls, 1);
+
+            analytics.Flush(maxEvents: 100);
+            Assert.IsTrue(ContainsEvent(sink, "ad_watched"));
+            Assert.IsTrue(ContainsEvent(sink, "offline_claim"));
         }
 
         [Test]
         public void DailyPvpAttackRewarded_AddsOne_AttemptsOnlyOncePerUtcDay()
         {
+            var eventBus = new EventBus();
+            var sink = new InMemoryAnalyticsSink();
+            var analytics = new BufferedAnalyticsService(sink);
+            using var bridge = new AnalyticsEventBusBridge(eventBus, analytics);
+
             var state = new GameState { PvpAttacksRemaining = 0, LastPvpAdAttackClaimUnixSeconds = 0 };
             var attacks = new PvpAttackChargesService(state, CreatePvpAttacksConfig());
 
             var balance = CreateValidBalanceConfig(generatorOutput: 1);
             var economy = new EconomyService(state);
             var production = new ProductionService(state, balance, economy);
-            var offline = new OfflineClaimService(state, balance, production, economy);
+            var offline = new OfflineClaimService(state, balance, production, economy, eventBus);
 
             var ads = new FakeAdsService();
-            var analytics = new FakeAnalyticsService();
-            var uc = new RewardedAdsUseCaseService(ads, offline, attacks, analytics);
+            var uc = new RewardedAdsUseCaseService(ads, offline, attacks, eventBus);
 
             Assert.IsTrue(uc.TryShowDailyPvpAttack(nowUnixSeconds: 1));
             Assert.AreEqual(1, state.PvpAttacksRemaining);
@@ -121,6 +121,9 @@ namespace AIWarsIdle.Tests.EditMode
             state.NextPvpAttackRegenAtUnixSeconds = 86_400 + 1_000_000_000L; // keep regen from capping attacks during Tick()
             Assert.IsTrue(uc.TryShowDailyPvpAttack(nowUnixSeconds: 86_400));
             Assert.AreEqual(1, state.PvpAttacksRemaining);
+
+            analytics.Flush(maxEvents: 100);
+            Assert.IsTrue(ContainsEvent(sink, "ad_watched"));
         }
 
         [Test]
@@ -139,6 +142,16 @@ namespace AIWarsIdle.Tests.EditMode
 
             Assert.IsFalse(uc.TryShowDailyPvpAttack(nowUnixSeconds: 1));
             Assert.AreEqual(0, ads.ShowCalls);
+        }
+
+        private static bool ContainsEvent(InMemoryAnalyticsSink sink, string name)
+        {
+            for (var i = 0; i < sink.Events.Count; i++)
+            {
+                if (sink.Events[i].Name == name) return true;
+            }
+
+            return false;
         }
     }
 }

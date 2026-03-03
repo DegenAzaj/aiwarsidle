@@ -16,6 +16,7 @@ namespace AIWarsIdle.PvP.Services
         private readonly BattleSimService _battleSim;
         private readonly EconomyService _economy;
         private readonly LeagueService _league;
+        private readonly IEventBus _eventBus;
 
         public PvpMapCombatService(
             GameState state,
@@ -26,7 +27,8 @@ namespace AIWarsIdle.PvP.Services
             MatchmakingService matchmakingService,
             BattleSimService battleSim,
             EconomyService economy,
-            LeagueService league)
+            LeagueService league,
+            IEventBus eventBus = null)
         {
             _state = state ?? throw new ArgumentNullException(nameof(state));
             _map = map ?? throw new ArgumentNullException(nameof(map));
@@ -37,6 +39,7 @@ namespace AIWarsIdle.PvP.Services
             _battleSim = battleSim ?? throw new ArgumentNullException(nameof(battleSim));
             _economy = economy ?? throw new ArgumentNullException(nameof(economy));
             _league = league ?? throw new ArgumentNullException(nameof(league));
+            _eventBus = eventBus;
 
             _mapConfig.ValidateOrThrow();
         }
@@ -121,6 +124,8 @@ namespace AIWarsIdle.PvP.Services
                 return new CombatResult { SectorId = sectorId, Win = false, Battle = new BattleResult(), UpdatedSector = CloneSector(sector) };
             }
 
+            _eventBus?.Publish(new SectorAttackEvent(sectorId, strategy));
+
             var attacker = _snapshotService.BuildSnapshot();
             var defender = _matchmakingService.GetDefenderSnapshot(attacker, sector, seed: MixSeed(seed, 12345));
 
@@ -134,10 +139,16 @@ namespace AIWarsIdle.PvP.Services
 
             if (win)
             {
+                var previousOwner = sector.OwnerPlayerId;
                 sector.OwnerPlayerId = _mapConfig.LocalPlayerId;
                 sector.OwnerSnapshot = CloneSnapshot(attacker);
                 sector.CapturedUnixSeconds = nowUnixSeconds;
                 sector.Stability = _mapConfig.GetCaptureStabilityStart(strategy);
+
+                if (previousOwner != sector.OwnerPlayerId)
+                {
+                    _eventBus?.Publish(new SectorOwnershipChangedEvent(sectorId, previousOwner, sector.OwnerPlayerId));
+                }
             }
             else
             {
@@ -158,6 +169,8 @@ namespace AIWarsIdle.PvP.Services
 
             battle.LeaguePointsDelta = points;
             battle.SoftReward = reward;
+
+            _eventBus?.Publish(new SectorResultEvent(sectorId, win));
 
             return new CombatResult
             {

@@ -11,18 +11,18 @@ namespace AIWarsIdle.PvP.Services
         private readonly IAdsService _ads;
         private readonly OfflineClaimService _offlineClaim;
         private readonly PvpAttackChargesService _attacks;
-        private readonly IAnalyticsService _analytics;
+        private readonly IEventBus _eventBus;
 
         public RewardedAdsUseCaseService(
             IAdsService ads,
             OfflineClaimService offlineClaim,
             PvpAttackChargesService attacks,
-            IAnalyticsService analytics = null)
+            IEventBus eventBus = null)
         {
             _ads = ads ?? throw new ArgumentNullException(nameof(ads));
             _offlineClaim = offlineClaim ?? throw new ArgumentNullException(nameof(offlineClaim));
             _attacks = attacks ?? throw new ArgumentNullException(nameof(attacks));
-            _analytics = analytics;
+            _eventBus = eventBus;
         }
 
         public bool TryShowOfflineClaimX2(long nowUnixSeconds)
@@ -32,12 +32,9 @@ namespace AIWarsIdle.PvP.Services
 
             _ads.ShowRewardedAd(() =>
             {
-                var pending = _offlineClaim.PendingOfflineGain;
-                if (pending <= 0) return;
-
+                if (_offlineClaim.PendingOfflineGain <= 0) return;
                 _offlineClaim.Claim(multiplier: 2);
-                _analytics?.Track("ad_watched", new AnalyticsParam("placement", PlacementOfflineX2));
-                _analytics?.Track("offline_claim", new AnalyticsParam("multiplier", "2"), new AnalyticsParam("amount", (pending * 2).ToString("R")));
+                _eventBus?.Publish(new AdWatchedEvent(PlacementOfflineX2));
             });
 
             return true;
@@ -51,11 +48,10 @@ namespace AIWarsIdle.PvP.Services
             _ads.ShowRewardedAd(() =>
             {
                 if (!_attacks.TryClaimDailyAdAttack(nowUnixSeconds)) return;
-                _analytics?.Track("ad_watched", new AnalyticsParam("placement", PlacementPvpAttackDaily));
+                _eventBus?.Publish(new AdWatchedEvent(PlacementPvpAttackDaily));
             });
 
             return true;
         }
     }
 }
-

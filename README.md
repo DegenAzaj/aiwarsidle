@@ -141,3 +141,25 @@ Testy EditMode dla EPIC 6: `aiwarsidle/Assets/Tests/EditMode/Epic6MapCoreTests.c
   - Rewarded ads pozostają bez zmian (`IAdsService`).
   - Dodany kontrakt interstitial + stub, który nie pokazuje interstitiali przy aktywnej subskrypcji: `IInterstitialAdsService` w `aiwarsidle/Assets/GameCore/Services/IInterstitialAdsService.cs` + `InterstitialAdsService` w `aiwarsidle/Assets/Monetization/InterstitialAdsService.cs`.
 - Testy EditMode EPIC 8: `aiwarsidle/Assets/Tests/EditMode/Epic8SubscriptionTests.cs`.
+
+---
+
+## EPIC 9 — Analytics (core) (DONE)
+
+- Dodany nieblokujący gameplay `IAnalyticsService` jako bufor:
+  - `BufferedAnalyticsService` + `IAnalyticsSink` (pod runtime sink Firebase/Unity Analytics itp.)
+  w `aiwarsidle/Assets/Analytics/BufferedAnalyticsService.cs` oraz `aiwarsidle/Assets/Analytics/IAnalyticsSink.cs`.
+- EventBus → Analytics:
+  - `AnalyticsEventBusBridge` mapuje domenowe eventy na nazwy z `DESIGN.md`/`TECH_SPEC.md`
+    (m.in. `session_start`, `offline_claim`, `generator_upgrade`, `prestige`, `map_open`, `sector_view`, `sector_attack`, `sector_result`,
+    `sector_ownership_changed`, `ad_watched`, `subscription_started`, plus Overclock).
+  w `aiwarsidle/Assets/Analytics/AnalyticsEventBusBridge.cs`.
+- Publikacja eventów domenowych (core):
+  - offline claim / upgrade / prestige / subscription / rewarded / PvP attack/result/ownership
+  w `aiwarsidle/Assets/GameCore/Services/*` oraz `aiwarsidle/Assets/PvP/Services/*`.
+- Telemetria bez UI:
+  - `SessionTelemetryService` (`session_start`) i `PvpTelemetryService` (`map_open`, `sector_view`)
+  w `aiwarsidle/Assets/GameCore/Services/SessionTelemetryService.cs` i `aiwarsidle/Assets/PvP/Services/PvpTelemetryService.cs`.
+- Testy EditMode EPIC 9: `aiwarsidle/Assets/Tests/EditMode/Epic9AnalyticsTests.cs` (w tym null/empty params + krytyczne ścieżki).
+
+Uwaga: `Track(...)` tylko buforuje — w runtime trzeba wołać `Flush()` cyklicznie (np. w bootstrapie).

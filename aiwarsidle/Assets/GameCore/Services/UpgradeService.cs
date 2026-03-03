@@ -9,12 +9,14 @@ namespace AIWarsIdle.GameCore.Services
         private readonly GameState _state;
         private readonly BalanceConfig _config;
         private readonly EconomyService _economy;
+        private readonly IEventBus _eventBus;
 
-        public UpgradeService(GameState state, BalanceConfig config, EconomyService economy)
+        public UpgradeService(GameState state, BalanceConfig config, EconomyService economy, IEventBus eventBus = null)
         {
             _state = state ?? throw new ArgumentNullException(nameof(state));
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _economy = economy ?? throw new ArgumentNullException(nameof(economy));
+            _eventBus = eventBus;
 
             _config.ValidateOrThrow();
         }
@@ -60,6 +62,11 @@ namespace AIWarsIdle.GameCore.Services
                 upgraded++;
             }
 
+            if (upgraded > 0)
+            {
+                _eventBus?.Publish(new GeneratorUpgradedEvent(generatorId, _state.GeneratorLevels[generatorId], upgraded));
+            }
+
             return upgraded;
         }
 
@@ -79,6 +86,11 @@ namespace AIWarsIdle.GameCore.Services
 
                 _state.GeneratorLevels[generatorId] = Math.Max(0, _state.GeneratorLevels[generatorId]) + 1;
                 upgraded++;
+            }
+
+            if (upgraded > 0)
+            {
+                _eventBus?.Publish(new GeneratorUpgradedEvent(generatorId, _state.GeneratorLevels[generatorId], upgraded));
             }
 
             return upgraded;

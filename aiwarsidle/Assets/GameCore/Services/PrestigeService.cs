@@ -8,11 +8,13 @@ namespace AIWarsIdle.GameCore.Services
     {
         private readonly GameState _state;
         private readonly BalanceConfig _config;
+        private readonly IEventBus _eventBus;
 
-        public PrestigeService(GameState state, BalanceConfig config)
+        public PrestigeService(GameState state, BalanceConfig config, IEventBus eventBus = null)
         {
             _state = state ?? throw new ArgumentNullException(nameof(state));
             _config = config ?? throw new ArgumentNullException(nameof(config));
+            _eventBus = eventBus;
 
             _config.ValidateOrThrow();
         }
@@ -50,7 +52,8 @@ namespace AIWarsIdle.GameCore.Services
             var nextPermanent = Math.Max(0, _state.PermanentUpgradeLevel) + 1;
             if (nextPermanent > _config.PermanentUpgradeCap) nextPermanent = _config.PermanentUpgradeCap;
             _state.PermanentUpgradeLevel = nextPermanent;
+
+            _eventBus?.Publish(new PrestigeExecutedEvent(_state.PrestigeCount, _state.PermanentUpgradeLevel));
         }
     }
 }
-
