@@ -127,3 +127,17 @@ Testy EditMode dla EPIC 6: `aiwarsidle/Assets/Tests/EditMode/Epic6MapCoreTests.c
 - Testy EditMode:
   - EPIC 7 charges/regen: `aiwarsidle/Assets/Tests/EditMode/Epic7PvpAttackChargesTests.cs`.
   - EPIC 7 rewarded use-case: `aiwarsidle/Assets/Tests/EditMode/Epic7RewardedAdsUseCaseTests.cs`.
+
+---
+
+## EPIC 8 — Subscription (core) (DONE)
+
+- Subskrypcja (stub, bez UI / bez weryfikacji store):
+  - Kontrakt: `ISubscriptionService.IsActive` w `aiwarsidle/Assets/GameCore/Services/ISubscriptionService.cs`.
+  - Stub implementacji: `SubscriptionService` w `aiwarsidle/Assets/Monetization/SubscriptionService.cs`.
+- Produkcja:
+  - `ProductionService` mnoży `ProductionPps` ×2 gdy subskrypcja aktywna, ale zachowuje osobną metodę `CalculateBaseProductionPerSecondWithoutSubscription()` pod PvP w `aiwarsidle/Assets/GameCore/Services/ProductionService.cs`.
+- Reklamy:
+  - Rewarded ads pozostają bez zmian (`IAdsService`).
+  - Dodany kontrakt interstitial + stub, który nie pokazuje interstitiali przy aktywnej subskrypcji: `IInterstitialAdsService` w `aiwarsidle/Assets/GameCore/Services/IInterstitialAdsService.cs` + `InterstitialAdsService` w `aiwarsidle/Assets/Monetization/InterstitialAdsService.cs`.
+- Testy EditMode EPIC 8: `aiwarsidle/Assets/Tests/EditMode/Epic8SubscriptionTests.cs`.

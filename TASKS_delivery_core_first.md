@@ -341,12 +341,12 @@ Parametry MVP (config):
 
 ## STORY 8.1 — SubscriptionService (stub)
 
-* [ ] `IsActive` + aplikacja mnożnika produkcji ×2 w kalkulacji (bez UI)
-* [ ] Disable interstitial ads (rewarded ads zostają jako opcjonalne placementy)
+* [x] `IsActive` + aplikacja mnożnika produkcji ×2 w kalkulacji (bez UI)
+* [x] Disable interstitial ads (rewarded ads zostają jako opcjonalne placementy)
 
 **TESTS**
-* [ ] Włączona subskrypcja → `ProductionPps` ×2
-* [ ] Włączona subskrypcja → `PvpPower` bez zmian (bezpośrednio)
+* [x] Włączona subskrypcja → `ProductionPps` ×2
+* [x] Włączona subskrypcja → `PvpPower` bez zmian (bezpośrednio)
 
 ---
 

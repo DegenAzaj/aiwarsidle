@@ -16,6 +16,7 @@ namespace AIWarsIdle.GameCore.Services
         private readonly EconomyService _economy;
         private readonly OverclockService _overclock;
         private readonly IPermanentProductionMultiplierProvider _permanentMultiplierProvider;
+        private readonly ISubscriptionService _subscription;
         private double _carrySeconds;
 
         public ProductionService(
@@ -23,20 +24,24 @@ namespace AIWarsIdle.GameCore.Services
             BalanceConfig config,
             EconomyService economy,
             OverclockService overclock = null,
-            IPermanentProductionMultiplierProvider permanentMultiplierProvider = null)
+            IPermanentProductionMultiplierProvider permanentMultiplierProvider = null,
+            ISubscriptionService subscription = null)
         {
             _state = state ?? throw new ArgumentNullException(nameof(state));
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _economy = economy ?? throw new ArgumentNullException(nameof(economy));
             _overclock = overclock;
             _permanentMultiplierProvider = permanentMultiplierProvider;
+            _subscription = subscription;
 
             _config.ValidateOrThrow();
         }
 
         public double CalculateProductionPerSecond()
         {
-            return CalculateBaseProductionPerSecondWithoutSubscription();
+            var basePps = CalculateBaseProductionPerSecondWithoutSubscription();
+            var subMultiplier = _subscription?.IsActive == true ? 2.0 : 1.0;
+            return basePps * subMultiplier;
         }
 
         public double CalculateProductionPerSecond(long nowUnixSeconds)
@@ -44,7 +49,8 @@ namespace AIWarsIdle.GameCore.Services
             if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");
             var basePps = CalculateBaseProductionPerSecondWithoutSubscription();
             var multiplier = _overclock?.GetProductionMultiplier(nowUnixSeconds) ?? 1.0;
-            return basePps * multiplier;
+            var subMultiplier = _subscription?.IsActive == true ? 2.0 : 1.0;
+            return basePps * multiplier * subMultiplier;
         }
 
         public double CalculateBaseProductionPerSecondWithoutSubscription()
