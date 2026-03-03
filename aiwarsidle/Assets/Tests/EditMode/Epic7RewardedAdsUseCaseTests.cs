@@ -71,7 +71,7 @@ namespace AIWarsIdle.Tests.EditMode
             var production = new ProductionService(state, balance, economy);
             var offline = new OfflineClaimService(state, balance, production, economy, eventBus);
 
-            offline.RecalculatePending(nowUnixSeconds: 100); // pending = 10 * 100 = 1000
+            offline.BankOfflineGain(nowUnixSeconds: 100); // pending = 10 * 100 = 1000
             Assert.AreEqual(1000.0, offline.PendingOfflineGain);
 
             var attacks = new PvpAttackChargesService(state, CreatePvpAttacksConfig());

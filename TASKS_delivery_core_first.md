@@ -368,7 +368,7 @@ Parametry MVP (config):
 
 ## STORY 10.1 — Bootstrapper
 
-* [ ] Jedno miejsce, które spina:
+* [x] Jedno miejsce, które spina:
   * load save
   * init serwisów z configów
   * tick produkcji co 1s
@@ -378,22 +378,22 @@ Parametry MVP (config):
   * aktualizacja `LastLoginTimestamp` (po naliczeniu offline gain)
 
 **TESTS**
-* [ ] PlayMode smoke: start gry → brak wyjątków, po kilku tickach stan się zmienia (produkcja rośnie)
+* [x] PlayMode smoke: start gry → brak wyjątków, po kilku tickach stan się zmienia (produkcja rośnie)
 
 ## STORY 10.2 — Offline claim (core, bez UI)
 
 Żeby wspierać “x2 offline claim za rewarded”, offline gain nie powinien być automatycznie dodawany bez możliwości decyzji.
 
-* [ ] Serwis domenowy `OfflineClaimService`:
-  * na starcie sesji wylicza `PendingOfflineGain` z `LastLoginTimestamp` (cap 12h)
+* [x] Serwis domenowy `OfflineClaimService`:
+  * na starcie sesji bankuje `PendingOfflineGain` z `LastLoginTimestamp` (cap 12h) i zapisuje pending w save (crash-safe)
   * `Claim(multiplier)` dodaje CP i czyści pending
   * wspiera `multiplier = 2` po rewarded
-* [ ] Telemetria: `offline_claim(amount)` + `ad_watched(placement=offline_x2)`
+* [x] Telemetria: `offline_claim(amount)` + `ad_watched(placement=offline_x2)`
 
 **TESTS**
-* [ ] Offline < cap → pending poprawny
-* [ ] Offline > cap → pending policzony jak 12h
-* [ ] Claim(1) i Claim(2) dodaje poprawną kwotę i czyści pending
+* [x] Offline < cap → pending poprawny
+* [x] Offline > cap → pending policzony jak 12h
+* [x] Claim(1) i Claim(2) dodaje poprawną kwotę i czyści pending
 
 ---
 

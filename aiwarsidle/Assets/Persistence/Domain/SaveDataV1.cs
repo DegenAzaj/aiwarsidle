@@ -29,6 +29,7 @@ namespace AIWarsIdle.Persistence.Domain
         public OverclockSaveData Overclock = new();
 
         public long LastLoginUnixSeconds;
+        public double PendingOfflineGain;
 
         public void Normalize()
         {
@@ -62,6 +63,7 @@ namespace AIWarsIdle.Persistence.Domain
             if (NextPvpAttackRegenAtUnixSeconds < 0) NextPvpAttackRegenAtUnixSeconds = 0;
             if (LastPvpAdAttackClaimUnixSeconds < 0) LastPvpAdAttackClaimUnixSeconds = 0;
             if (LastLoginUnixSeconds < 0) LastLoginUnixSeconds = 0;
+            if (PendingOfflineGain < 0) PendingOfflineGain = 0;
         }
     }
 

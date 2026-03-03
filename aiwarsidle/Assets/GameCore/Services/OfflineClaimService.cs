@@ -12,7 +12,7 @@ namespace AIWarsIdle.GameCore.Services
         private readonly EconomyService _economy;
         private readonly IEventBus _eventBus;
 
-        public double PendingOfflineGain { get; private set; }
+        public double PendingOfflineGain => _state.PendingOfflineGain;
 
         public OfflineClaimService(
             GameState state,
@@ -30,7 +30,7 @@ namespace AIWarsIdle.GameCore.Services
             _config.ValidateOrThrow();
         }
 
-        public void RecalculatePending(long nowUnixSeconds)
+        public void BankOfflineGain(long nowUnixSeconds)
         {
             if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");
 
@@ -40,12 +40,17 @@ namespace AIWarsIdle.GameCore.Services
             var offlineSeconds = nowUnixSeconds - last;
             if (offlineSeconds <= 0)
             {
-                PendingOfflineGain = 0;
+                _state.LastLoginUnixSeconds = nowUnixSeconds;
                 return;
             }
 
-            PendingOfflineGain = _production.CalculateOfflineGain(offlineSeconds);
-            if (PendingOfflineGain < 0) PendingOfflineGain = 0;
+            var add = _production.CalculateOfflineGain(offlineSeconds);
+            if (add < 0) add = 0;
+
+            var next = _state.PendingOfflineGain + add;
+            if (double.IsNaN(next) || double.IsInfinity(next) || next < 0) next = 0;
+            _state.PendingOfflineGain = next;
+            _state.LastLoginUnixSeconds = nowUnixSeconds;
         }
 
         public void Claim(double multiplier)
@@ -59,23 +64,17 @@ namespace AIWarsIdle.GameCore.Services
                 throw new ArgumentOutOfRangeException(nameof(multiplier), "Multiplier must be > 0.");
             }
 
-            if (PendingOfflineGain <= 0)
+            if (_state.PendingOfflineGain <= 0)
             {
-                PendingOfflineGain = 0;
+                _state.PendingOfflineGain = 0;
                 return;
             }
 
-            var baseAmount = PendingOfflineGain;
+            var baseAmount = _state.PendingOfflineGain;
             var finalAmount = baseAmount * multiplier;
             _economy.AddCurrency(finalAmount, CurrencySource.OfflineClaim);
             _eventBus?.Publish(new OfflineClaimedEvent(baseAmount, multiplier));
-            PendingOfflineGain = 0;
-        }
-
-        public void CommitLoginTimestamp(long nowUnixSeconds)
-        {
-            if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");
-            _state.LastLoginUnixSeconds = nowUnixSeconds;
+            _state.PendingOfflineGain = 0;
         }
     }
 }

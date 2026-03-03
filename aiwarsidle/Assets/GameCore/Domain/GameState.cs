@@ -26,6 +26,7 @@ namespace AIWarsIdle.GameCore.Domain
         public OverclockState Overclock;
 
         public long LastLoginUnixSeconds;
+        public double PendingOfflineGain;
 
         public GameState()
         {

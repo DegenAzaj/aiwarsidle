@@ -307,7 +307,7 @@ namespace AIWarsIdle.Tests
 
             state.GeneratorLevels[0] = 10;
 
-            offline.RecalculatePending(nowUnixSeconds: 3600);
+            offline.BankOfflineGain(nowUnixSeconds: 3600);
             Assert.Greater(offline.PendingOfflineGain, 0);
 
             offline.Claim(multiplier: 2);

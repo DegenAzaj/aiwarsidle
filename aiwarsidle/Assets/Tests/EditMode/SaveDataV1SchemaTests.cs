@@ -13,6 +13,7 @@ namespace AIWarsIdle.Tests
 
             Assert.AreEqual(1, save.Version);
             Assert.AreEqual(0, save.LifetimeEarnedSoftCurrency);
+            Assert.AreEqual(0, save.PendingOfflineGain);
             Assert.NotNull(save.GeneratorLevels);
             Assert.AreEqual(GameState.GeneratorCount, save.GeneratorLevels.Length);
 
@@ -76,6 +77,7 @@ namespace AIWarsIdle.Tests
                 Sectors = null!,
                 Overclock = null!,
                 LifetimeEarnedSoftCurrency = -1,
+                PendingOfflineGain = -123,
                 LastLoginUnixSeconds = -1,
                 LastPvpAdAttackClaimUnixSeconds = -2,
                 LastPvpAttackRegenUnixSeconds = -3,
@@ -90,6 +92,7 @@ namespace AIWarsIdle.Tests
             Assert.NotNull(save.Overclock);
 
             Assert.AreEqual(0, save.LifetimeEarnedSoftCurrency);
+            Assert.AreEqual(0, save.PendingOfflineGain);
             Assert.AreEqual(0, save.LastLoginUnixSeconds);
             Assert.AreEqual(0, save.LastPvpAdAttackClaimUnixSeconds);
             Assert.AreEqual(0, save.LastPvpAttackRegenUnixSeconds);

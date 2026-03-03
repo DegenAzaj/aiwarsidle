@@ -163,3 +163,20 @@ Testy EditMode dla EPIC 6: `aiwarsidle/Assets/Tests/EditMode/Epic6MapCoreTests.c
 - Testy EditMode EPIC 9: `aiwarsidle/Assets/Tests/EditMode/Epic9AnalyticsTests.cs` (w tym null/empty params + krytyczne ścieżki).
 
 Uwaga: `Track(...)` tylko buforuje — w runtime trzeba wołać `Flush()` cyklicznie (np. w bootstrapie).
+
+---
+
+## EPIC 10 — Bootstrap / Game loop (bez UI logiki) (DONE)
+
+- Dodany composition root + game loop:
+  - `GameBootstrapper` (Unity lifecycle: `Update`, pause/quit) w `aiwarsidle/Assets/Bootstrap/GameBootstrapper.cs`.
+  - `GameLoop` (init serwisów + tick: produkcja/overclock/mapa + autosave + analytics flush) w `aiwarsidle/Assets/Bootstrap/GameLoop.cs`.
+  - Osobny asmdef `AIWarsIdle.Bootstrap` w `aiwarsidle/Assets/Bootstrap/AIWarsIdle.Bootstrap.asmdef`.
+- Save/load runtime:
+  - Mapper `SaveDataV1` ↔ `GameState` w `aiwarsidle/Assets/Persistence/Services/SaveDataV1GameStateMapper.cs`.
+- Offline claim “crash-safe”:
+  - `PendingOfflineGain` jest persystowane w save (`SaveDataV1`) oraz w runtime (`GameState`), żeby restart przed UI-claim nie gubił pending.
+  - `OfflineClaimService.BankOfflineGain(now)` bankuje offline gain i aktualizuje `LastLoginUnixSeconds` w sposób odporny na crash.
+- Testy:
+  - PlayMode smoke bootstrap/tick: `aiwarsidle/Assets/Tests/PlayMode/Epic10BootstrapPlayModeTests.cs`.
+  - EditMode testy offline claim z checklisty EPIC10: `aiwarsidle/Assets/Tests/EditMode/Epic10OfflineClaimServiceTests.cs`.

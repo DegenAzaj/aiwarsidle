@@ -12,11 +12,11 @@ namespace AIWarsIdle.Persistence.Services
         private readonly SaveDataMigrator _migrator;
         private readonly JsonSerializerSettings _jsonSettings;
 
-        public SaveService(SaveFilePaths paths, SaveDataMigrator migrator, JsonSerializerSettings? jsonSettings = null)
+        public SaveService(SaveFilePaths paths, SaveDataMigrator migrator)
         {
             _paths = paths;
             _migrator = migrator ?? throw new ArgumentNullException(nameof(migrator));
-            _jsonSettings = jsonSettings ?? new JsonSerializerSettings
+            _jsonSettings = new JsonSerializerSettings
             {
                 Formatting = Formatting.None,
                 NullValueHandling = NullValueHandling.Include
