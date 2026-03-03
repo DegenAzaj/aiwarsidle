@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using AIWarsIdle.GameCore.Domain;
 using AIWarsIdle.GameCore.Services;
 using AIWarsIdle.PvP.Config;
@@ -13,13 +14,21 @@ namespace AIWarsIdle.PvP.Services
         private readonly PvpConfig _config;
         private readonly ProductionService _production;
         private readonly int _localPlayerId;
+        private readonly Dictionary<int, MapConfig.SectorDefinition> _sectorDefById;
+        private readonly MapConfig _mapConfig;
 
-        public SnapshotService(GameState state, PvpConfig config, ProductionService production, int localPlayerId = DefaultLocalPlayerId)
+        public SnapshotService(
+            GameState state,
+            PvpConfig config,
+            ProductionService production,
+            int localPlayerId = DefaultLocalPlayerId,
+            MapConfig mapConfig = null)
         {
             _state = state ?? throw new ArgumentNullException(nameof(state));
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _production = production ?? throw new ArgumentNullException(nameof(production));
             _localPlayerId = localPlayerId;
+            _mapConfig = mapConfig;
 
             if (_localPlayerId <= 0)
             {
@@ -27,6 +36,12 @@ namespace AIWarsIdle.PvP.Services
             }
 
             _config.ValidateOrThrow();
+
+            if (_mapConfig != null)
+            {
+                _mapConfig.ValidateOrThrow();
+                _sectorDefById = BuildSectorDefinitionMap(_mapConfig);
+            }
         }
 
         public PvpSnapshot BuildSnapshot()
@@ -40,6 +55,11 @@ namespace AIWarsIdle.PvP.Services
                 (effectiveSectorCount * _config.SectorPvpPowerPerSector);
 
             if (core < 0) core = 0;
+
+            if (_mapConfig != null && _sectorDefById != null && _sectorDefById.Count > 0)
+            {
+                ApplySectorPvpBonuses(ref core);
+            }
 
             var basePpsForPvp = _production.CalculateBaseProductionPerSecondWithoutSubscription();
             if (double.IsNaN(basePpsForPvp) || double.IsInfinity(basePpsForPvp) || basePpsForPvp < 0)
@@ -68,6 +88,33 @@ namespace AIWarsIdle.PvP.Services
             };
         }
 
+        private void ApplySectorPvpBonuses(ref double core)
+        {
+            var sectors = _state.MapState?.Sectors;
+            if (sectors == null || sectors.Length == 0) return;
+
+            var flat = 0.0;
+            var percent = 0.0;
+
+            for (var i = 0; i < sectors.Length; i++)
+            {
+                var sector = sectors[i];
+                if (sector == null) continue;
+                if (sector.OwnerPlayerId != _localPlayerId) continue;
+                if (!_sectorDefById.TryGetValue(sector.SectorId, out var def) || def == null) continue;
+
+                flat += def.PvpPowerBonusFlat;
+                percent += def.PvpPowerBonusPercent;
+            }
+
+            if (flat < 0) flat = 0;
+            core += flat;
+
+            var multiplier = 1.0 + (percent / 100.0);
+            if (double.IsNaN(multiplier) || double.IsInfinity(multiplier) || multiplier <= 0) return;
+            core *= multiplier;
+        }
+
         private static int CountOwnedSectors(MapState mapState, int localPlayerId)
         {
             if (mapState?.Sectors == null || mapState.Sectors.Length == 0) return 0;
@@ -82,6 +129,20 @@ namespace AIWarsIdle.PvP.Services
 
             return count;
         }
+
+        private static Dictionary<int, MapConfig.SectorDefinition> BuildSectorDefinitionMap(MapConfig config)
+        {
+            var map = new Dictionary<int, MapConfig.SectorDefinition>();
+            if (config?.SectorDefinitions == null || config.SectorDefinitions.Length == 0) return map;
+
+            for (var i = 0; i < config.SectorDefinitions.Length; i++)
+            {
+                var def = config.SectorDefinitions[i];
+                if (def == null) continue;
+                if (!map.ContainsKey(def.SectorId)) map.Add(def.SectorId, def);
+            }
+
+            return map;
+        }
     }
 }
-

@@ -245,45 +245,45 @@ Parametry MVP (config):
 
 ## STORY 6.1 — MapConfig
 
-* [ ] `MapConfig` (reset mapy co 7 dni, lista sektorów + sąsiedztwo, bonusy produkcji + bonusy PvP, cap/diminishing returns, stability parametry, cooldown)
-* [ ] `FreshCaptureWindowSeconds` (okno “świeżo zdobytego” sektora pod bonus Overclock)
+* [x] `MapConfig` (reset mapy co 7 dni, lista sektorów + sąsiedztwo, bonusy produkcji + bonusy PvP, cap/diminishing returns, stability parametry, cooldown)
+* [x] `FreshCaptureWindowSeconds` (okno “świeżo zdobytego” sektora pod bonus Overclock)
 
 **TESTS**
-* [ ] Walidacja: 20–30 sektorów, unikalne `SectorId`, bonusy w sensownym zakresie
-* [ ] Walidacja sąsiedztwa: brak self-loop, brak duplikatów, graf spójny (lub jawnie dopuszczamy “wyspy”)
+* [x] Walidacja: 20–30 sektorów, unikalne `SectorId`, bonusy w sensownym zakresie
+* [x] Walidacja sąsiedztwa: brak self-loop, brak duplikatów, graf spójny (lub jawnie dopuszczamy “wyspy”)
 
 ## STORY 6.2 — MapService: stan mapy i stability tick
 
-* [ ] Inicjalizacja mapy na nowy sezon (neutral owner)
-* [ ] `TickStability(now)` — rośnie w czasie, clamp 0..100
-* [ ] `ResetMapSeasonIfNeeded(now)` — reset mapy + mapSeasonId (co 7 dni)
+* [x] Inicjalizacja mapy na nowy sezon (neutral owner + home sector local playera)
+* [x] `TickStability(now)` — rośnie w czasie, clamp 0..100
+* [x] `ResetMapSeasonIfNeeded(now)` — reset mapy + mapSeasonId (co 7 dni)
 
 **TESTS**
-* [ ] Stability rośnie zgodnie z config i nie przekracza 100
-* [ ] Nowy sezon: wszystkie sektory neutralne + stability startowe
+* [x] Stability rośnie zgodnie z config i nie przekracza 100
+* [x] Nowy sezon: wszystkie sektory neutralne + stability startowe (+ home sector zostaje owned)
 
 ## STORY 6.3 — MatchmakingService (owner snapshot)
 
-* [ ] Dla neutralnych/bot: bot snapshot w widełkach 80–120% mocy atakującego (config)
-* [ ] Dla sektorów z ownerem: użycie `OwnerSnapshot` (MVP)
+* [x] Dla neutralnych/bot: bot snapshot w widełkach 80–120% mocy atakującego (config)
+* [x] Dla sektorów z ownerem: użycie `OwnerSnapshot` (MVP)
 
 **TESTS**
-* [ ] Bot snapshot: power mieści się w widełkach
-* [ ] Owner snapshot: zwraca dokładnie zapisany snapshot
+* [x] Bot snapshot: power mieści się w widełkach
+* [x] Owner snapshot: zwraca dokładnie zapisany snapshot
 
 ## STORY 6.4 — BattleSimService (strategie + stability)
 
-* [ ] `Simulate(attacker, defender, strategy, stability)` wg `TECH_SPEC.md`
-* [ ] Determinizm w testach (seed kontrolowany / wrapper RNG)
+* [x] `Simulate(attacker, defender, strategy, stability)` wg `TECH_SPEC.md`
+* [x] Determinizm w testach (seed kontrolowany / wrapper RNG)
 
 **TESTS**
-* [ ] StrategyMultiplier wpływa na wynik (statystycznie lub deterministycznie przy seedzie)
-* [ ] StabilityMultiplier zwiększa siłę obrony wraz ze stability
+* [x] StrategyMultiplier wpływa na wynik (statystycznie lub deterministycznie przy seedzie)
+* [x] StabilityMultiplier zwiększa siłę obrony wraz ze stability
 
 ## STORY 6.5 — MapService: AttackPreview + AttackSector
 
-* [ ] `GetAttackPreview(sectorId, strategy)` → widełki szansy do UI (przybliżone)
-* [ ] `AttackSector(sectorId, strategy)`:
+* [x] `GetAttackPreview(sectorId, strategy)` → widełki szansy do UI (przybliżone)
+* [x] `AttackSector(sectorId, strategy)`:
   * walidacja sąsiedztwa (brak teleportu; graf z `MapConfig`)
   * weryfikacja ataków remaining (charge’e) i cooldownu (jeśli włączony)
   * symulacja walki
@@ -293,23 +293,23 @@ Parametry MVP (config):
   * zmiana stanu sektorów; anty-snowball (cap/diminishing + maintenance) jest liczony w ekonomii/produkcji (nie w samym ataku)
 
 **TESTS**
-* [ ] Atak bez ataków remaining → fail (bez zmian stanu)
-* [ ] Atak na niesąsiedni sektor → fail (bez zmian stanu)
-* [ ] Win → owner zmieniony, stability ustawione, punkty/nagroda naliczone
-* [ ] Lose → owner bez zmian, punkty/nagroda minimalna, cooldown (jeśli włączony)
+* [x] Atak bez ataków remaining → fail (bez zmian stanu)
+* [x] Atak na niesąsiedni sektor → fail (bez zmian stanu)
+* [x] Win → owner zmieniony, stability ustawione, punkty/nagroda naliczone
+* [x] Lose → owner bez zmian, punkty/nagroda minimalna, cooldown (jeśli włączony)
 
 ## STORY 6.6 — Integracja: bonusy sektorów + maintenance → produkcja
 
-* [ ] Produkcja uwzględnia:
+* [x] Produkcja uwzględnia:
   * bonus produkcji z posiadanych sektorów
   * anti-snowball: cap/diminishing returns na sumę bonusów
   * maintenance penalty po przekroczeniu progu sektorów (config)
-* [ ] Integracja w `ProductionService.CalculateProductionPerSecond()` (źródło: `MapState` / liczba posiadanych sektorów)
+* [x] Integracja w `ProductionService.CalculateProductionPerSecond()` (źródło: `MapState` / liczba posiadanych sektorów)
 
 **TESTS**
-* [ ] 0 sektorów → brak bonusu i brak maintenance
-* [ ] Kilka sektorów → PPS rośnie zgodnie z config
-* [ ] Dużo sektorów → diminishing/cap działa + maintenance obniża PPS
+* [x] 0 sektorów → brak bonusu i brak maintenance
+* [x] Kilka sektorów → PPS rośnie zgodnie z config
+* [x] Dużo sektorów → diminishing/cap działa + maintenance obniża PPS
 
 ---
 

@@ -5,7 +5,7 @@ namespace AIWarsIdle.GameCore.Services
         Unknown = 0,
         OnlineProduction = 1,
         OfflineClaim = 2,
-        Debug = 3
+        Debug = 3,
+        PvpReward = 4
     }
 }
-

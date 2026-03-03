@@ -4,20 +4,32 @@ using AIWarsIdle.GameCore.Domain;
 
 namespace AIWarsIdle.GameCore.Services
 {
+    public interface IPermanentProductionMultiplierProvider
+    {
+        double GetPermanentMultiplier();
+    }
+
     public sealed class ProductionService
     {
         private readonly GameState _state;
         private readonly BalanceConfig _config;
         private readonly EconomyService _economy;
         private readonly OverclockService _overclock;
+        private readonly IPermanentProductionMultiplierProvider _permanentMultiplierProvider;
         private double _carrySeconds;
 
-        public ProductionService(GameState state, BalanceConfig config, EconomyService economy, OverclockService overclock = null)
+        public ProductionService(
+            GameState state,
+            BalanceConfig config,
+            EconomyService economy,
+            OverclockService overclock = null,
+            IPermanentProductionMultiplierProvider permanentMultiplierProvider = null)
         {
             _state = state ?? throw new ArgumentNullException(nameof(state));
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _economy = economy ?? throw new ArgumentNullException(nameof(economy));
             _overclock = overclock;
+            _permanentMultiplierProvider = permanentMultiplierProvider;
 
             _config.ValidateOrThrow();
         }
@@ -50,7 +62,13 @@ namespace AIWarsIdle.GameCore.Services
                 total += output;
             }
 
-            return total * globalMultiplier;
+            var permanentMultiplier = _permanentMultiplierProvider?.GetPermanentMultiplier() ?? 1.0;
+            if (double.IsNaN(permanentMultiplier) || double.IsInfinity(permanentMultiplier) || permanentMultiplier <= 0)
+            {
+                permanentMultiplier = 1.0;
+            }
+
+            return (total * globalMultiplier) * permanentMultiplier;
         }
 
         public double CalculateOfflineGain(double seconds)

@@ -81,3 +81,31 @@ Repo/notes + projekt Unity: `aiwarsidle/` (Unity 6.3, Android-only, uGUI).
   - `LeagueService` (punkty sezonu, awans/spadek, reset sezonu przez `leagueSeasonId`) w `aiwarsidle/Assets/PvP/Services/LeagueService.cs`.
   - W configu i kodzie jest wzmianka o bezpiecznym rollout’cie zmian schematu sezonu (“apply from next season”), żeby uniknąć resetów w środku sezonu.
 - Testy EditMode dla EPIC 5 w `aiwarsidle/Assets/Tests/EditMode/Epic5SnapshotLeagueTests.cs`.
+
+---
+
+## EPIC 6 — PvP: Mapa sektorów (core) (DONE)
+
+Założenie MVP: na starcie gracz ma **Home Sector**, którego nie może stracić; dalej może przejmować tylko sektory sąsiadujące (no-teleport).
+
+- `MapConfig` (ScriptableObject) z:
+  - sezonem mapy (reset co 7 dni), definicjami sektorów + adjacency, stability/capture/cooldown
+  - bonusami produkcji (cap/diminishing + maintenance) oraz bonusami PvP per-sektor
+  - walidacjami (unikalne `SectorId`, brak self-loop/duplikatów, opcjonalnie graf spójny i zakres 20–30 sektorów)
+  w `aiwarsidle/Assets/PvP/Config/MapConfig.cs`.
+- `MapService`:
+  - `ResetMapSeasonIfNeeded(now)` i `TickStability(now)` (clamp 0..100)
+  - jawny “single entry” do update’u mapy: `AdvanceTime(now)` (init/reset sezonu + tick stability)
+  w `aiwarsidle/Assets/PvP/Services/MapService.cs`.
+- Matchmaking obrońcy (MVP):
+  - bot snapshot w widełkach (config) lub użycie `OwnerSnapshot` jeśli sektor ma ownera
+  w `aiwarsidle/Assets/PvP/Services/MatchmakingService.cs`.
+- PvP na mapie:
+  - `GetAttackPreview` (widełki szansy) oraz `AttackSector` (walidacje adjacency/cooldown/charge’y, symulacja, update sektora, reward + season points)
+  w `aiwarsidle/Assets/PvP/Services/PvpMapCombatService.cs`.
+- Produkcja a sektory (anti-snowball):
+  - `ProductionService` dostał hook `IPermanentProductionMultiplierProvider` na stałe mnożniki (bez zależności GameCore→PvP)
+  w `aiwarsidle/Assets/GameCore/Services/ProductionService.cs`.
+  - Implementacja mnożnika z mapy: `MapProductionBonusProvider` w `aiwarsidle/Assets/PvP/Services/MapProductionBonusProvider.cs`.
+
+Testy EditMode dla EPIC 6: `aiwarsidle/Assets/Tests/EditMode/Epic6MapCoreTests.cs`.
