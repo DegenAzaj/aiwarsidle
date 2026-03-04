@@ -1,6 +1,9 @@
 using System;
 using System.Collections;
 using UnityEngine;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 namespace AIWarsIdle.UI.Splash
 {
@@ -17,6 +20,10 @@ namespace AIWarsIdle.UI.Splash
         [Tooltip("Fade-out duration when leaving Splash (seconds). Set 0 for instant switch.")]
         [SerializeField] private float _splashFadeOutSeconds = 0.25f;
 
+        [Header("Splash UI")]
+        [Tooltip("Optional. If null, will look for a child named 'touch_continue_dim' under SplashRoot.")]
+        [SerializeField] private GameObject _touchContinueDim;
+
         [Header("Policy")]
         [Tooltip("If app resumes after >= this threshold, show Splash and route to Hub.")]
         [SerializeField] private float _resumeToSplashThresholdMinutes = 10f;
@@ -29,12 +36,13 @@ namespace AIWarsIdle.UI.Splash
 
         private long _lastPausedAtUnixSecondsUtc;
         private Coroutine _routingCoroutine;
+        private bool _showTouchContinueDim;
 
         private void Start()
         {
             if (_showSplashOnColdStart)
             {
-                RouteToHubThroughSplash();
+                RouteToHubThroughSplash(showTouchContinueDim: false);
             }
         }
 
@@ -56,11 +64,11 @@ namespace AIWarsIdle.UI.Splash
             var thresholdSeconds = (long)Math.Ceiling(_resumeToSplashThresholdMinutes * 60f);
             if (ageSeconds >= thresholdSeconds)
             {
-                RouteToHubThroughSplash();
+                RouteToHubThroughSplash(showTouchContinueDim: true);
             }
         }
 
-        public void RouteToHubThroughSplash()
+        public void RouteToHubThroughSplash(bool showTouchContinueDim = false)
         {
             if (_splashRoot == null || _hubRoot == null)
             {
@@ -68,12 +76,19 @@ namespace AIWarsIdle.UI.Splash
                 return;
             }
 
+            _showTouchContinueDim = showTouchContinueDim;
+
             if (_routingCoroutine != null)
             {
                 StopCoroutine(_routingCoroutine);
             }
 
             _routingCoroutine = StartCoroutine(RouteRoutine());
+        }
+
+        public void DebugTriggerInactivityTimeout()
+        {
+            RouteToHubThroughSplash(showTouchContinueDim: true);
         }
 
         private IEnumerator RouteRoutine()
@@ -89,6 +104,12 @@ namespace AIWarsIdle.UI.Splash
                 splashCanvasGroup.blocksRaycasts = true;
             }
 
+            var touchContinue = ResolveTouchContinueDim();
+            if (touchContinue != null)
+            {
+                SetActiveSafe(touchContinue, _showTouchContinueDim);
+            }
+
             if (_minimumSplashSeconds > 0f)
             {
                 yield return new WaitForSeconds(_minimumSplashSeconds);
@@ -98,13 +119,29 @@ namespace AIWarsIdle.UI.Splash
                 yield return null;
             }
 
-            SetActiveSafe(_hubRoot, true);
+            if (_showTouchContinueDim)
+            {
+                while (!WasContinuePressedThisFrame())
+                {
+                    yield return null;
+                }
+            }
 
             if (_splashFadeOutSeconds > 0f && splashCanvasGroup != null)
             {
+                SetActiveSafe(_hubRoot, true);
                 yield return FadeCanvasGroup(splashCanvasGroup, from: 1f, to: 0f, _splashFadeOutSeconds);
                 splashCanvasGroup.interactable = false;
                 splashCanvasGroup.blocksRaycasts = false;
+            }
+            else
+            {
+                SetActiveSafe(_hubRoot, true);
+            }
+
+            if (touchContinue != null)
+            {
+                SetActiveSafe(touchContinue, false);
             }
 
             SetActiveSafe(_splashRoot, false);
@@ -139,6 +176,18 @@ namespace AIWarsIdle.UI.Splash
             return cg;
         }
 
+        private GameObject ResolveTouchContinueDim()
+        {
+            if (_touchContinueDim != null) return _touchContinueDim;
+            if (_splashRoot == null) return null;
+
+            var t = _splashRoot.transform.Find("touch_continue_dim");
+            if (t == null) return null;
+
+            _touchContinueDim = t.gameObject;
+            return _touchContinueDim;
+        }
+
         private static IEnumerator FadeCanvasGroup(CanvasGroup group, float from, float to, float durationSeconds)
         {
             if (group == null) yield break;
@@ -160,6 +209,24 @@ namespace AIWarsIdle.UI.Splash
             }
 
             group.alpha = to;
+        }
+
+        private static bool WasContinuePressedThisFrame()
+        {
+#if ENABLE_INPUT_SYSTEM
+            // New Input System: support mouse click or any touch press.
+            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame) return true;
+            if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame) return true;
+            if (Pen.current != null && Pen.current.tip.wasPressedThisFrame) return true;
+#endif
+
+            // Fallback for cases where Legacy Input is enabled.
+#if ENABLE_LEGACY_INPUT_MANAGER
+            if (Input.GetMouseButtonDown(0)) return true;
+            if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) return true;
+#endif
+
+            return false;
         }
     }
 }

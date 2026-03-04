@@ -18,7 +18,7 @@ MonoBehaviour:
   _innerShadow: {r: 0.17254902, g: 0.2784314, b: 0.16862746, a: 1}
   _border: {r: 0.11372549, g: 0.22745098, b: 0.101960786, a: 1}
   _textPrimary: {r: 0.20528887, g: 1, b: 0.11792451, a: 1}
-  _textSecondary: {r: 0, g: 0.9803922, b: 0.6039216, a: 1}
+  _textSecondary: {r: 0.20168407, g: 0.754717, b: 0.13883947, a: 1}
   _accent: {r: 0.22, g: 0.6, b: 1, a: 1}
   _accentHover: {r: 0.3, g: 0.7, b: 1, a: 1}
   _accentPressed: {r: 0.15, g: 0.5, b: 0.9, a: 1}

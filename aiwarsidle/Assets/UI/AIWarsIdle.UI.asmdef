@@ -6,7 +6,9 @@
     "AIWarsIdle.PvP",
     "AIWarsIdle.Persistence",
     "AIWarsIdle.Analytics",
-    "AIWarsIdle.Monetization"
+    "AIWarsIdle.Monetization",
+    "Unity.InputSystem",
+    "Unity.InputSystem.ForUI"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
@@ -18,4 +20,3 @@
   "versionDefines": [],
   "noEngineReferences": false
 }
-
