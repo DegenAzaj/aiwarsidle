@@ -9,6 +9,9 @@ namespace AIWarsIdle.UI.Splash
 {
     public sealed class ResumePolicyController : MonoBehaviour
     {
+        public Func<long> NowUnixSecondsUtcProvider { get; set; }
+        public Func<bool> ContinuePressedThisFrameProvider { get; set; }
+
         [Header("Roots")]
         [SerializeField] private GameObject _splashRoot;
         [SerializeField] private GameObject _hubRoot;
@@ -37,6 +40,14 @@ namespace AIWarsIdle.UI.Splash
         private long _lastPausedAtUnixSecondsUtc;
         private Coroutine _routingCoroutine;
         private bool _showTouchContinueDim;
+
+        public GameObject SplashRoot { get => _splashRoot; set => _splashRoot = value; }
+        public GameObject HubRoot { get => _hubRoot; set => _hubRoot = value; }
+        public GameObject TouchContinueDim { get => _touchContinueDim; set => _touchContinueDim = value; }
+        public float ResumeToSplashThresholdMinutes { get => _resumeToSplashThresholdMinutes; set => _resumeToSplashThresholdMinutes = value; }
+        public float MinimumSplashSeconds { get => _minimumSplashSeconds; set => _minimumSplashSeconds = value; }
+        public float SplashFadeOutSeconds { get => _splashFadeOutSeconds; set => _splashFadeOutSeconds = value; }
+        public bool ShowSplashOnColdStart { get => _showSplashOnColdStart; set => _showSplashOnColdStart = value; }
 
         private void Start()
         {
@@ -156,9 +167,9 @@ namespace AIWarsIdle.UI.Splash
             go.SetActive(active);
         }
 
-        private static long NowUnixSecondsUtc()
+        private long NowUnixSecondsUtc()
         {
-            return DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            return NowUnixSecondsUtcProvider != null ? NowUnixSecondsUtcProvider() : DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         }
 
         private CanvasGroup ResolveSplashCanvasGroup()
@@ -211,8 +222,13 @@ namespace AIWarsIdle.UI.Splash
             group.alpha = to;
         }
 
-        private static bool WasContinuePressedThisFrame()
+        private bool WasContinuePressedThisFrame()
         {
+            if (ContinuePressedThisFrameProvider != null)
+            {
+                return ContinuePressedThisFrameProvider();
+            }
+
 #if ENABLE_INPUT_SYSTEM
             // New Input System: support mouse click or any touch press.
             if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame) return true;
