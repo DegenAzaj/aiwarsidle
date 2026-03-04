@@ -21,6 +21,14 @@ Thumbs.db
 *.tmp
 *.log
 
+# DCC / art tool backups
+*.blend1
+*.blend2
+*.psd~
+*.kra~
+*.xcf~
+*.aseprite~
+
 # Unity generated folders
 [Ll]ibrary/
 [Tt]emp/
