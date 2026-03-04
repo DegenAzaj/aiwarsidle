@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53205d6e426da3cbba9fb610c8b6eec0, type: 3}
+  m_Name: UITheme
+  m_EditorClassIdentifier: AIWarsIdle.UI::AIWarsIdle.UI.Theme.UITheme
+  _background: {r: 0, g: 0, b: 0, a: 1}
+  _surface: {r: 0.32156864, g: 0.4627451, b: 0.3137255, a: 1}
+  _light: {r: 0.32156864, g: 0.4627451, b: 0.3137255, a: 1}
+  _innerShadow: {r: 0.17254902, g: 0.2784314, b: 0.16862746, a: 1}
+  _border: {r: 0.11372549, g: 0.22745098, b: 0.101960786, a: 1}
+  _textPrimary: {r: 0.20528887, g: 1, b: 0.11792451, a: 1}
+  _textSecondary: {r: 0, g: 0.9803922, b: 0.6039216, a: 1}
+  _accent: {r: 0.22, g: 0.6, b: 1, a: 1}
+  _accentHover: {r: 0.3, g: 0.7, b: 1, a: 1}
+  _accentPressed: {r: 0.15, g: 0.5, b: 0.9, a: 1}
+  _success: {r: 0.3, g: 0.85, b: 0.55, a: 1}
+  _warning: {r: 1, g: 0.8, b: 0.25, a: 1}
+  _danger: {r: 1, g: 0.35, b: 0.35, a: 1}
+  _disabled: {r: 0.35, g: 0.37, b: 0.42, a: 1}
