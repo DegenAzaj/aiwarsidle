@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "996809214150",
+    "project_id": "ai-wars-idle",
+    "storage_bucket": "ai-wars-idle.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:996809214150:android:0c7bee02e432c1fa69efc7",
+        "android_client_info": {
+          "package_name": "com.aiwarsidle.game.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2rbZsSjmii4E9k8tk0EB3iIzvfxezjgo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -40,6 +40,11 @@ Thumbs.db
 # Builds
 [Bb]uild/
 [Bb]uilds/
+*.apk
+*.aab
+*.aab.*
+**/*_BurstDebugInformation_DoNotShip/
+**/.utmp/
 
 # Unity auto-generated solution/project files
 *.csproj
@@ -72,3 +77,6 @@ sysinfo.txt
 # Addressables / StreamingAssets caches (optional, safe to ignore)
 **/[Aa]ssets/[Aa]ddressableAssetsData/*/*.bin*
 **/[Aa]ssets/[Aa]ddressableAssetsData/*/*.json
+
+# Keep `aiwarsidle/Assets/google-services.json` (Firebase config), but ignore the accidental root-level copy.
+/aiwarsidle/google-services.json

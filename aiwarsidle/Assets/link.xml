@@ -1,0 +1,6 @@
+<linker>
+  <!-- Preserve Firebase Remote Config types for IL2CPP when accessed via reflection. -->
+  <assembly fullname="Firebase.RemoteConfig" preserve="all" />
+  <assembly fullname="Firebase.App" preserve="all" />
+</linker>
+

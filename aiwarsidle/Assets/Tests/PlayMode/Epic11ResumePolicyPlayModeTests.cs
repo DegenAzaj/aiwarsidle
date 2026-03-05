@@ -34,6 +34,8 @@ namespace AIWarsIdle.Tests
             var now = 1000L;
             controller.NowUnixSecondsUtcProvider = () => now;
             controller.ContinuePressedThisFrameProvider = () => false;
+            controller.CurrentBuildNumberProvider = () => 1;
+            controller.MinAppVersionOverride = () => 0;
 
             yield return null; // allow Start() to run
 
@@ -80,6 +82,8 @@ namespace AIWarsIdle.Tests
 
             var now = 2000L;
             controller.NowUnixSecondsUtcProvider = () => now;
+            controller.CurrentBuildNumberProvider = () => 1;
+            controller.MinAppVersionOverride = () => 0;
 
             yield return null;
 
@@ -95,4 +99,3 @@ namespace AIWarsIdle.Tests
         }
     }
 }
-

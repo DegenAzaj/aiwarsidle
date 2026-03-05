@@ -411,12 +411,12 @@ Zasada: UI jest cienką warstwą, tylko prezentacja + input → wywołania serwi
 
 ## STORY 11.0b — Resume policy (10 min → Splash)
 
-* [ ] Jeśli app wraca z tła po **>= 10 minutach** → pokazujemy Splash (jedyny entry) i dopiero potem routing do Hub.
-* [ ] Jeśli app wraca szybciej → bez Splash, zostajemy w bieżącym ekranie/stanie.
+* [x] Jeśli app wraca z tła po **>= 10 minutach** → pokazujemy Splash (jedyny entry) i dopiero potem routing do Hub.
+* [x] Jeśli app wraca szybciej → bez Splash, zostajemy w bieżącym ekranie/stanie.
 
 **TESTS**
-* [ ] PlayMode: resume po >= 10 min → przejście przez Splash → Hub
-* [ ] PlayMode: resume po < 10 min → brak Splash, brak resetu routingu
+* [x] PlayMode: resume po >= 10 min → przejście przez Splash → Hub
+* [x] PlayMode: resume po < 10 min → brak Splash, brak resetu routingu
 
 ## STORY 11.1 — UIRouter + ekrany
 

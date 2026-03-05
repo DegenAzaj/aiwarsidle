@@ -180,3 +180,27 @@ Uwaga: `Track(...)` tylko buforuje — w runtime trzeba wołać `Flush()` cyklic
 - Testy:
   - PlayMode smoke bootstrap/tick: `aiwarsidle/Assets/Tests/PlayMode/Epic10BootstrapPlayModeTests.cs`.
   - EditMode testy offline claim z checklisty EPIC10: `aiwarsidle/Assets/Tests/EditMode/Epic10OfflineClaimServiceTests.cs`.
+
+---
+
+## EPIC 11 — UI (WIP)
+
+Minimalne fundamenty UI pod Splash/Hub oraz tematyzację:
+
+- Scena pod layout:
+  - Dodany `Canvas` + `LayoutRoot` w `aiwarsidle/Assets/Scenes/SampleScene.unity` (do szybkiego ustawiania uGUI layoutów).
+- Theme (kolory spójne w prefabach):
+  - `UITheme` (ScriptableObject) + `UIThemeProvider` + `UIThemeBinder` w `aiwarsidle/Assets/UI/Common/Theme/`.
+- Splash / single-entry + resume policy (>= 10 min → Splash):
+  - `ResumePolicyController` w `aiwarsidle/Assets/UI/Splash/ResumePolicyController.cs`:
+    - tryb “touch to continue” (aktywny `touch_continue_dim`) po timeout resuma
+    - force update: aktywuje `force_update` i blokuje wejście do `hub_root`, gdy `min_app_version` (Firebase Remote Config) > app build number
+    - `download_button` (pod `force_update/force_update_pop/download_button`) otwiera URL z Remote Config `store_url`
+  - `SplashVersionLabel` w `aiwarsidle/Assets/UI/Splash/SplashVersionLabel.cs` pokazuje `Application.version` + build number w formacie `0.0.0 (X)`.
+  - Dev debug button do triggerowania timeoutu: `aiwarsidle/Assets/UI/Splash/ResumePolicyDebugButton.cs`.
+- Firebase Remote Config (reflection + IL2CPP preserve):
+  - `FirebaseRemoteConfigMinAppVersion` + `FirebaseRemoteConfigStringValue` w `aiwarsidle/Assets/UI/Splash/`
+  - `aiwarsidle/Assets/link.xml` zachowuje assembly Firebase pod reflection.
+- Testy PlayMode EPIC 11:
+  - Resume policy: `aiwarsidle/Assets/Tests/PlayMode/Epic11ResumePolicyPlayModeTests.cs`
+  - Force update + download URL wiring: `aiwarsidle/Assets/Tests/PlayMode/Epic11UpdateRequiredPlayModeTests.cs`
