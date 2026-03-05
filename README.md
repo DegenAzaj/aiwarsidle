@@ -198,6 +198,19 @@ Minimalne fundamenty UI pod Splash/Hub oraz tematyzację:
     - `download_button` (pod `force_update/force_update_pop/download_button`) otwiera URL z Remote Config `store_url`
   - `SplashVersionLabel` w `aiwarsidle/Assets/UI/Splash/SplashVersionLabel.cs` pokazuje `Application.version` + build number w formacie `0.0.0 (X)`.
   - Dev debug button do triggerowania timeoutu: `aiwarsidle/Assets/UI/Splash/ResumePolicyDebugButton.cs`.
+
+UIRouter + ekrany (STORY 11.1, etap: 2 taby — PvP + Generatory):
+
+- `UIRouter` w `aiwarsidle/Assets/UI/UIRouter.cs`:
+  - przełącza tylko `pvp_root` i `generators_root` (pozostałe rooty później),
+  - `LobbyRoot` (HUD/Lobby) zostaje aktywny cały czas,
+  - taby mają stan aktywności (blokuje klik na aktywnym tabie) + opcjonalne przygaszanie alpha na `Icon` (`Graphic[]`) i `Text` (`TMP_Text[]`).
+- Wejście po Splashu:
+  - `ResumePolicyController` nie aktywuje `hub_root`; po udanym wejściu woła `UIRouter.EnterHubByTab(UIRoute.Pvp)` (jakby user kliknął tab PvP).
+  - `hub_root` traktowany jako legacy container i jest trzymany w stanie inactive (żeby nie “migał” w 1. klatce).
+- PlayMode testy EPIC 11:
+  - Resume policy: `aiwarsidle/Assets/Tests/PlayMode/Epic11ResumePolicyPlayModeTests.cs` + update gate: `aiwarsidle/Assets/Tests/PlayMode/Epic11UpdateRequiredPlayModeTests.cs`.
+  - Router: `aiwarsidle/Assets/Tests/PlayMode/Epic11UIRouterPlayModeTests.cs` (w tym “przełączanie paneli nie gubi stanu”).
 - Firebase Remote Config (reflection + IL2CPP preserve):
   - `FirebaseRemoteConfigMinAppVersion` + `FirebaseRemoteConfigStringValue` w `aiwarsidle/Assets/UI/Splash/`
   - `aiwarsidle/Assets/link.xml` zachowuje assembly Firebase pod reflection.

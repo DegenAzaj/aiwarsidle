@@ -4,6 +4,7 @@ using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
+using AIWarsIdle.UI;
 
 namespace AIWarsIdle.UI.Splash
 {
@@ -19,6 +20,13 @@ namespace AIWarsIdle.UI.Splash
         [Header("Roots")]
         [SerializeField] private GameObject _splashRoot;
         [SerializeField] private GameObject _hubRoot;
+
+        [Header("Hub Routing")]
+        [Tooltip("Optional. If null, will try to find UIRouter under HubRoot.")]
+        [SerializeField] private UIRouter _hubRouter;
+
+        [Tooltip("Route requested when entering Hub via Splash.")]
+        [SerializeField] private UIRoute _hubEntryRoute = UIRoute.Pvp;
 
         [Header("Splash FX")]
         [Tooltip("Optional. If null, a CanvasGroup will be searched on SplashRoot (or added at runtime).")]
@@ -66,12 +74,26 @@ namespace AIWarsIdle.UI.Splash
         private UnityEngine.UI.Button _downloadButton;
 
         public GameObject SplashRoot { get => _splashRoot; set => _splashRoot = value; }
-        public GameObject HubRoot { get => _hubRoot; set => _hubRoot = value; }
+        public GameObject HubRoot
+        {
+            get => _hubRoot;
+            set
+            {
+                _hubRoot = value;
+                SetActiveSafe(_hubRoot, false);
+            }
+        }
         public GameObject TouchContinueDim { get => _touchContinueDim; set => _touchContinueDim = value; }
         public float ResumeToSplashThresholdMinutes { get => _resumeToSplashThresholdMinutes; set => _resumeToSplashThresholdMinutes = value; }
         public float MinimumSplashSeconds { get => _minimumSplashSeconds; set => _minimumSplashSeconds = value; }
         public float SplashFadeOutSeconds { get => _splashFadeOutSeconds; set => _splashFadeOutSeconds = value; }
         public bool ShowSplashOnColdStart { get => _showSplashOnColdStart; set => _showSplashOnColdStart = value; }
+
+        private void Awake()
+        {
+            // HubRoot is treated as a legacy container; it must remain inactive.
+            SetActiveSafe(_hubRoot, false);
+        }
 
         private void Start()
         {
@@ -113,6 +135,11 @@ namespace AIWarsIdle.UI.Splash
 
             _showTouchContinueDim = showTouchContinueDim;
 
+            // Apply initial state immediately to avoid 1-frame Hub flash (HubRoot might be active in scene).
+            HideHubScreensIfPossible();
+            SetActiveSafe(_hubRoot, false);
+            SetActiveSafe(_splashRoot, true);
+
             if (_routingCoroutine != null)
             {
                 StopCoroutine(_routingCoroutine);
@@ -128,6 +155,7 @@ namespace AIWarsIdle.UI.Splash
 
         private IEnumerator RouteRoutine()
         {
+            HideHubScreensIfPossible();
             SetActiveSafe(_hubRoot, false);
             SetActiveSafe(_splashRoot, true);
 
@@ -187,14 +215,14 @@ namespace AIWarsIdle.UI.Splash
 
             if (_splashFadeOutSeconds > 0f && splashCanvasGroup != null)
             {
-                SetActiveSafe(_hubRoot, true);
+                RouteHubIfPossible();
                 yield return FadeCanvasGroup(splashCanvasGroup, from: 1f, to: 0f, _splashFadeOutSeconds);
                 splashCanvasGroup.interactable = false;
                 splashCanvasGroup.blocksRaycasts = false;
             }
             else
             {
-                SetActiveSafe(_hubRoot, true);
+                RouteHubIfPossible();
             }
 
             if (touchContinue != null)
@@ -205,6 +233,42 @@ namespace AIWarsIdle.UI.Splash
             SetActiveSafe(_splashRoot, false);
 
             _routingCoroutine = null;
+        }
+
+        private void HideHubScreensIfPossible()
+        {
+            try
+            {
+                var router = _hubRouter;
+                if (router == null && _hubRoot != null)
+                {
+                    router = _hubRoot.GetComponentInChildren<UIRouter>(includeInactive: true);
+                }
+
+                router?.HideAllScreens();
+            }
+            catch
+            {
+                // Best-effort only.
+            }
+        }
+
+        private void RouteHubIfPossible()
+        {
+            try
+            {
+                var router = _hubRouter;
+                if (router == null && _hubRoot != null)
+                {
+                    router = _hubRoot.GetComponentInChildren<UIRouter>(includeInactive: true);
+                }
+
+                router?.EnterHubByTab(_hubEntryRoute);
+            }
+            catch
+            {
+                // Never block entry due to UI routing errors.
+            }
         }
 
         private static void SetActiveSafe(GameObject go, bool active)

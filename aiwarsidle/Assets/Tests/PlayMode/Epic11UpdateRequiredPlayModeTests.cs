@@ -1,4 +1,5 @@
 using System.Collections;
+using AIWarsIdle.UI;
 using AIWarsIdle.UI.Splash;
 using NUnit.Framework;
 using UnityEngine;
@@ -15,6 +16,12 @@ namespace AIWarsIdle.Tests
             var hub = new GameObject("hub_root");
             splash.SetActive(false);
             hub.SetActive(true);
+
+            var pvp = new GameObject("pvp_root");
+            pvp.SetActive(false);
+
+            var router = hub.AddComponent<UIRouter>();
+            router.PvpRoot = pvp;
 
             var force = new GameObject("force_update");
             force.transform.SetParent(splash.transform, worldPositionStays: false);
@@ -47,7 +54,8 @@ namespace AIWarsIdle.Tests
             yield return null; // allow branch to activate force_update reliably
 
             Assert.IsTrue(splash.activeSelf, "Splash should remain active when update is required.");
-            Assert.IsFalse(hub.activeSelf, "Hub should not be entered when update is required.");
+            Assert.IsFalse(hub.activeSelf, "HubRoot should remain inactive when update is required.");
+            Assert.IsFalse(pvp.activeSelf, "PvP should not be activated when update is required.");
             Assert.IsTrue(force.activeSelf, "force_update child should be active when update is required.");
 
             // Ensure button is wired and would open URL.
@@ -65,6 +73,12 @@ namespace AIWarsIdle.Tests
             var hub = new GameObject("hub_root");
             splash.SetActive(false);
             hub.SetActive(false);
+
+            var pvp = new GameObject("pvp_root");
+            pvp.SetActive(false);
+
+            var router = hub.AddComponent<UIRouter>();
+            router.PvpRoot = pvp;
 
             var force = new GameObject("force_update");
             force.transform.SetParent(splash.transform, worldPositionStays: false);
@@ -94,7 +108,8 @@ namespace AIWarsIdle.Tests
             yield return null;
             yield return null;
 
-            Assert.IsTrue(hub.activeSelf, "Hub should be entered when update is not required.");
+            Assert.IsFalse(hub.activeSelf, "HubRoot should remain inactive; routing is performed via UIRouter.");
+            Assert.IsTrue(pvp.activeSelf, "PvP should be activated when update is not required.");
             Assert.IsFalse(force.activeSelf, "force_update child should stay inactive when update is not required.");
         }
     }

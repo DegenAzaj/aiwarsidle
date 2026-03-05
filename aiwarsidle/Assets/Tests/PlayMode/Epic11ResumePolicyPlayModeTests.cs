@@ -1,4 +1,5 @@
 using System.Collections;
+using AIWarsIdle.UI;
 using AIWarsIdle.UI.Splash;
 using NUnit.Framework;
 using UnityEngine;
@@ -14,7 +15,13 @@ namespace AIWarsIdle.Tests
             var splash = new GameObject("splash_root");
             var hub = new GameObject("hub_root");
             splash.SetActive(false);
-            hub.SetActive(true);
+            hub.SetActive(false);
+
+            var pvp = new GameObject("pvp_root");
+            pvp.SetActive(false);
+
+            var router = hub.AddComponent<UIRouter>();
+            router.PvpRoot = pvp;
 
             var touch = new GameObject("touch_continue_dim");
             touch.transform.SetParent(splash.transform, worldPositionStays: false);
@@ -46,14 +53,16 @@ namespace AIWarsIdle.Tests
             yield return null; // let routing coroutine start + first yield
 
             Assert.IsTrue(splash.activeSelf, "Splash should be active after inactivity timeout.");
-            Assert.IsFalse(hub.activeSelf, "Hub should be inactive while waiting on Splash.");
+            Assert.IsFalse(hub.activeSelf, "HubRoot should be inactive while waiting on Splash.");
+            Assert.IsFalse(pvp.activeSelf, "PvP should not be active while waiting on Splash.");
             Assert.IsTrue(touch.activeSelf, "touch_continue_dim should be active in touch-to-continue mode.");
 
             controller.ContinuePressedThisFrameProvider = () => true;
             yield return null; // allow continue + transition
 
             Assert.IsFalse(splash.activeSelf, "Splash should be inactive after user continues.");
-            Assert.IsTrue(hub.activeSelf, "Hub should be active after user continues.");
+            Assert.IsFalse(hub.activeSelf, "HubRoot should remain inactive; routing is performed via UIRouter.");
+            Assert.IsTrue(pvp.activeSelf, "PvP should be active after user continues.");
             Assert.IsFalse(touch.activeSelf, "touch_continue_dim should be disabled after leaving Splash.");
         }
 
@@ -64,6 +73,12 @@ namespace AIWarsIdle.Tests
             var hub = new GameObject("hub_root");
             splash.SetActive(false);
             hub.SetActive(true);
+
+            var pvp = new GameObject("pvp_root");
+            pvp.SetActive(true);
+
+            var router = hub.AddComponent<UIRouter>();
+            router.PvpRoot = pvp;
 
             var touch = new GameObject("touch_continue_dim");
             touch.transform.SetParent(splash.transform, worldPositionStays: false);
@@ -94,7 +109,8 @@ namespace AIWarsIdle.Tests
             yield return null;
 
             Assert.IsFalse(splash.activeSelf, "Splash should remain inactive when resuming before timeout.");
-            Assert.IsTrue(hub.activeSelf, "Hub should remain active when resuming before timeout.");
+            Assert.IsFalse(hub.activeSelf, "HubRoot should remain inactive when resuming before timeout.");
+            Assert.IsTrue(pvp.activeSelf, "PvP should remain unchanged when resuming before timeout.");
             Assert.IsFalse(touch.activeSelf, "touch_continue_dim should remain inactive when Splash is not shown.");
         }
     }
