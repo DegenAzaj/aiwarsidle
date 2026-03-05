@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -25,6 +26,9 @@ namespace AIWarsIdle.UI
             public GameObject InactiveState;
 
             [Header("Optional Visuals")]
+            [Tooltip("Optional. If set, this group alpha will be used for active/inactive fade. Assign it to a child that contains only icon/text if you don't want to fade the whole button.")]
+            public CanvasGroup AlphaGroup;
+
             [Tooltip("Optional. Icon graphics to fade depending on active state.")]
             public Graphic[] Icons;
 
@@ -60,6 +64,9 @@ namespace AIWarsIdle.UI
         [SerializeField] private bool _autoEnterOnEnable;
 
         public UIRoute CurrentRoute { get; private set; } = UIRoute.Generators;
+
+        private Coroutine _autoEnterCoroutine;
+        private Coroutine _reapplyTabVisualsCoroutine;
 
         public GameObject LobbyRoot { get => _lobbyRoot; set => _lobbyRoot = value; }
         public GameObject GeneratorsRoot { get => _generatorsRoot; set => _generatorsRoot = value; }
@@ -100,6 +107,9 @@ namespace AIWarsIdle.UI
 
             ApplyTabState(_generatorsTab, isActive: route == UIRoute.Generators);
             ApplyTabState(_pvpTab, isActive: route == UIRoute.Pvp);
+
+            // Resilient against late theme binders overwriting label/icon alpha.
+            ScheduleReapplyTabVisuals();
         }
 
         public void HideAllScreens()
@@ -109,6 +119,8 @@ namespace AIWarsIdle.UI
 
             ApplyTabState(_generatorsTab, isActive: false);
             ApplyTabState(_pvpTab, isActive: false);
+
+            ScheduleReapplyTabVisuals();
         }
 
         private void Awake()
@@ -121,8 +133,36 @@ namespace AIWarsIdle.UI
         {
             if (_autoEnterOnEnable)
             {
-                EnterHub();
+                if (_autoEnterCoroutine != null)
+                {
+                    StopCoroutine(_autoEnterCoroutine);
+                }
+
+                // Defer to next frame so UIThemeBinder.OnEnable can apply first; then we set active/inactive visuals.
+                _autoEnterCoroutine = StartCoroutine(AutoEnterNextFrame());
             }
+        }
+
+        private void OnDisable()
+        {
+            if (_autoEnterCoroutine != null)
+            {
+                StopCoroutine(_autoEnterCoroutine);
+                _autoEnterCoroutine = null;
+            }
+
+            if (_reapplyTabVisualsCoroutine != null)
+            {
+                StopCoroutine(_reapplyTabVisualsCoroutine);
+                _reapplyTabVisualsCoroutine = null;
+            }
+        }
+
+        private IEnumerator AutoEnterNextFrame()
+        {
+            yield return null;
+            _autoEnterCoroutine = null;
+            EnterHub();
         }
 
         private void WireTab(Tab tab, UIRoute route)
@@ -150,6 +190,7 @@ namespace AIWarsIdle.UI
             if (tab.InactiveState != null) tab.InactiveState.SetActive(!isActive);
 
             var alpha = Mathf.Clamp01(isActive ? tab.ActiveAlpha : tab.InactiveAlpha);
+            if (tab.AlphaGroup != null) tab.AlphaGroup.alpha = alpha;
             ApplyAlpha(tab.Icons, alpha);
             ApplyAlpha(tab.Labels, alpha);
         }
@@ -185,6 +226,22 @@ namespace AIWarsIdle.UI
             if (go == null) return;
             if (go.activeSelf == active) return;
             go.SetActive(active);
+        }
+
+        private void ScheduleReapplyTabVisuals()
+        {
+            if (!isActiveAndEnabled) return;
+            if (_reapplyTabVisualsCoroutine != null) return;
+            _reapplyTabVisualsCoroutine = StartCoroutine(ReapplyTabVisualsNextFrame());
+        }
+
+        private IEnumerator ReapplyTabVisualsNextFrame()
+        {
+            yield return null;
+            _reapplyTabVisualsCoroutine = null;
+
+            ApplyTabState(_generatorsTab, isActive: CurrentRoute == UIRoute.Generators);
+            ApplyTabState(_pvpTab, isActive: CurrentRoute == UIRoute.Pvp);
         }
     }
 }
