@@ -9,6 +9,7 @@ namespace AIWarsIdle.Persistence.Domain
 
         public double SoftCurrency;
         public double LifetimeEarnedSoftCurrency;
+        public double LifetimeEarnedSoftCurrencyAtLastPrestige;
         public int PremiumCurrency;
         public int[] GeneratorLevels = new int[GameState.GeneratorCount];
         public int PrestigeCount;
@@ -81,6 +82,11 @@ namespace AIWarsIdle.Persistence.Domain
             Overclock.Normalize();
 
             if (LifetimeEarnedSoftCurrency < 0) LifetimeEarnedSoftCurrency = 0;
+            if (LifetimeEarnedSoftCurrencyAtLastPrestige < 0) LifetimeEarnedSoftCurrencyAtLastPrestige = 0;
+            if (LifetimeEarnedSoftCurrencyAtLastPrestige > LifetimeEarnedSoftCurrency)
+            {
+                LifetimeEarnedSoftCurrencyAtLastPrestige = LifetimeEarnedSoftCurrency;
+            }
             if (LastPvpAttackRegenUnixSeconds < 0) LastPvpAttackRegenUnixSeconds = 0;
             if (NextPvpAttackRegenAtUnixSeconds < 0) NextPvpAttackRegenAtUnixSeconds = 0;
             if (LastPvpAdAttackClaimUnixSeconds < 0) LastPvpAdAttackClaimUnixSeconds = 0;

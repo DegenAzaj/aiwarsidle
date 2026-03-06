@@ -466,6 +466,7 @@ Zasada: UI jest cienką warstwą, tylko prezentacja + input → wywołania serwi
 ## STORY 11.3 — Prestige modal
 
 * [ ] UI `CanPrestige` + confirm
+* [ ] Core: `PrestigeService.PreviewPrestigeGains()` (bez mutacji stanu) żeby UI mogło pokazać “REBOOT +N” oraz progress po reboocie bez duplikowania logiki
 
 **TESTS**
 * [ ] PlayMode: prestige resetuje UI i stan zgodnie z testami serwisów

@@ -8,6 +8,7 @@ namespace AIWarsIdle.GameCore.Domain
 
         public double SoftCurrency;
         public double LifetimeEarnedSoftCurrency;
+        public double LifetimeEarnedSoftCurrencyAtLastPrestige;
         public int PremiumCurrency;
         public int[] GeneratorLevels;
         public int PrestigeCount;

@@ -274,6 +274,7 @@ namespace AIWarsIdle.Tests
             {
                 SoftCurrency = 123,
                 LifetimeEarnedSoftCurrency = 1_000_000,
+                LifetimeEarnedSoftCurrencyAtLastPrestige = 0,
                 PermanentUpgradeLevel = 10,
                 PrestigeCount = 0
             };
@@ -287,9 +288,39 @@ namespace AIWarsIdle.Tests
             prestige.ExecutePrestige();
 
             Assert.AreEqual(0, state.SoftCurrency);
+            Assert.AreEqual(13, state.PrestigeCount);
+            Assert.AreEqual(10, state.PermanentUpgradeLevel);
+            Assert.AreEqual(1_000_000, state.LifetimeEarnedSoftCurrency);
+            Assert.AreEqual(748933.2712284164, state.LifetimeEarnedSoftCurrencyAtLastPrestige, 1e-6);
+        }
+
+        [Test]
+        public void PrestigeService_ExecutePrestigeSingle_Increments_By_One_And_Keeps_Remaining_Progress()
+        {
+            var state = new GameState
+            {
+                SoftCurrency = 123,
+                LifetimeEarnedSoftCurrency = 1_000_000,
+                LifetimeEarnedSoftCurrencyAtLastPrestige = 0,
+                PermanentUpgradeLevel = 9,
+                PrestigeCount = 0
+            };
+
+            var cfg = CreateValidBalanceConfig();
+            cfg.PermanentUpgradeCap = 10;
+
+            var prestige = new PrestigeService(state, cfg);
+
+            Assert.AreEqual(1, prestige.PreviewPrestigeGains(max: false));
+
+            prestige.ExecutePrestigeSingle();
+
+            Assert.AreEqual(0, state.SoftCurrency);
             Assert.AreEqual(1, state.PrestigeCount);
             Assert.AreEqual(10, state.PermanentUpgradeLevel);
             Assert.AreEqual(1_000_000, state.LifetimeEarnedSoftCurrency);
+            Assert.AreEqual(1_000, state.LifetimeEarnedSoftCurrencyAtLastPrestige, 1e-9);
+            Assert.AreEqual(1, state.GeneratorLevels[0], "Should avoid dead-start after prestige by seeding generator 0.");
         }
 
         [Test]

@@ -130,7 +130,7 @@ namespace AIWarsIdle.UI.Generators
                 };
             }
 
-            if (_levelText != null) _levelText.text = state.GeneratorLevels[_generatorId].ToString();
+            if (_levelText != null) _levelText.text = $"Level: {state.GeneratorLevels[_generatorId]}";
 
             if (_ppsText != null)
             {

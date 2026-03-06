@@ -25,6 +25,7 @@ namespace AIWarsIdle.Persistence.Services
 
             state.SoftCurrency = save.SoftCurrency;
             state.LifetimeEarnedSoftCurrency = save.LifetimeEarnedSoftCurrency;
+            state.LifetimeEarnedSoftCurrencyAtLastPrestige = save.LifetimeEarnedSoftCurrencyAtLastPrestige;
             state.PremiumCurrency = save.PremiumCurrency;
 
             if (state.GeneratorLevels == null || state.GeneratorLevels.Length != GameState.GeneratorCount)
@@ -108,6 +109,7 @@ namespace AIWarsIdle.Persistence.Services
 
             save.SoftCurrency = state.SoftCurrency;
             save.LifetimeEarnedSoftCurrency = state.LifetimeEarnedSoftCurrency;
+            save.LifetimeEarnedSoftCurrencyAtLastPrestige = state.LifetimeEarnedSoftCurrencyAtLastPrestige;
             save.PremiumCurrency = state.PremiumCurrency;
 
             if (save.GeneratorLevels == null || save.GeneratorLevels.Length != GameState.GeneratorCount)

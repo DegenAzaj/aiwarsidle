@@ -15,6 +15,7 @@ namespace AIWarsIdle.UI.Generators
         [SerializeField] private TMP_Text _ppsText;
         [SerializeField] private TMP_Text _lifetimeProducedText;
         [SerializeField] private TMP_Text _prestigeProgressText;
+        [SerializeField] private TMP_Text _prestigeLevelText;
 
         [Header("Prestige Progress (optional)")]
         [SerializeField] private Slider _prestigeSlider;
@@ -72,8 +73,15 @@ namespace AIWarsIdle.UI.Generators
                 _lifetimeProducedText.text = UiFormat.Compact(state.LifetimeEarnedSoftCurrency);
             }
 
+            if (_prestigeLevelText != null)
+            {
+                _prestigeLevelText.text = state.PrestigeCount.ToString();
+            }
+
             var threshold = loop.Prestige.GetPrestigeThreshold();
-            var progress = threshold <= 0 ? 0f : (float)Mathf.Clamp01((float)(state.LifetimeEarnedSoftCurrency / threshold));
+            var earnedSinceLast = state.LifetimeEarnedSoftCurrency - state.LifetimeEarnedSoftCurrencyAtLastPrestige;
+            if (earnedSinceLast < 0) earnedSinceLast = 0;
+            var progress = threshold <= 0 ? 0f : Mathf.Clamp01((float)(earnedSinceLast / threshold));
 
             if (_prestigeProgressText != null)
             {
@@ -86,4 +94,3 @@ namespace AIWarsIdle.UI.Generators
         }
     }
 }
-
