@@ -319,7 +319,7 @@ namespace AIWarsIdle.Tests
             Assert.AreEqual(1, state.PrestigeCount);
             Assert.AreEqual(10, state.PermanentUpgradeLevel);
             Assert.AreEqual(1_000_000, state.LifetimeEarnedSoftCurrency);
-            Assert.AreEqual(1_000, state.LifetimeEarnedSoftCurrencyAtLastPrestige, 1e-9);
+            Assert.AreEqual(1_000_000, state.LifetimeEarnedSoftCurrencyAtLastPrestige, 1e-9);
             Assert.AreEqual(1, state.GeneratorLevels[0], "Should avoid dead-start after prestige by seeding generator 0.");
         }
 

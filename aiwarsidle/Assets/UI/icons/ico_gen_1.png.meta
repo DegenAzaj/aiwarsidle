@@ -1,0 +1,3666 @@
+fileFormatVersion: 2
+guid: a594097979ed4e1ada548bc2bef877d9
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -571365799256050346
+    second: ico_gen_1_0
+  - first:
+      213: -1721406381378846146
+    second: ico_gen_1_1
+  - first:
+      213: 2713065577726045649
+    second: ico_gen_1_2
+  - first:
+      213: 948669557739747098
+    second: ico_gen_1_3
+  - first:
+      213: -82023277311286768
+    second: ico_gen_1_4
+  - first:
+      213: 6696354200307235391
+    second: ico_gen_1_5
+  - first:
+      213: 3236659028798595824
+    second: ico_gen_1_6
+  - first:
+      213: -3597226728115951554
+    second: ico_gen_1_7
+  - first:
+      213: 4244491484585249184
+    second: ico_gen_1_8
+  - first:
+      213: 410405747920229465
+    second: ico_gen_1_9
+  - first:
+      213: -3928014752183445509
+    second: ico_gen_1_10
+  - first:
+      213: -1262483443812567138
+    second: ico_gen_1_11
+  - first:
+      213: 2145931129936351352
+    second: ico_gen_1_12
+  - first:
+      213: -3621629278102116208
+    second: ico_gen_1_13
+  - first:
+      213: 8990125305336169979
+    second: ico_gen_1_14
+  - first:
+      213: 1278914772316215717
+    second: ico_gen_1_15
+  - first:
+      213: 7612778565855519691
+    second: ico_gen_1_16
+  - first:
+      213: 655589627444058587
+    second: ico_gen_1_17
+  - first:
+      213: -8978288717173258450
+    second: ico_gen_1_18
+  - first:
+      213: -3893379231032870221
+    second: ico_gen_1_19
+  - first:
+      213: -6270125722999269037
+    second: ico_gen_1_20
+  - first:
+      213: 4115054538575598795
+    second: ico_gen_1_21
+  - first:
+      213: -3442574829968533876
+    second: ico_gen_1_22
+  - first:
+      213: -4233017101979259276
+    second: ico_gen_1_23
+  - first:
+      213: 509505374148183259
+    second: ico_gen_1_24
+  - first:
+      213: 8974053907787182940
+    second: ico_gen_1_25
+  - first:
+      213: 7799256725223728922
+    second: ico_gen_1_26
+  - first:
+      213: 7245820109387135604
+    second: ico_gen_1_27
+  - first:
+      213: 3265066341051713560
+    second: ico_gen_1_28
+  - first:
+      213: -756830673838847862
+    second: ico_gen_1_29
+  - first:
+      213: -3393867593698566424
+    second: ico_gen_1_30
+  - first:
+      213: -3715294233837439513
+    second: ico_gen_1_31
+  - first:
+      213: 4150674100605880646
+    second: ico_gen_1_32
+  - first:
+      213: 2344301866109979864
+    second: ico_gen_1_33
+  - first:
+      213: 7084859156631509487
+    second: ico_gen_1_34
+  - first:
+      213: -311018225438144107
+    second: ico_gen_1_35
+  - first:
+      213: -3208212614009847029
+    second: ico_gen_1_36
+  - first:
+      213: 3606923682021320749
+    second: ico_gen_1_37
+  - first:
+      213: 4432562334796062308
+    second: ico_gen_1_38
+  - first:
+      213: -6344565776829966465
+    second: ico_gen_1_39
+  - first:
+      213: 894630880125345755
+    second: ico_gen_1_40
+  - first:
+      213: 3951385455653290424
+    second: ico_gen_1_41
+  - first:
+      213: 2631156363281383272
+    second: ico_gen_1_42
+  - first:
+      213: 3268399598264153610
+    second: ico_gen_1_43
+  - first:
+      213: -772067898637519247
+    second: ico_gen_1_44
+  - first:
+      213: -6281028287591325346
+    second: ico_gen_1_45
+  - first:
+      213: -816295892699582733
+    second: ico_gen_1_46
+  - first:
+      213: 5721896196778419274
+    second: ico_gen_1_47
+  - first:
+      213: -5186808833705965832
+    second: ico_gen_1_48
+  - first:
+      213: -5233883589332932431
+    second: ico_gen_1_49
+  - first:
+      213: -7703563297669829502
+    second: ico_gen_1_50
+  - first:
+      213: -6639571487134714979
+    second: ico_gen_1_51
+  - first:
+      213: -3206187159577971605
+    second: ico_gen_1_52
+  - first:
+      213: -7605113574512506131
+    second: ico_gen_1_53
+  - first:
+      213: -920420369078340027
+    second: ico_gen_1_54
+  - first:
+      213: -5150081267952509310
+    second: ico_gen_1_55
+  - first:
+      213: -7201119780318537220
+    second: ico_gen_1_56
+  - first:
+      213: 946190944599392046
+    second: ico_gen_1_57
+  - first:
+      213: -6122571906951662825
+    second: ico_gen_1_58
+  - first:
+      213: -7918416614798725295
+    second: ico_gen_1_59
+  - first:
+      213: -3279863586722729212
+    second: ico_gen_1_60
+  - first:
+      213: -1437384955060328314
+    second: ico_gen_1_61
+  - first:
+      213: -5202039069263604534
+    second: ico_gen_1_62
+  - first:
+      213: 6220024481603272706
+    second: ico_gen_1_63
+  - first:
+      213: 1051577520716597478
+    second: ico_gen_1_64
+  - first:
+      213: 723322209716365155
+    second: ico_gen_1_65
+  - first:
+      213: 5625015506634425971
+    second: ico_gen_1_66
+  - first:
+      213: -1341499074651966344
+    second: ico_gen_1_67
+  - first:
+      213: -2849533311519673257
+    second: ico_gen_1_68
+  - first:
+      213: -7014379160868187937
+    second: ico_gen_1_69
+  - first:
+      213: 7948441627457030272
+    second: ico_gen_1_70
+  - first:
+      213: 6627206939791183774
+    second: ico_gen_1_71
+  - first:
+      213: -316267907462045086
+    second: ico_gen_1_72
+  - first:
+      213: 4431159822216871490
+    second: ico_gen_1_73
+  - first:
+      213: 8706668206038825317
+    second: ico_gen_1_74
+  - first:
+      213: -2941400538941695379
+    second: ico_gen_1_75
+  - first:
+      213: 5518159308756997101
+    second: ico_gen_1_76
+  - first:
+      213: -8198593434118602038
+    second: ico_gen_1_77
+  - first:
+      213: 375320774469818773
+    second: ico_gen_1_78
+  - first:
+      213: -2825134314165395465
+    second: ico_gen_1_79
+  - first:
+      213: -5027428941070652497
+    second: ico_gen_1_80
+  - first:
+      213: 7626488576451170051
+    second: ico_gen_1_81
+  - first:
+      213: 8103980234906261947
+    second: ico_gen_1_82
+  - first:
+      213: -6460468847601410998
+    second: ico_gen_1_83
+  - first:
+      213: 8724974023904507667
+    second: ico_gen_1_84
+  - first:
+      213: -1633096656420733062
+    second: ico_gen_1_85
+  - first:
+      213: 100753130719954275
+    second: ico_gen_1_86
+  - first:
+      213: 158101967184334751
+    second: ico_gen_1_87
+  - first:
+      213: -1389076067272091917
+    second: ico_gen_1_88
+  - first:
+      213: -7860348540653373435
+    second: ico_gen_1_89
+  - first:
+      213: 5613650551589660021
+    second: ico_gen_1_90
+  - first:
+      213: 3775416942910847494
+    second: ico_gen_1_91
+  - first:
+      213: -7800717254658764586
+    second: ico_gen_1_92
+  - first:
+      213: -534370910062582587
+    second: ico_gen_1_93
+  - first:
+      213: 6066957817812920409
+    second: ico_gen_1_94
+  - first:
+      213: -2233986690870472792
+    second: ico_gen_1_95
+  - first:
+      213: 6342212454704707975
+    second: ico_gen_1_96
+  - first:
+      213: -298854953753942638
+    second: ico_gen_1_97
+  - first:
+      213: -3375744130402287400
+    second: ico_gen_1_98
+  - first:
+      213: -2737563095999642983
+    second: ico_gen_1_99
+  - first:
+      213: 1962375198976318836
+    second: ico_gen_1_100
+  - first:
+      213: -827413160860895465
+    second: ico_gen_1_101
+  - first:
+      213: 2921627975248939119
+    second: ico_gen_1_102
+  - first:
+      213: 8337964380970158685
+    second: ico_gen_1_103
+  - first:
+      213: -824425165810882044
+    second: ico_gen_1_104
+  - first:
+      213: -2894801649389481039
+    second: ico_gen_1_105
+  - first:
+      213: 6885069097616111215
+    second: ico_gen_1_106
+  - first:
+      213: -6291107347404750251
+    second: ico_gen_1_107
+  - first:
+      213: -1817891162160869167
+    second: ico_gen_1_108
+  - first:
+      213: -7883064997069375059
+    second: ico_gen_1_109
+  - first:
+      213: 2800341062747569064
+    second: ico_gen_1_110
+  - first:
+      213: 7276448819664232170
+    second: ico_gen_1_111
+  - first:
+      213: -7654107721118489577
+    second: ico_gen_1_112
+  - first:
+      213: 81404594975843112
+    second: ico_gen_1_113
+  - first:
+      213: -3796123095906917388
+    second: ico_gen_1_114
+  - first:
+      213: 780899620119750887
+    second: ico_gen_1_115
+  - first:
+      213: -4710615941119463354
+    second: ico_gen_1_116
+  - first:
+      213: 5755137105215075416
+    second: ico_gen_1_117
+  - first:
+      213: 3049364459599259278
+    second: ico_gen_1_118
+  - first:
+      213: -8608556260144232964
+    second: ico_gen_1_119
+  - first:
+      213: 3235187552217572954
+    second: ico_gen_1_120
+  - first:
+      213: 6956976037604046447
+    second: ico_gen_1_121
+  - first:
+      213: -1679881299179728105
+    second: ico_gen_1_122
+  - first:
+      213: -2125222166686990181
+    second: ico_gen_1_123
+  - first:
+      213: -7661142952400126498
+    second: ico_gen_1_124
+  - first:
+      213: 6495157630342856323
+    second: ico_gen_1_125
+  - first:
+      213: -825940660159623045
+    second: ico_gen_1_126
+  - first:
+      213: 6759538199336100719
+    second: ico_gen_1_127
+  - first:
+      213: -2533560236106556308
+    second: ico_gen_1_128
+  - first:
+      213: -5622485029390302419
+    second: ico_gen_1_129
+  - first:
+      213: -3539425047754911396
+    second: ico_gen_1_130
+  - first:
+      213: 2998384032815599913
+    second: ico_gen_1_131
+  - first:
+      213: 3304020851865404698
+    second: ico_gen_1_132
+  - first:
+      213: 6358818617249529788
+    second: ico_gen_1_133
+  - first:
+      213: 6835973317448800360
+    second: ico_gen_1_134
+  - first:
+      213: 197627635318517897
+    second: ico_gen_1_135
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: ico_gen_1_0
+      rect:
+        serializedVersion: 2
+        x: 322
+        y: 862
+        width: 40
+        height: 61
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 655398235d91218f0800000000000000
+      internalID: -571365799256050346
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_1
+      rect:
+        serializedVersion: 2
+        x: 405
+        y: 892
+        width: 38
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e32c2db34065c18e0800000000000000
+      internalID: -1721406381378846146
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_2
+      rect:
+        serializedVersion: 2
+        x: 447
+        y: 894
+        width: 10
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1dd63bcb4ceb6a520800000000000000
+      internalID: 2713065577726045649
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_3
+      rect:
+        serializedVersion: 2
+        x: 472
+        y: 897
+        width: 9
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a17fd4ebfe95a2d00800000000000000
+      internalID: 948669557739747098
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_4
+      rect:
+        serializedVersion: 2
+        x: 490
+        y: 830
+        width: 23
+        height: 80
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0122c8c83489cdef0800000000000000
+      internalID: -82023277311286768
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_5
+      rect:
+        serializedVersion: 2
+        x: 495
+        y: 909
+        width: 10
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f3af1879aaa3eec50800000000000000
+      internalID: 6696354200307235391
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_6
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 894
+        width: 26
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0f2e996fc3ceaec20800000000000000
+      internalID: 3236659028798595824
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_7
+      rect:
+        serializedVersion: 2
+        x: 570
+        y: 903
+        width: 9
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e38ab168955141ec0800000000000000
+      internalID: -3597226728115951554
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_8
+      rect:
+        serializedVersion: 2
+        x: 591
+        y: 885
+        width: 26
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0a9cfd6548677ea30800000000000000
+      internalID: 4244491484585249184
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_9
+      rect:
+        serializedVersion: 2
+        x: 356
+        y: 890
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 95450927add02b500800000000000000
+      internalID: 410405747920229465
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_10
+      rect:
+        serializedVersion: 2
+        x: 369
+        y: 883
+        width: 14
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf79c97f463ec79c0800000000000000
+      internalID: -3928014752183445509
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_11
+      rect:
+        serializedVersion: 2
+        x: 447
+        y: 887
+        width: 10
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e977dbc2ff1ca7ee0800000000000000
+      internalID: -1262483443812567138
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_12
+      rect:
+        serializedVersion: 2
+        x: 470
+        y: 822
+        width: 19
+        height: 75
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8701f483ef0e7cd10800000000000000
+      internalID: 2145931129936351352
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_13
+      rect:
+        serializedVersion: 2
+        x: 519
+        y: 880
+        width: 11
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 098a19a1c536dbdc0800000000000000
+      internalID: -3621629278102116208
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_14
+      rect:
+        serializedVersion: 2
+        x: 543
+        y: 868
+        width: 12
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf500de555753cc70800000000000000
+      internalID: 8990125305336169979
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_15
+      rect:
+        serializedVersion: 2
+        x: 557
+        y: 887
+        width: 13
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a958ed953e9fb110800000000000000
+      internalID: 1278914772316215717
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_16
+      rect:
+        serializedVersion: 2
+        x: 570
+        y: 880
+        width: 17
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bc3a68b75c506a960800000000000000
+      internalID: 7612778565855519691
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_17
+      rect:
+        serializedVersion: 2
+        x: 663
+        y: 895
+        width: 17
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd9db3eea4f191900800000000000000
+      internalID: 655589627444058587
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_18
+      rect:
+        serializedVersion: 2
+        x: 701
+        y: 887
+        width: 12
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e278df11bf5b66380800000000000000
+      internalID: -8978288717173258450
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_19
+      rect:
+        serializedVersion: 2
+        x: 716
+        y: 884
+        width: 18
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3baf666a730f7f9c0800000000000000
+      internalID: -3893379231032870221
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_20
+      rect:
+        serializedVersion: 2
+        x: 759
+        y: 874
+        width: 27
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 359d69f10e90cf8a0800000000000000
+      internalID: -6270125722999269037
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_21
+      rect:
+        serializedVersion: 2
+        x: 234
+        y: 869
+        width: 44
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bc45823ec4c9b1930800000000000000
+      internalID: 4115054538575598795
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_22
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 815
+        width: 79
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c8656038e648930d0800000000000000
+      internalID: -3442574829968533876
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_23
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 879
+        width: 11
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 47e6f5c8f5d4145c0800000000000000
+      internalID: -4233017101979259276
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_24
+      rect:
+        serializedVersion: 2
+        x: 508
+        y: 886
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd441453070221700800000000000000
+      internalID: 509505374148183259
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_25
+      rect:
+        serializedVersion: 2
+        x: 637
+        y: 880
+        width: 21
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c537cd88b7e3a8c70800000000000000
+      internalID: 8974053907787182940
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_26
+      rect:
+        serializedVersion: 2
+        x: 667
+        y: 881
+        width: 7
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a17690b5ba68c3c60800000000000000
+      internalID: 7799256725223728922
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_27
+      rect:
+        serializedVersion: 2
+        x: 250
+        y: 852
+        width: 16
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 47af66edff25e8460800000000000000
+      internalID: 7245820109387135604
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_28
+      rect:
+        serializedVersion: 2
+        x: 375
+        y: 863
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 818c872c988df4d20800000000000000
+      internalID: 3265066341051713560
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_29
+      rect:
+        serializedVersion: 2
+        x: 395
+        y: 837
+        width: 11
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a8847b213823f75f0800000000000000
+      internalID: -756830673838847862
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_30
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 833
+        width: 18
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ee13eea76f86e0d0800000000000000
+      internalID: -3393867593698566424
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_31
+      rect:
+        serializedVersion: 2
+        x: 431
+        y: 865
+        width: 10
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e5ff0c249f907cc0800000000000000
+      internalID: -3715294233837439513
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_32
+      rect:
+        serializedVersion: 2
+        x: 447
+        y: 854
+        width: 11
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 64907017a182a9930800000000000000
+      internalID: 4150674100605880646
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_33
+      rect:
+        serializedVersion: 2
+        x: 518
+        y: 864
+        width: 20
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8dc45c76022a88020800000000000000
+      internalID: 2344301866109979864
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_34
+      rect:
+        serializedVersion: 2
+        x: 559
+        y: 855
+        width: 18
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe9d1b2add9725260800000000000000
+      internalID: 7084859156631509487
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_35
+      rect:
+        serializedVersion: 2
+        x: 574
+        y: 870
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5994612629a0fabf0800000000000000
+      internalID: -311018225438144107
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_36
+      rect:
+        serializedVersion: 2
+        x: 591
+        y: 871
+        width: 13
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b03040a10a32a73d0800000000000000
+      internalID: -3208212614009847029
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_37
+      rect:
+        serializedVersion: 2
+        x: 608
+        y: 831
+        width: 21
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d2823de7afd5e0230800000000000000
+      internalID: 3606923682021320749
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_38
+      rect:
+        serializedVersion: 2
+        x: 637
+        y: 854
+        width: 19
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46e9b4275ff938d30800000000000000
+      internalID: 4432562334796062308
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_39
+      rect:
+        serializedVersion: 2
+        x: 645
+        y: 823
+        width: 63
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f7713f97a0393f7a0800000000000000
+      internalID: -6344565776829966465
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_40
+      rect:
+        serializedVersion: 2
+        x: 682
+        y: 800
+        width: 92
+        height: 81
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bdf57f6ab0e5a6c00800000000000000
+      internalID: 894630880125345755
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_41
+      rect:
+        serializedVersion: 2
+        x: 725
+        y: 869
+        width: 10
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8b10cd6f22426d630800000000000000
+      internalID: 3951385455653290424
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_42
+      rect:
+        serializedVersion: 2
+        x: 763
+        y: 861
+        width: 12
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 86f35ed95ceb38420800000000000000
+      internalID: 2631156363281383272
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_43
+      rect:
+        serializedVersion: 2
+        x: 786
+        y: 813
+        width: 64
+        height: 62
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a06709e2e10bb5d20800000000000000
+      internalID: 3268399598264153610
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_44
+      rect:
+        serializedVersion: 2
+        x: 200
+        y: 829
+        width: 10
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1767a3736501945f0800000000000000
+      internalID: -772067898637519247
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_45
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 815
+        width: 41
+        height: 51
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e5160fdfc0e45d8a0800000000000000
+      internalID: -6281028287591325346
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_46
+      rect:
+        serializedVersion: 2
+        x: 359
+        y: 847
+        width: 8
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3fee704e53feba4f0800000000000000
+      internalID: -816295892699582733
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_47
+      rect:
+        serializedVersion: 2
+        x: 366
+        y: 823
+        width: 25
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a44e2aa6642486f40800000000000000
+      internalID: 5721896196778419274
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_48
+      rect:
+        serializedVersion: 2
+        x: 432
+        y: 856
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f6091db8d0c408b0800000000000000
+      internalID: -5186808833705965832
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_49
+      rect:
+        serializedVersion: 2
+        x: 453
+        y: 835
+        width: 13
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b860161b928d57b0800000000000000
+      internalID: -5233883589332932431
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_50
+      rect:
+        serializedVersion: 2
+        x: 518
+        y: 827
+        width: 12
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28c27a9fef1771590800000000000000
+      internalID: -7703563297669829502
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_51
+      rect:
+        serializedVersion: 2
+        x: 541
+        y: 854
+        width: 12
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d93f58019e08bd3a0800000000000000
+      internalID: -6639571487134714979
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_52
+      rect:
+        serializedVersion: 2
+        x: 575
+        y: 857
+        width: 9
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b64bfe5f3c55183d0800000000000000
+      internalID: -3206187159577971605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_53
+      rect:
+        serializedVersion: 2
+        x: 590
+        y: 834
+        width: 11
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dea4ea26f75357690800000000000000
+      internalID: -7605113574512506131
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_54
+      rect:
+        serializedVersion: 2
+        x: 254
+        y: 835
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5463d090d820a33f0800000000000000
+      internalID: -920420369078340027
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_55
+      rect:
+        serializedVersion: 2
+        x: 426
+        y: 838
+        width: 15
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28e1c438f5c3788b0800000000000000
+      internalID: -5150081267952509310
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_56
+      rect:
+        serializedVersion: 2
+        x: 447
+        y: 825
+        width: 10
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cf9131586bb701c90800000000000000
+      internalID: -7201119780318537220
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_57
+      rect:
+        serializedVersion: 2
+        x: 508
+        y: 839
+        width: 7
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e2fb986a6ab812d00800000000000000
+      internalID: 946190944599392046
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_58
+      rect:
+        serializedVersion: 2
+        x: 539
+        y: 774
+        width: 21
+        height: 67
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7133c561a41480ba0800000000000000
+      internalID: -6122571906951662825
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_59
+      rect:
+        serializedVersion: 2
+        x: 541
+        y: 840
+        width: 16
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 15fee5bda022c1290800000000000000
+      internalID: -7918416614798725295
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_60
+      rect:
+        serializedVersion: 2
+        x: 559
+        y: 833
+        width: 19
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 40337a102759b72d0800000000000000
+      internalID: -3279863586722729212
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_61
+      rect:
+        serializedVersion: 2
+        x: 631
+        y: 836
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 688632cbff16d0ce0800000000000000
+      internalID: -1437384955060328314
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_62
+      rect:
+        serializedVersion: 2
+        x: 746
+        y: 813
+        width: 25
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ac4d6d03705aec7b0800000000000000
+      internalID: -5202039069263604534
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_63
+      rect:
+        serializedVersion: 2
+        x: 238
+        y: 831
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 20042389f47f15650800000000000000
+      internalID: 6220024481603272706
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_64
+      rect:
+        serializedVersion: 2
+        x: 297
+        y: 791
+        width: 57
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6e849100f24f79e00800000000000000
+      internalID: 1051577520716597478
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_65
+      rect:
+        serializedVersion: 2
+        x: 389
+        y: 805
+        width: 14
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3676b48a7b1c90a00800000000000000
+      internalID: 723322209716365155
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_66
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 801
+        width: 14
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3764209fcc1101e40800000000000000
+      internalID: 5625015506634425971
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_67
+      rect:
+        serializedVersion: 2
+        x: 426
+        y: 818
+        width: 15
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 874badcf2b9026de0800000000000000
+      internalID: -1341499074651966344
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_68
+      rect:
+        serializedVersion: 2
+        x: 495
+        y: 803
+        width: 18
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7543a37fc8c6478d0800000000000000
+      internalID: -2849533311519673257
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_69
+      rect:
+        serializedVersion: 2
+        x: 507
+        y: 825
+        width: 8
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd09c84215be7ae90800000000000000
+      internalID: -7014379160868187937
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_70
+      rect:
+        serializedVersion: 2
+        x: 565
+        y: 825
+        width: 12
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 088018a2c898e4e60800000000000000
+      internalID: 7948441627457030272
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_71
+      rect:
+        serializedVersion: 2
+        x: 590
+        y: 824
+        width: 11
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e9fc14b699198fb50800000000000000
+      internalID: 6627206939791183774
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_72
+      rect:
+        serializedVersion: 2
+        x: 630
+        y: 823
+        width: 15
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2626ed983046c9bf0800000000000000
+      internalID: -316267907462045086
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_73
+      rect:
+        serializedVersion: 2
+        x: 63
+        y: 57
+        width: 919
+        height: 757
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 24e383a8164ae7d30800000000000000
+      internalID: 4431159822216871490
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_74
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 797
+        width: 34
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 569b12e7a9c44d870800000000000000
+      internalID: 8706668206038825317
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_75
+      rect:
+        serializedVersion: 2
+        x: 246
+        y: 811
+        width: 15
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d6adc364bcb0e27d0800000000000000
+      internalID: -2941400538941695379
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_76
+      rect:
+        serializedVersion: 2
+        x: 279
+        y: 773
+        width: 82
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de3d974a7a0749c40800000000000000
+      internalID: 5518159308756997101
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_77
+      rect:
+        serializedVersion: 2
+        x: 359
+        y: 805
+        width: 15
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ac2c28da5beb83e80800000000000000
+      internalID: -8198593434118602038
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_78
+      rect:
+        serializedVersion: 2
+        x: 420
+        y: 807
+        width: 21
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 599191f7148653500800000000000000
+      internalID: 375320774469818773
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_79
+      rect:
+        serializedVersion: 2
+        x: 447
+        y: 800
+        width: 12
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ff97693f4b1bc8d0800000000000000
+      internalID: -2825134314165395465
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_80
+      rect:
+        serializedVersion: 2
+        x: 452
+        y: 813
+        width: 16
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fab27f9b30cfa3ab0800000000000000
+      internalID: -5027428941070652497
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_81
+      rect:
+        serializedVersion: 2
+        x: 467
+        y: 795
+        width: 22
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 30f42f214fab6d960800000000000000
+      internalID: 7626488576451170051
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_82
+      rect:
+        serializedVersion: 2
+        x: 508
+        y: 803
+        width: 8
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb9df50461f177070800000000000000
+      internalID: 8103980234906261947
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_83
+      rect:
+        serializedVersion: 2
+        x: 517
+        y: 813
+        width: 12
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a4c9d38efcdc756a0800000000000000
+      internalID: -6460468847601410998
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_84
+      rect:
+        serializedVersion: 2
+        x: 563
+        y: 806
+        width: 26
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 317b659d5a5551970800000000000000
+      internalID: 8724974023904507667
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_85
+      rect:
+        serializedVersion: 2
+        x: 589
+        y: 807
+        width: 13
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a7ff9265e331659e0800000000000000
+      internalID: -1633096656420733062
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_86
+      rect:
+        serializedVersion: 2
+        x: 601
+        y: 801
+        width: 17
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 36542964072f56100800000000000000
+      internalID: 100753130719954275
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_87
+      rect:
+        serializedVersion: 2
+        x: 617
+        y: 807
+        width: 20
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f9f0058c6e0b13200800000000000000
+      internalID: 158101967184334751
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_88
+      rect:
+        serializedVersion: 2
+        x: 635
+        y: 805
+        width: 48
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3f6104c2da209bce0800000000000000
+      internalID: -1389076067272091917
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_89
+      rect:
+        serializedVersion: 2
+        x: 695
+        y: 773
+        width: 52
+        height: 51
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 508789fe5ae6ae290800000000000000
+      internalID: -7860348540653373435
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_90
+      rect:
+        serializedVersion: 2
+        x: 779
+        y: 806
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5756dac2f61b7ed40800000000000000
+      internalID: 5613650551589660021
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_91
+      rect:
+        serializedVersion: 2
+        x: 787
+        y: 799
+        width: 20
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 60a3131e4b9f46430800000000000000
+      internalID: 3775416942910847494
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_92
+      rect:
+        serializedVersion: 2
+        x: 842
+        y: 806
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6d0ddc2acf84eb390800000000000000
+      internalID: -7800717254658764586
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_93
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 806
+        width: 8
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c4ea6f0d788598f0800000000000000
+      internalID: -534370910062582587
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_94
+      rect:
+        serializedVersion: 2
+        x: 377
+        y: 803
+        width: 7
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 958a40ebdf9223450800000000000000
+      internalID: 6066957817812920409
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_95
+      rect:
+        serializedVersion: 2
+        x: 519
+        y: 797
+        width: 10
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8af07b9d0f84ff0e0800000000000000
+      internalID: -2233986690870472792
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_96
+      rect:
+        serializedVersion: 2
+        x: 559
+        y: 772
+        width: 24
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7897bb400a0140850800000000000000
+      internalID: 6342212454704707975
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_97
+      rect:
+        serializedVersion: 2
+        x: 763
+        y: 801
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2956122c0014adbf0800000000000000
+      internalID: -298854953753942638
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_98
+      rect:
+        serializedVersion: 2
+        x: 363
+        y: 793
+        width: 9
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8d003ce4992f621d0800000000000000
+      internalID: -3375744130402287400
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_99
+      rect:
+        serializedVersion: 2
+        x: 665
+        y: 792
+        width: 24
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 99209b05ed8320ad0800000000000000
+      internalID: -2737563095999642983
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_100
+      rect:
+        serializedVersion: 2
+        x: 89
+        y: 695
+        width: 12
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 47d150ba8d1cb3b10800000000000000
+      internalID: 1962375198976318836
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_101
+      rect:
+        serializedVersion: 2
+        x: 93
+        y: 647
+        width: 20
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 71737603d107484f0800000000000000
+      internalID: -827413160860895465
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_102
+      rect:
+        serializedVersion: 2
+        x: 86
+        y: 603
+        width: 28
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f688e8ef925bb8820800000000000000
+      internalID: 2921627975248939119
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_103
+      rect:
+        serializedVersion: 2
+        x: 89
+        y: 563
+        width: 12
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d5a06959d6666b370800000000000000
+      internalID: 8337964380970158685
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_104
+      rect:
+        serializedVersion: 2
+        x: 79
+        y: 463
+        width: 42
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 40a23fffdad0f84f0800000000000000
+      internalID: -824425165810882044
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_105
+      rect:
+        serializedVersion: 2
+        x: 74
+        y: 450
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b3dce8bc3993d7d0800000000000000
+      internalID: -2894801649389481039
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_106
+      rect:
+        serializedVersion: 2
+        x: 86
+        y: 439
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f667d699dddac8f50800000000000000
+      internalID: 6885069097616111215
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_107
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 393
+        width: 17
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5520712033f71b8a0800000000000000
+      internalID: -6291107347404750251
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_108
+      rect:
+        serializedVersion: 2
+        x: 90
+        y: 381
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d0541f9e9d85c6e0800000000000000
+      internalID: -1817891162160869167
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_109
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 296
+        width: 11
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: da93d54c62ab99290800000000000000
+      internalID: -7883064997069375059
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_110
+      rect:
+        serializedVersion: 2
+        x: 352
+        y: 296
+        width: 11
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ab32071c5fccd620800000000000000
+      internalID: 2800341062747569064
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_111
+      rect:
+        serializedVersion: 2
+        x: 398
+        y: 295
+        width: 19
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aee956236a32bf460800000000000000
+      internalID: 7276448819664232170
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_112
+      rect:
+        serializedVersion: 2
+        x: 487
+        y: 279
+        width: 10
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7146822b49527c590800000000000000
+      internalID: -7654107721118489577
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_113
+      rect:
+        serializedVersion: 2
+        x: 495
+        y: 295
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 823ae9e3c05312100800000000000000
+      internalID: 81404594975843112
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_114
+      rect:
+        serializedVersion: 2
+        x: 552
+        y: 287
+        width: 9
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4f3efc03826715bc0800000000000000
+      internalID: -3796123095906917388
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_115
+      rect:
+        serializedVersion: 2
+        x: 573
+        y: 294
+        width: 12
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e8a97e211056da00800000000000000
+      internalID: 780899620119750887
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_116
+      rect:
+        serializedVersion: 2
+        x: 603
+        y: 295
+        width: 15
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 640384c62c780aeb0800000000000000
+      internalID: -4710615941119463354
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_117
+      rect:
+        serializedVersion: 2
+        x: 622
+        y: 290
+        width: 12
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 854b30684ba5edf40800000000000000
+      internalID: 5755137105215075416
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_118
+      rect:
+        serializedVersion: 2
+        x: 631
+        y: 295
+        width: 13
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e866d1dd1d4815a20800000000000000
+      internalID: 3049364459599259278
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_119
+      rect:
+        serializedVersion: 2
+        x: 654
+        y: 294
+        width: 20
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cf5432501b3488880800000000000000
+      internalID: -8608556260144232964
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_120
+      rect:
+        serializedVersion: 2
+        x: 682
+        y: 285
+        width: 12
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a56a1bf10f1b5ec20800000000000000
+      internalID: 3235187552217572954
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_121
+      rect:
+        serializedVersion: 2
+        x: 743
+        y: 294
+        width: 10
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f663b48b8d42c8060800000000000000
+      internalID: 6956976037604046447
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_122
+      rect:
+        serializedVersion: 2
+        x: 335
+        y: 287
+        width: 8
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7131299dbdcdfa8e0800000000000000
+      internalID: -1679881299179728105
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_123
+      rect:
+        serializedVersion: 2
+        x: 402
+        y: 283
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9006d503b1b182e0800000000000000
+      internalID: -2125222166686990181
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_124
+      rect:
+        serializedVersion: 2
+        x: 437
+        y: 282
+        width: 12
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eddf3b443172ea590800000000000000
+      internalID: -7661142952400126498
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_125
+      rect:
+        serializedVersion: 2
+        x: 455
+        y: 283
+        width: 11
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 38ef0c4b37f632a50800000000000000
+      internalID: 6495157630342856323
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_126
+      rect:
+        serializedVersion: 2
+        x: 523
+        y: 279
+        width: 16
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7052a9785ba984f0800000000000000
+      internalID: -825940660159623045
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_127
+      rect:
+        serializedVersion: 2
+        x: 583
+        y: 282
+        width: 10
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f63ac11cd24becd50800000000000000
+      internalID: 6759538199336100719
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_128
+      rect:
+        serializedVersion: 2
+        x: 647
+        y: 281
+        width: 14
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c6c50dd736cf6dcd0800000000000000
+      internalID: -2533560236106556308
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_129
+      rect:
+        serializedVersion: 2
+        x: 319
+        y: 256
+        width: 18
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d234d3ca7abe8f1b0800000000000000
+      internalID: -5622485029390302419
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_130
+      rect:
+        serializedVersion: 2
+        x: 504
+        y: 271
+        width: 10
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c51d277fbaf61eec0800000000000000
+      internalID: -3539425047754911396
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_131
+      rect:
+        serializedVersion: 2
+        x: 572
+        y: 271
+        width: 13
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9215d2844666c9920800000000000000
+      internalID: 2998384032815599913
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_132
+      rect:
+        serializedVersion: 2
+        x: 718
+        y: 263
+        width: 10
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a15cbe5957d3add20800000000000000
+      internalID: 3304020851865404698
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_133
+      rect:
+        serializedVersion: 2
+        x: 335
+        y: 251
+        width: 9
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cbf7c4887df0f3850800000000000000
+      internalID: 6358818617249529788
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_134
+      rect:
+        serializedVersion: 2
+        x: 391
+        y: 247
+        width: 12
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 868959083814ede50800000000000000
+      internalID: 6835973317448800360
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ico_gen_1_135
+      rect:
+        serializedVersion: 2
+        x: 554
+        y: 251
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 980f5f8894d1eb200800000000000000
+      internalID: 197627635318517897
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      ico_gen_1_0: -571365799256050346
+      ico_gen_1_1: -1721406381378846146
+      ico_gen_1_10: -3928014752183445509
+      ico_gen_1_100: 1962375198976318836
+      ico_gen_1_101: -827413160860895465
+      ico_gen_1_102: 2921627975248939119
+      ico_gen_1_103: 8337964380970158685
+      ico_gen_1_104: -824425165810882044
+      ico_gen_1_105: -2894801649389481039
+      ico_gen_1_106: 6885069097616111215
+      ico_gen_1_107: -6291107347404750251
+      ico_gen_1_108: -1817891162160869167
+      ico_gen_1_109: -7883064997069375059
+      ico_gen_1_11: -1262483443812567138
+      ico_gen_1_110: 2800341062747569064
+      ico_gen_1_111: 7276448819664232170
+      ico_gen_1_112: -7654107721118489577
+      ico_gen_1_113: 81404594975843112
+      ico_gen_1_114: -3796123095906917388
+      ico_gen_1_115: 780899620119750887
+      ico_gen_1_116: -4710615941119463354
+      ico_gen_1_117: 5755137105215075416
+      ico_gen_1_118: 3049364459599259278
+      ico_gen_1_119: -8608556260144232964
+      ico_gen_1_12: 2145931129936351352
+      ico_gen_1_120: 3235187552217572954
+      ico_gen_1_121: 6956976037604046447
+      ico_gen_1_122: -1679881299179728105
+      ico_gen_1_123: -2125222166686990181
+      ico_gen_1_124: -7661142952400126498
+      ico_gen_1_125: 6495157630342856323
+      ico_gen_1_126: -825940660159623045
+      ico_gen_1_127: 6759538199336100719
+      ico_gen_1_128: -2533560236106556308
+      ico_gen_1_129: -5622485029390302419
+      ico_gen_1_13: -3621629278102116208
+      ico_gen_1_130: -3539425047754911396
+      ico_gen_1_131: 2998384032815599913
+      ico_gen_1_132: 3304020851865404698
+      ico_gen_1_133: 6358818617249529788
+      ico_gen_1_134: 6835973317448800360
+      ico_gen_1_135: 197627635318517897
+      ico_gen_1_14: 8990125305336169979
+      ico_gen_1_15: 1278914772316215717
+      ico_gen_1_16: 7612778565855519691
+      ico_gen_1_17: 655589627444058587
+      ico_gen_1_18: -8978288717173258450
+      ico_gen_1_19: -3893379231032870221
+      ico_gen_1_2: 2713065577726045649
+      ico_gen_1_20: -6270125722999269037
+      ico_gen_1_21: 4115054538575598795
+      ico_gen_1_22: -3442574829968533876
+      ico_gen_1_23: -4233017101979259276
+      ico_gen_1_24: 509505374148183259
+      ico_gen_1_25: 8974053907787182940
+      ico_gen_1_26: 7799256725223728922
+      ico_gen_1_27: 7245820109387135604
+      ico_gen_1_28: 3265066341051713560
+      ico_gen_1_29: -756830673838847862
+      ico_gen_1_3: 948669557739747098
+      ico_gen_1_30: -3393867593698566424
+      ico_gen_1_31: -3715294233837439513
+      ico_gen_1_32: 4150674100605880646
+      ico_gen_1_33: 2344301866109979864
+      ico_gen_1_34: 7084859156631509487
+      ico_gen_1_35: -311018225438144107
+      ico_gen_1_36: -3208212614009847029
+      ico_gen_1_37: 3606923682021320749
+      ico_gen_1_38: 4432562334796062308
+      ico_gen_1_39: -6344565776829966465
+      ico_gen_1_4: -82023277311286768
+      ico_gen_1_40: 894630880125345755
+      ico_gen_1_41: 3951385455653290424
+      ico_gen_1_42: 2631156363281383272
+      ico_gen_1_43: 3268399598264153610
+      ico_gen_1_44: -772067898637519247
+      ico_gen_1_45: -6281028287591325346
+      ico_gen_1_46: -816295892699582733
+      ico_gen_1_47: 5721896196778419274
+      ico_gen_1_48: -5186808833705965832
+      ico_gen_1_49: -5233883589332932431
+      ico_gen_1_5: 6696354200307235391
+      ico_gen_1_50: -7703563297669829502
+      ico_gen_1_51: -6639571487134714979
+      ico_gen_1_52: -3206187159577971605
+      ico_gen_1_53: -7605113574512506131
+      ico_gen_1_54: -920420369078340027
+      ico_gen_1_55: -5150081267952509310
+      ico_gen_1_56: -7201119780318537220
+      ico_gen_1_57: 946190944599392046
+      ico_gen_1_58: -6122571906951662825
+      ico_gen_1_59: -7918416614798725295
+      ico_gen_1_6: 3236659028798595824
+      ico_gen_1_60: -3279863586722729212
+      ico_gen_1_61: -1437384955060328314
+      ico_gen_1_62: -5202039069263604534
+      ico_gen_1_63: 6220024481603272706
+      ico_gen_1_64: 1051577520716597478
+      ico_gen_1_65: 723322209716365155
+      ico_gen_1_66: 5625015506634425971
+      ico_gen_1_67: -1341499074651966344
+      ico_gen_1_68: -2849533311519673257
+      ico_gen_1_69: -7014379160868187937
+      ico_gen_1_7: -3597226728115951554
+      ico_gen_1_70: 7948441627457030272
+      ico_gen_1_71: 6627206939791183774
+      ico_gen_1_72: -316267907462045086
+      ico_gen_1_73: 4431159822216871490
+      ico_gen_1_74: 8706668206038825317
+      ico_gen_1_75: -2941400538941695379
+      ico_gen_1_76: 5518159308756997101
+      ico_gen_1_77: -8198593434118602038
+      ico_gen_1_78: 375320774469818773
+      ico_gen_1_79: -2825134314165395465
+      ico_gen_1_8: 4244491484585249184
+      ico_gen_1_80: -5027428941070652497
+      ico_gen_1_81: 7626488576451170051
+      ico_gen_1_82: 8103980234906261947
+      ico_gen_1_83: -6460468847601410998
+      ico_gen_1_84: 8724974023904507667
+      ico_gen_1_85: -1633096656420733062
+      ico_gen_1_86: 100753130719954275
+      ico_gen_1_87: 158101967184334751
+      ico_gen_1_88: -1389076067272091917
+      ico_gen_1_89: -7860348540653373435
+      ico_gen_1_9: 410405747920229465
+      ico_gen_1_90: 5613650551589660021
+      ico_gen_1_91: 3775416942910847494
+      ico_gen_1_92: -7800717254658764586
+      ico_gen_1_93: -534370910062582587
+      ico_gen_1_94: 6066957817812920409
+      ico_gen_1_95: -2233986690870472792
+      ico_gen_1_96: 6342212454704707975
+      ico_gen_1_97: -298854953753942638
+      ico_gen_1_98: -3375744130402287400
+      ico_gen_1_99: -2737563095999642983
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

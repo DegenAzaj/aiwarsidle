@@ -75,9 +75,8 @@ namespace AIWarsIdle.UI.Generators
             }
 
             // MVP: execute directly. Story 11.3 adds a confirm modal.
-            loop.Prestige.ExecutePrestige();
+            loop.Prestige.ExecutePrestigeSingle();
             Refresh();
         }
     }
 }
-

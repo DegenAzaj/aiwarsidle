@@ -121,11 +121,11 @@ namespace AIWarsIdle.UI.Generators
             {
                 _nameText.text = _generatorId switch
                 {
-                    0 => "Generator 1",
-                    1 => "Generator 2",
-                    2 => "Generator 3",
-                    3 => "Generator 4",
-                    4 => "Generator 5",
+                    0 => "Data Scrapers",
+                    1 => "GPU Farms",
+                    2 => "Neural Clusters",
+                    3 => "Quantum Nodes",
+                    4 => "Core AI Nexus",
                     _ => $"Generator {_generatorId + 1}",
                 };
             }

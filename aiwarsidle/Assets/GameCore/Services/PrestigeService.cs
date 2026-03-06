@@ -100,13 +100,8 @@ namespace AIWarsIdle.GameCore.Services
                 throw new InvalidOperationException("Cannot prestige yet.");
             }
 
-            var remainingEarned = earnedSinceLast - threshold;
-            if (remainingEarned < 0) remainingEarned = 0;
-
-            var newBaseline = _state.LifetimeEarnedSoftCurrency - remainingEarned;
-            if (newBaseline < 0) newBaseline = 0;
-            if (newBaseline > _state.LifetimeEarnedSoftCurrency) newBaseline = _state.LifetimeEarnedSoftCurrency;
-            _state.LifetimeEarnedSoftCurrencyAtLastPrestige = newBaseline;
+            // Single prestige: progress to the next prestige starts from 0.
+            _state.LifetimeEarnedSoftCurrencyAtLastPrestige = _state.LifetimeEarnedSoftCurrency;
 
             _state.SoftCurrency = 0;
             for (var i = 0; i < _state.GeneratorLevels.Length; i++)
