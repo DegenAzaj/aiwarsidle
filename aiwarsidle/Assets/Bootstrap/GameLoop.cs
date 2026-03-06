@@ -17,13 +17,18 @@ namespace AIWarsIdle.Bootstrap
         private readonly AutosaveRunner _autosave;
         private readonly BufferedAnalyticsService _analytics;
         private readonly AnalyticsEventBusBridge _analyticsBridge;
+        private readonly EventBus _eventBus;
         private readonly MapService _map;
         private readonly OverclockService _overclock;
         private readonly ProductionService _production;
+        private readonly EconomyService _economy;
+        private readonly UpgradeService _upgrades;
+        private readonly PrestigeService _prestige;
         private readonly OfflineClaimService _offline;
         private readonly PvpAttackChargesService _pvpAttacks;
         private readonly LeagueService _league;
         private readonly SessionTelemetryService _sessionTelemetry;
+        private readonly SubscriptionService _subscription;
 
         private double _analyticsFlushCarry;
         private readonly double _analyticsFlushIntervalSeconds;
@@ -32,6 +37,15 @@ namespace AIWarsIdle.Bootstrap
         public OfflineClaimService OfflineClaim => _offline;
 
         public long LastNowUnixSeconds { get; private set; }
+
+        public IEventBus EventBus => _eventBus;
+        public EconomyService Economy => _economy;
+        public ProductionService Production => _production;
+        public UpgradeService Upgrades => _upgrades;
+        public PrestigeService Prestige => _prestige;
+        public OverclockService Overclock => _overclock;
+        public ISubscriptionService Subscription => _subscription;
+        public long NowUnixSeconds => LastNowUnixSeconds;
 
         public GameLoop(
             SaveService saveService,
@@ -59,36 +73,39 @@ namespace AIWarsIdle.Bootstrap
 
             _time = new BootstrapTime();
 
-            var eventBus = new EventBus();
+            _eventBus = new EventBus();
 
             var analyticsSink = new NullAnalyticsSink();
             _analytics = new BufferedAnalyticsService(analyticsSink);
-            _analyticsBridge = new AnalyticsEventBusBridge(eventBus, _analytics);
+            _analyticsBridge = new AnalyticsEventBusBridge(_eventBus, _analytics);
 
             State = SaveDataV1GameStateMapper.ToGameState(initialSave);
 
-            var subscription = new SubscriptionService();
-            var economy = new EconomyService(State, eventBus);
+            _subscription = new SubscriptionService();
+            _economy = new EconomyService(State, _eventBus);
 
-            _overclock = new OverclockService(State, overclockConfig, eventBus);
+            _overclock = new OverclockService(State, overclockConfig, _eventBus);
 
             var productionBonus = new MapProductionBonusProvider(State.MapState, mapConfig);
             _production = new ProductionService(
                 State,
                 balanceConfig,
-                economy,
+                _economy,
                 overclock: _overclock,
                 permanentMultiplierProvider: productionBonus,
-                subscription: subscription);
+                subscription: _subscription);
 
-            _offline = new OfflineClaimService(State, balanceConfig, _production, economy, eventBus);
+            _upgrades = new UpgradeService(State, balanceConfig, _economy, _eventBus);
+            _prestige = new PrestigeService(State, balanceConfig, _eventBus);
+
+            _offline = new OfflineClaimService(State, balanceConfig, _production, _economy, _eventBus);
 
             _map = new MapService(State.MapState, mapConfig, _overclock);
 
             _pvpAttacks = pvpAttacksConfig == null ? null : new PvpAttackChargesService(State, pvpAttacksConfig);
             _league = leagueConfig == null ? null : new LeagueService(State, leagueConfig);
 
-            _sessionTelemetry = new SessionTelemetryService(eventBus);
+            _sessionTelemetry = new SessionTelemetryService(_eventBus);
 
             _autosave = new AutosaveRunner(
                 saveService,

@@ -403,11 +403,11 @@ Zasada: UI jest cienką warstwą, tylko prezentacja + input → wywołania serwi
 
 ## STORY 11.0 — Splash screen (UI entry)
 
-* [ ] Splash screen: po starcie/resume (wg ustaleń “single entry”) sprawdza **Update Required** (np. minimalna wersja z Firebase Remote Config) i w razie potrzeby blokuje wejście do gry (CTA do update).
+* [x] Splash screen: po starcie/resume (wg ustaleń “single entry”) sprawdza **Update Required** (np. minimalna wersja z Firebase Remote Config) i w razie potrzeby blokuje wejście do gry (CTA do update).
 
 **TESTS**
-* [ ] PlayMode: UpdateRequired=true → brak przejścia do Hub
-* [ ] PlayMode: UpdateRequired=false → przejście do Hub
+* [x] PlayMode: UpdateRequired=true → brak przejścia do Hub
+* [x] PlayMode: UpdateRequired=false → przejście do Hub
 
 ## STORY 11.0b — Resume policy (10 min → Splash)
 
@@ -420,10 +420,10 @@ Zasada: UI jest cienką warstwą, tylko prezentacja + input → wywołania serwi
 
 ## STORY 11.1 — UIRouter + ekrany
 
-* [ ] `UIRouter` i nawigacja: Hub / Generatory / Mapa PvP / Sklep / Event
+* [x] `UIRouter` i nawigacja: Hub / Generatory / Mapa PvP / Sklep / Event
 
 **TESTS**
-* [ ] PlayMode: przełączanie paneli nie gubi stanu, brak crashy
+* [x] PlayMode: przełączanie paneli nie gubi stanu, brak crashy
 
 ## STORY 11.1b — Stany UI + feedback (fail-safe)
 
