@@ -28,6 +28,8 @@ namespace AIWarsIdle.Bootstrap
         private GameLoop _loop;
 
         public GameLoop Loop => _loop;
+        public string SaveSubdirectory => _saveSubdirectory;
+        public string SaveFileNameWithoutExtension => _saveFileNameWithoutExtension;
 
         public BalanceConfig BalanceConfig { get => _balanceConfig; set => _balanceConfig = value; }
         public OverclockConfig OverclockConfig { get => _overclockConfig; set => _overclockConfig = value; }
@@ -96,4 +98,3 @@ namespace AIWarsIdle.Bootstrap
         }
     }
 }
-

@@ -44,6 +44,28 @@ namespace AIWarsIdle.Persistence.Domain
                 GeneratorLevels = fixedLevels;
             }
 
+            // Seed a playable fresh start (avoid "stuck at 0 currency" with all generators at level 0).
+            // Only applies to brand-new / empty progression.
+            var anyGeneratorLevelPositive = false;
+            for (var i = 0; i < GeneratorLevels.Length; i++)
+            {
+                if (GeneratorLevels[i] > 0)
+                {
+                    anyGeneratorLevelPositive = true;
+                    break;
+                }
+            }
+
+            if (!anyGeneratorLevelPositive
+                && SoftCurrency <= 0
+                && LifetimeEarnedSoftCurrency <= 0
+                && PrestigeCount <= 0
+                && PermanentUpgradeLevel <= 0
+                && GeneratorLevels.Length > 0)
+            {
+                GeneratorLevels[0] = 1;
+            }
+
             if (Sectors == null)
             {
                 Sectors = Array.Empty<SectorSaveData>();

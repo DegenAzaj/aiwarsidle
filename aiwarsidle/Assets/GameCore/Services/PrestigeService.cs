@@ -47,6 +47,12 @@ namespace AIWarsIdle.GameCore.Services
                 _state.GeneratorLevels[i] = 0;
             }
 
+            // Avoid a dead-start after prestige (no currency + no production).
+            if (_state.GeneratorLevels.Length > 0)
+            {
+                _state.GeneratorLevels[0] = 1;
+            }
+
             _state.PrestigeCount = Math.Max(0, _state.PrestigeCount) + 1;
 
             var nextPermanent = Math.Max(0, _state.PermanentUpgradeLevel) + 1;

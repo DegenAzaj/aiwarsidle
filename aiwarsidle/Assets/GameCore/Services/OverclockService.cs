@@ -24,6 +24,8 @@ namespace AIWarsIdle.GameCore.Services
         }
 
         public int MaxCharges => _config.MaxCharges;
+        public int DurationSeconds => _config.DurationSeconds;
+        public int RegenSeconds => _config.RegenSeconds;
 
         public bool IsActive(long nowUnixSeconds)
         {
@@ -166,4 +168,3 @@ namespace AIWarsIdle.GameCore.Services
         }
     }
 }
-

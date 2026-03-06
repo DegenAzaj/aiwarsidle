@@ -44,6 +44,34 @@ namespace AIWarsIdle.GameCore.Services
             return basePps * subMultiplier;
         }
 
+        public double CalculateGeneratorProductionPerSecond(int generatorId)
+        {
+            return CalculateGeneratorProductionPerSecond(generatorId, nowUnixSeconds: 0);
+        }
+
+        public double CalculateGeneratorProductionPerSecond(int generatorId, long nowUnixSeconds)
+        {
+            if (generatorId < 0 || generatorId >= GameState.GeneratorCount)
+            {
+                throw new ArgumentOutOfRangeException(nameof(generatorId), $"GeneratorId must be in range 0..{GameState.GeneratorCount - 1}.");
+            }
+            if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");
+
+            var level = _state.GeneratorLevels[generatorId];
+            if (level <= 0) return 0;
+
+            var globalMultiplier = PrestigeMath.CalculateGlobalMultiplier(_config, _state.PermanentUpgradeLevel);
+            var permanentMultiplier = GetPermanentMultiplierSafe();
+
+            var output = _config.GeneratorBaseOutputs[generatorId] * level;
+            output *= GetMilestoneMultiplier(level);
+
+            var overclockMultiplier = _overclock?.GetProductionMultiplier(nowUnixSeconds) ?? 1.0;
+            var subMultiplier = _subscription?.IsActive == true ? 2.0 : 1.0;
+
+            return (output * globalMultiplier) * permanentMultiplier * overclockMultiplier * subMultiplier;
+        }
+
         public double CalculateProductionPerSecond(long nowUnixSeconds)
         {
             if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");
@@ -68,13 +96,19 @@ namespace AIWarsIdle.GameCore.Services
                 total += output;
             }
 
+            var permanentMultiplier = GetPermanentMultiplierSafe();
+
+            return (total * globalMultiplier) * permanentMultiplier;
+        }
+
+        private double GetPermanentMultiplierSafe()
+        {
             var permanentMultiplier = _permanentMultiplierProvider?.GetPermanentMultiplier() ?? 1.0;
             if (double.IsNaN(permanentMultiplier) || double.IsInfinity(permanentMultiplier) || permanentMultiplier <= 0)
             {
                 permanentMultiplier = 1.0;
             }
-
-            return (total * globalMultiplier) * permanentMultiplier;
+            return permanentMultiplier;
         }
 
         public double CalculateOfflineGain(double seconds)
