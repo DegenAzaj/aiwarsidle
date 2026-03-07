@@ -83,6 +83,7 @@ namespace AIWarsIdle.UI.Generators
             var splashVisible = IsSplashVisible();
             if (splashVisible)
             {
+                UpdateHudClaimButton(canClaim: false);
                 _wasSplashVisible = true;
                 _dismissedForCurrentEntry = false;
                 if (_isVisible) SetVisible(false);
@@ -97,6 +98,9 @@ namespace AIWarsIdle.UI.Generators
 
             if (_dismissedForCurrentEntry)
             {
+                var loopWhileDismissed = ResolveLoop();
+                var canClaimWhileDismissed = loopWhileDismissed != null && loopWhileDismissed.OfflineClaim.PendingOfflineGain > 0;
+                UpdateHudClaimButton(canClaimWhileDismissed);
                 if (_isVisible) SetVisible(false);
                 return;
             }
@@ -104,11 +108,13 @@ namespace AIWarsIdle.UI.Generators
             var loop = ResolveLoop();
             if (loop == null)
             {
+                UpdateHudClaimButton(canClaim: false);
                 if (_isVisible) SetVisible(false);
                 return;
             }
 
             var shouldShow = loop.OfflineClaim.PendingOfflineGain > 0;
+            UpdateHudClaimButton(shouldShow);
             SetVisible(shouldShow);
         }
 
@@ -137,7 +143,7 @@ namespace AIWarsIdle.UI.Generators
             }
 
             var canClaim = loop.OfflineClaim.PendingOfflineGain > 0;
-            if (_hudClaimButton != null) _hudClaimButton.interactable = canClaim;
+            UpdateHudClaimButton(canClaim);
             if (_claimButton != null) _claimButton.interactable = canClaim;
             if (_claimX2Button != null) _claimX2Button.interactable = canClaim && loop.RewardedAds != null;
         }
@@ -298,6 +304,12 @@ namespace AIWarsIdle.UI.Generators
             {
                 _modalRoot.SetActive(visible);
             }
+        }
+
+        private void UpdateHudClaimButton(bool canClaim)
+        {
+            if (_hudClaimButton == null) return;
+            _hudClaimButton.interactable = canClaim;
         }
 
         private static T FindComponentInChildren<T>(GameObject root, string childName) where T : Component

@@ -103,5 +103,24 @@ namespace AIWarsIdle.Tests.EditMode
             Assert.AreEqual(1800.0, state.SoftCurrency);
             Assert.AreEqual(0.0, offline.PendingOfflineGain);
         }
+
+        [Test]
+        public void MarkBackgrounded_ResetsOfflineWindowStart_ForResumeFlow()
+        {
+            var state = new GameState { LastLoginUnixSeconds = 0 };
+            state.GeneratorLevels[0] = 1;
+
+            var cfg = CreateValidBalanceConfig(generatorOutput: 10);
+            var economy = new EconomyService(state);
+            var production = new ProductionService(state, cfg, economy);
+            var offline = new OfflineClaimService(state, cfg, production, economy);
+
+            offline.MarkBackgrounded(nowUnixSeconds: 500);
+            offline.BankOfflineGain(nowUnixSeconds: 560);
+
+            Assert.AreEqual(560, state.LastLoginUnixSeconds);
+            Assert.AreEqual(10.0 * 60 * 0.6, offline.PendingOfflineGain);
+            Assert.AreEqual(60, offline.LastBankedOfflineRawSeconds);
+        }
     }
 }

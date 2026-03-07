@@ -10790,6 +10790,21 @@ MonoBehaviour:
   _saveFileNameWithoutExtension: save
   _autosaveIntervalSeconds: 30
   _analyticsFlushIntervalSeconds: 2
+--- !u!4 &1664637917
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1664637915}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 457.65338, y: 1178.3752, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1664637918
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10812,21 +10827,6 @@ MonoBehaviour:
   _offlineGainNumberText: {fileID: 0}
   _offlineTimeDescriptionText: {fileID: 0}
   _refreshIntervalSeconds: 0.1
---- !u!4 &1664637917
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1664637915}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 457.65338, y: 1178.3752, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1667127628
 GameObject:
   m_ObjectHideFlags: 0

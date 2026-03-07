@@ -33,6 +33,7 @@ namespace AIWarsIdle.Bootstrap
 
         private double _analyticsFlushCarry;
         private readonly double _analyticsFlushIntervalSeconds;
+        private bool _isApplicationPaused;
 
         public GameState State { get; }
         public OfflineClaimService OfflineClaim => _offline;
@@ -165,7 +166,35 @@ namespace AIWarsIdle.Bootstrap
 
         public void OnApplicationPause(bool isPaused)
         {
+            var now = _time.NowUnixSeconds;
+            LastNowUnixSeconds = now;
+
+            if (isPaused)
+            {
+                _isApplicationPaused = true;
+                _overclock.Tick(now);
+                _pvpAttacks?.Tick(now);
+                _league?.ResetSeasonIfNeeded(now);
+                _map.AdvanceTime(now);
+                _offline.MarkBackgrounded(now);
+                _autosave.OnApplicationPause(isPaused);
+                return;
+            }
+
+            if (!_isApplicationPaused)
+            {
+                _autosave.OnApplicationPause(isPaused);
+                return;
+            }
+
+            _isApplicationPaused = false;
+            _overclock.Tick(now);
+            _pvpAttacks?.Tick(now);
+            _league?.ResetSeasonIfNeeded(now);
+            _map.AdvanceTime(now);
+            _offline.BankOfflineGain(now);
             _autosave.OnApplicationPause(isPaused);
+            _autosave.ForceSave();
         }
 
         public void OnApplicationQuit()

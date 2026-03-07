@@ -66,6 +66,15 @@ namespace AIWarsIdle.GameCore.Services
             _state.LastLoginUnixSeconds = nowUnixSeconds;
         }
 
+        public void MarkBackgrounded(long nowUnixSeconds)
+        {
+            if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");
+
+            _state.LastLoginUnixSeconds = nowUnixSeconds;
+            _state.LastBankedOfflineRawSeconds = 0;
+            _state.LastBankedOfflineEffectiveSeconds = 0;
+        }
+
         public void Claim(double multiplier)
         {
             if (double.IsNaN(multiplier) || double.IsInfinity(multiplier))
