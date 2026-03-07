@@ -52,6 +52,8 @@ namespace AIWarsIdle.Persistence.Services
 
             state.LastLoginUnixSeconds = save.LastLoginUnixSeconds;
             state.PendingOfflineGain = save.PendingOfflineGain;
+            state.LastBankedOfflineRawSeconds = save.LastBankedOfflineRawSeconds;
+            state.LastBankedOfflineEffectiveSeconds = save.LastBankedOfflineEffectiveSeconds;
 
             state.MapState ??= new MapState();
             state.MapState.MapSeasonId = save.MapSeasonId;
@@ -136,6 +138,8 @@ namespace AIWarsIdle.Persistence.Services
 
             save.LastLoginUnixSeconds = state.LastLoginUnixSeconds;
             save.PendingOfflineGain = state.PendingOfflineGain;
+            save.LastBankedOfflineRawSeconds = state.LastBankedOfflineRawSeconds;
+            save.LastBankedOfflineEffectiveSeconds = state.LastBankedOfflineEffectiveSeconds;
 
             save.MapSeasonId = state.MapState?.MapSeasonId ?? 0;
 

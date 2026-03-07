@@ -29,6 +29,7 @@ namespace AIWarsIdle.Bootstrap
         private readonly LeagueService _league;
         private readonly SessionTelemetryService _sessionTelemetry;
         private readonly SubscriptionService _subscription;
+        private readonly RewardedAdsUseCaseService _rewardedAds;
 
         private double _analyticsFlushCarry;
         private readonly double _analyticsFlushIntervalSeconds;
@@ -45,6 +46,7 @@ namespace AIWarsIdle.Bootstrap
         public PrestigeService Prestige => _prestige;
         public OverclockService Overclock => _overclock;
         public ISubscriptionService Subscription => _subscription;
+        public RewardedAdsUseCaseService RewardedAds => _rewardedAds;
         public long NowUnixSeconds => LastNowUnixSeconds;
 
         public GameLoop(
@@ -104,6 +106,7 @@ namespace AIWarsIdle.Bootstrap
 
             _pvpAttacks = pvpAttacksConfig == null ? null : new PvpAttackChargesService(State, pvpAttacksConfig);
             _league = leagueConfig == null ? null : new LeagueService(State, leagueConfig);
+            _rewardedAds = new RewardedAdsUseCaseService(new AdsService(), _offline, _pvpAttacks, _eventBus);
 
             _sessionTelemetry = new SessionTelemetryService(_eventBus);
 
@@ -168,6 +171,11 @@ namespace AIWarsIdle.Bootstrap
         public void OnApplicationQuit()
         {
             _autosave.OnApplicationQuit();
+        }
+
+        public void ForceSave()
+        {
+            _autosave.ForceSave();
         }
 
         public void Dispose()

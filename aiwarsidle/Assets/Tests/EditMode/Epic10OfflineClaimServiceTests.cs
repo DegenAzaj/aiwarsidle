@@ -61,6 +61,23 @@ namespace AIWarsIdle.Tests.EditMode
         }
 
         [Test]
+        public void BankOfflineGain_StoresRawAndEffectiveOfflineSeconds_ForUi()
+        {
+            var state = new GameState { LastLoginUnixSeconds = 0 };
+            state.GeneratorLevels[0] = 1;
+
+            var cfg = CreateValidBalanceConfig(generatorOutput: 10);
+            var economy = new EconomyService(state);
+            var production = new ProductionService(state, cfg, economy);
+            var offline = new OfflineClaimService(state, cfg, production, economy);
+
+            offline.BankOfflineGain(nowUnixSeconds: 20 * 60 * 60);
+
+            Assert.AreEqual(20 * 60 * 60, offline.LastBankedOfflineRawSeconds);
+            Assert.AreEqual(12 * 60 * 60, offline.LastBankedOfflineEffectiveSeconds);
+        }
+
+        [Test]
         public void Claim_WithMultiplier1_And_2_AddsCorrectAndClearsPending()
         {
             var state = new GameState { LastLoginUnixSeconds = 0 };
@@ -87,4 +104,3 @@ namespace AIWarsIdle.Tests.EditMode
         }
     }
 }
-

@@ -13,6 +13,9 @@ namespace AIWarsIdle.GameCore.Services
         private readonly IEventBus _eventBus;
 
         public double PendingOfflineGain => _state.PendingOfflineGain;
+        public long LastBankedOfflineRawSeconds => _state.LastBankedOfflineRawSeconds;
+        public long LastBankedOfflineEffectiveSeconds => _state.LastBankedOfflineEffectiveSeconds;
+        public double OfflineCapSeconds => _config.OfflineCapSeconds;
 
         public OfflineClaimService(
             GameState state,
@@ -40,9 +43,19 @@ namespace AIWarsIdle.GameCore.Services
             var offlineSeconds = nowUnixSeconds - last;
             if (offlineSeconds <= 0)
             {
+                _state.LastBankedOfflineRawSeconds = 0;
+                _state.LastBankedOfflineEffectiveSeconds = 0;
                 _state.LastLoginUnixSeconds = nowUnixSeconds;
                 return;
             }
+
+            _state.LastBankedOfflineRawSeconds = offlineSeconds;
+            var effectiveSeconds = Math.Min((double)offlineSeconds, _config.OfflineCapSeconds);
+            if (double.IsNaN(effectiveSeconds) || double.IsInfinity(effectiveSeconds) || effectiveSeconds < 0)
+            {
+                effectiveSeconds = 0;
+            }
+            _state.LastBankedOfflineEffectiveSeconds = (long)Math.Floor(effectiveSeconds);
 
             var add = _production.CalculateOfflineGain(offlineSeconds);
             if (add < 0) add = 0;
@@ -67,6 +80,8 @@ namespace AIWarsIdle.GameCore.Services
             if (_state.PendingOfflineGain <= 0)
             {
                 _state.PendingOfflineGain = 0;
+                _state.LastBankedOfflineRawSeconds = 0;
+                _state.LastBankedOfflineEffectiveSeconds = 0;
                 return;
             }
 
@@ -75,6 +90,8 @@ namespace AIWarsIdle.GameCore.Services
             _economy.AddCurrency(finalAmount, CurrencySource.OfflineClaim);
             _eventBus?.Publish(new OfflineClaimedEvent(baseAmount, multiplier));
             _state.PendingOfflineGain = 0;
+            _state.LastBankedOfflineRawSeconds = 0;
+            _state.LastBankedOfflineEffectiveSeconds = 0;
         }
     }
 }

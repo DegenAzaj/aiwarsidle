@@ -28,6 +28,8 @@ namespace AIWarsIdle.GameCore.Domain
 
         public long LastLoginUnixSeconds;
         public double PendingOfflineGain;
+        public long LastBankedOfflineRawSeconds;
+        public long LastBankedOfflineEffectiveSeconds;
 
         public GameState()
         {

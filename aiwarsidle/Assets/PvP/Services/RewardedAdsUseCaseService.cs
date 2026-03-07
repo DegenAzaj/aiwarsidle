@@ -21,7 +21,7 @@ namespace AIWarsIdle.PvP.Services
         {
             _ads = ads ?? throw new ArgumentNullException(nameof(ads));
             _offlineClaim = offlineClaim ?? throw new ArgumentNullException(nameof(offlineClaim));
-            _attacks = attacks ?? throw new ArgumentNullException(nameof(attacks));
+            _attacks = attacks;
             _eventBus = eventBus;
         }
 
@@ -43,6 +43,7 @@ namespace AIWarsIdle.PvP.Services
         public bool TryShowDailyPvpAttack(long nowUnixSeconds)
         {
             if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");
+            if (_attacks == null) return false;
             if (!_attacks.CanClaimDailyAdAttack(nowUnixSeconds)) return false;
 
             _ads.ShowRewardedAd(() =>

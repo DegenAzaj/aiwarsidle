@@ -31,6 +31,8 @@ namespace AIWarsIdle.Persistence.Domain
 
         public long LastLoginUnixSeconds;
         public double PendingOfflineGain;
+        public long LastBankedOfflineRawSeconds;
+        public long LastBankedOfflineEffectiveSeconds;
 
         public void Normalize()
         {
@@ -92,6 +94,12 @@ namespace AIWarsIdle.Persistence.Domain
             if (LastPvpAdAttackClaimUnixSeconds < 0) LastPvpAdAttackClaimUnixSeconds = 0;
             if (LastLoginUnixSeconds < 0) LastLoginUnixSeconds = 0;
             if (PendingOfflineGain < 0) PendingOfflineGain = 0;
+            if (LastBankedOfflineRawSeconds < 0) LastBankedOfflineRawSeconds = 0;
+            if (LastBankedOfflineEffectiveSeconds < 0) LastBankedOfflineEffectiveSeconds = 0;
+            if (LastBankedOfflineEffectiveSeconds > LastBankedOfflineRawSeconds)
+            {
+                LastBankedOfflineEffectiveSeconds = LastBankedOfflineRawSeconds;
+            }
         }
     }
 
