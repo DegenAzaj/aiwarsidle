@@ -1,5 +1,7 @@
 # ECONOMY_SKETCH.md
 
+> Uwaga: w aktualnym MVP ekonomia sektorów ma wspierać mapę PvE na hex gridzie `radius = 4` (~61 sektorów), z 6 stronami konfliktu i resetem mapy co ok. 72h. Historyczne liczby w szkicu poniżej należy interpretować pod te nowsze założenia.
+
 Dobra. Projektujemy ekonomię tak, żeby:
 
 * early game był szybki i satysfakcjonujący

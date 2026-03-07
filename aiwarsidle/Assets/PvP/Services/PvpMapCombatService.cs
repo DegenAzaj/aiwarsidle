@@ -53,19 +53,14 @@ namespace AIWarsIdle.PvP.Services
         {
             if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");
 
-            if (!_map.IsInitialized) return new AttackPreview { SectorId = sectorId, Strategy = strategy, WinChanceMin = 0f, WinChanceMax = 0f };
-            if (_map.NeedsSeasonReset(nowUnixSeconds)) return new AttackPreview { SectorId = sectorId, Strategy = strategy, WinChanceMin = 0f, WinChanceMax = 0f };
+            var evaluation = EvaluateAttack(sectorId, nowUnixSeconds);
+            if (!evaluation.CanAttack)
+            {
+                return new AttackPreview { SectorId = sectorId, Strategy = strategy, WinChanceMin = 0f, WinChanceMax = 0f };
+            }
 
             var sector = _map.GetSector(sectorId);
-            if (sector == null)
-            {
-                return new AttackPreview { SectorId = sectorId, Strategy = strategy, WinChanceMin = 0f, WinChanceMax = 0f };
-            }
-
-            if (!CanAttemptAttack(sector, nowUnixSeconds))
-            {
-                return new AttackPreview { SectorId = sectorId, Strategy = strategy, WinChanceMin = 0f, WinChanceMax = 0f };
-            }
+            if (sector == null) return new AttackPreview { SectorId = sectorId, Strategy = strategy, WinChanceMin = 0f, WinChanceMax = 0f };
 
             var attacker = _snapshotService.BuildSnapshot();
             var defender = _matchmakingService.GetDefenderSnapshot(attacker, sector, seed: MixSeed(seedBase, 991));
@@ -99,29 +94,17 @@ namespace AIWarsIdle.PvP.Services
         {
             if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");
 
-            if (!_map.IsInitialized)
-            {
-                return new CombatResult { SectorId = sectorId, Win = false, Battle = new BattleResult(), UpdatedSector = new SectorState { SectorId = sectorId } };
-            }
-            if (_map.NeedsSeasonReset(nowUnixSeconds))
-            {
-                return new CombatResult { SectorId = sectorId, Win = false, Battle = new BattleResult(), UpdatedSector = new SectorState { SectorId = sectorId } };
-            }
-
             var sector = _map.GetSector(sectorId);
-            if (sector == null)
+            var evaluation = EvaluateAttack(sectorId, nowUnixSeconds);
+            if (!evaluation.CanAttack)
             {
-                return new CombatResult { SectorId = sectorId, Win = false, Battle = new BattleResult(), UpdatedSector = new SectorState { SectorId = sectorId } };
-            }
-
-            if (!CanAttemptAttack(sector, nowUnixSeconds))
-            {
-                return new CombatResult { SectorId = sectorId, Win = false, Battle = new BattleResult(), UpdatedSector = CloneSector(sector) };
-            }
-
-            if (_attacks.GetRemaining(nowUnixSeconds) <= 0)
-            {
-                return new CombatResult { SectorId = sectorId, Win = false, Battle = new BattleResult(), UpdatedSector = CloneSector(sector) };
+                return new CombatResult
+                {
+                    SectorId = sectorId,
+                    Win = false,
+                    Battle = new BattleResult(),
+                    UpdatedSector = sector == null ? new SectorState { SectorId = sectorId } : CloneSector(sector)
+                };
             }
 
             _eventBus?.Publish(new SectorAttackEvent(sectorId, strategy));
@@ -181,24 +164,115 @@ namespace AIWarsIdle.PvP.Services
             };
         }
 
-        private bool CanAttemptAttack(SectorState sector, long nowUnixSeconds)
+        public PvpAttackEvaluation EvaluateAttack(int sectorId, long nowUnixSeconds)
         {
-            if (sector == null) return false;
-            if (sector.SectorId == _mapConfig.HomeSectorId) return false;
-            if (sector.OwnerPlayerId == _mapConfig.LocalPlayerId) return false;
+            if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");
 
-            if (_mapConfig.SectorDefinitions == null || _mapConfig.SectorDefinitions.Length == 0) return false;
-            if (_mapConfig.Adjacency == null || _mapConfig.Adjacency.Length == 0) return false;
+            if (!_map.IsInitialized)
+            {
+                return new PvpAttackEvaluation
+                {
+                    CanAttack = false,
+                    BlockReason = PvpAttackBlockReason.MapUninitialized,
+                    RemainingAttacks = _attacks.GetRemaining(nowUnixSeconds)
+                };
+            }
 
-            if (!_map.HasOwnedNeighbor(sector.SectorId, _mapConfig.LocalPlayerId)) return false;
+            if (_map.NeedsSeasonReset(nowUnixSeconds))
+            {
+                return new PvpAttackEvaluation
+                {
+                    CanAttack = false,
+                    BlockReason = PvpAttackBlockReason.SeasonResetPending,
+                    RemainingAttacks = _attacks.GetRemaining(nowUnixSeconds)
+                };
+            }
+
+            var sector = _map.GetSector(sectorId);
+            if (sector == null)
+            {
+                return new PvpAttackEvaluation
+                {
+                    CanAttack = false,
+                    BlockReason = PvpAttackBlockReason.SectorMissing,
+                    RemainingAttacks = _attacks.GetRemaining(nowUnixSeconds)
+                };
+            }
+
+            if (_map.IsHomeSector(sector.SectorId))
+            {
+                return new PvpAttackEvaluation
+                {
+                    CanAttack = false,
+                    BlockReason = PvpAttackBlockReason.HomeSector,
+                    RemainingAttacks = _attacks.GetRemaining(nowUnixSeconds)
+                };
+            }
+
+            if (sector.OwnerPlayerId == _mapConfig.LocalPlayerId)
+            {
+                return new PvpAttackEvaluation
+                {
+                    CanAttack = false,
+                    BlockReason = PvpAttackBlockReason.AlreadyOwned,
+                    RemainingAttacks = _attacks.GetRemaining(nowUnixSeconds)
+                };
+            }
+
+            if (_mapConfig.SectorDefinitions == null || _mapConfig.SectorDefinitions.Length == 0 || _mapConfig.Adjacency == null || _mapConfig.Adjacency.Length == 0)
+            {
+                return new PvpAttackEvaluation
+                {
+                    CanAttack = false,
+                    BlockReason = PvpAttackBlockReason.MissingMapDefinitions,
+                    RemainingAttacks = _attacks.GetRemaining(nowUnixSeconds)
+                };
+            }
+
+            if (!_map.HasOwnedNeighbor(sector.SectorId, _mapConfig.LocalPlayerId))
+            {
+                return new PvpAttackEvaluation
+                {
+                    CanAttack = false,
+                    BlockReason = PvpAttackBlockReason.NoAdjacentOwnedSector,
+                    RemainingAttacks = _attacks.GetRemaining(nowUnixSeconds)
+                };
+            }
 
             if (_mapConfig.SectorAttackCooldownSeconds > 0 && sector.LastCombatUnixSeconds > 0)
             {
                 var age = nowUnixSeconds - sector.LastCombatUnixSeconds;
-                if (age >= 0 && age < _mapConfig.SectorAttackCooldownSeconds) return false;
+                if (age >= 0 && age < _mapConfig.SectorAttackCooldownSeconds)
+                {
+                    var cooldownEndsAt = sector.LastCombatUnixSeconds + _mapConfig.SectorAttackCooldownSeconds;
+                    return new PvpAttackEvaluation
+                    {
+                        CanAttack = false,
+                        BlockReason = PvpAttackBlockReason.CooldownActive,
+                        RemainingAttacks = _attacks.GetRemaining(nowUnixSeconds),
+                        CooldownEndsAtUnixSeconds = cooldownEndsAt,
+                        CooldownRemainingSeconds = cooldownEndsAt > nowUnixSeconds ? cooldownEndsAt - nowUnixSeconds : 0
+                    };
+                }
             }
 
-            return true;
+            var remaining = _attacks.GetRemaining(nowUnixSeconds);
+            if (remaining <= 0)
+            {
+                return new PvpAttackEvaluation
+                {
+                    CanAttack = false,
+                    BlockReason = PvpAttackBlockReason.NoAttackCharges,
+                    RemainingAttacks = remaining
+                };
+            }
+
+            return new PvpAttackEvaluation
+            {
+                CanAttack = true,
+                BlockReason = PvpAttackBlockReason.None,
+                RemainingAttacks = remaining
+            };
         }
 
         private int ComputePreviewSeedBase(int sectorId, AttackStrategy strategy)

@@ -1,4 +1,6 @@
-Poniżej masz **Jira-ready backlog** pod MVP z docelowym async PvP (na końcu z prawdziwym backend snapshot, nie tylko boty).
+> Uwaga: ten backlog jest historyczny. Aktualne MVP zakłada PvE (gracz vs 5 botów) na hex gridzie `radius = 4` (~61 sektorów), z potyczką mapy trwającą ok. 72h. Wzmianki niżej o docelowym async PvP/backendzie nie są już założeniem MVP v1.
+
+Poniżej masz **Jira-ready backlog** pod pierwotne MVP z docelowym async PvP (na końcu z prawdziwym backend snapshot, nie tylko boty).
 
 Struktura:
 **Epic → Story → Task**
@@ -342,4 +344,3 @@ Sprint 6+
 Backend async PvP
 
 ---
-

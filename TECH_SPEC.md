@@ -13,7 +13,8 @@
 * Deterministyczne obliczenia ekonomii
 * SaveData wersjonowany
 * PvP symulowane (brak real-time)
-* PvP oparte o mapę sektorów (2D)
+* MVP: PvP realizowane jako PvE (gracz vs 5 botów) na wspólnej mapie
+* PvP oparte o heksagonalną mapę sektorów (`hex grid`)
 
 ---
 
@@ -169,7 +170,7 @@ Nie ma logiki UI.
 
 ---
 
-# 5. Map PvP System (Async)
+# 5. Map PvP System (MVP PvE vs boty)
 
 ---
 
@@ -213,7 +214,7 @@ Tymczasowe boosty PvP (np. Overclock +% attack power) stosuj osobno w PvP (np. j
 
 ## 5.2 MapService
 
-MapService zarządza stanem mapy świata i sektorów (właściciel, stability, bonusy, cooldown).
+MapService zarządza stanem mapy heksagonalnej i sektorów (właściciel, stability, bonusy, cooldown).
 
 Model (MVP):
 
@@ -233,7 +234,7 @@ class SectorState {
 }
 
 class MapState {
-    int MapSeasonId; // reset co 7 dni
+    int MapSeasonId; // reset co ~72h
     SectorState[] Sectors;
 }
 
@@ -254,11 +255,16 @@ class CombatResult {
 
 Zasady (MVP):
 
-* Mapa ma 20–30 sektorów zdefiniowanych w `MapConfig`.
+* Mapa ma heksagonalny układ w kształcie dużego hexa: `radius = 4`, ok. 61 sektorów.
+* W konflikcie uczestniczy 6 stron: gracz + 5 botów.
+* Każda strona startuje z jednego narożnego `Home Sector`.
+* `Home Sector` jest nietykalny i nie może zostać przejęty.
+* Większość mapy startuje jako neutralna.
 * Zasada mapy: **brak teleportu** — atak jest możliwy tylko na sektor sąsiedni (połączenia z `MapConfig`).
 * Po przejęciu sektor startuje z niską stabilnością (config).
 * Stabilność rośnie w czasie (config).
-* `OwnerSnapshot` służy do obrony; na MVP może być bot snapshot (bez backendu).
+* `OwnerSnapshot` służy do obrony; w MVP źródłem przeciwników są boty lub zapisany snapshot bot-owner-a.
+* Boty działają okresowo i używają tych samych zasad co gracz, ale mogą mieć różne profile zachowań.
 
 Metody:
 
@@ -289,7 +295,8 @@ Wyjście:
 Logika:
 
 * Dla sektora neutralnego lub bez wiarygodnego ownera: generuj bot snapshot w zakresie 80–120% `PvpPower` atakującego (config).
-* Dla sektora z ownerem: użyj zapisanej wartości `OwnerSnapshot` (MVP) lub pobierz z backendu (v2).
+* Dla sektora zajętego przez bota: użyj zapisanej wartości `OwnerSnapshot`.
+* Backend async PvP jest poza MVP.
 
 ---
 
@@ -464,7 +471,7 @@ ScriptableObject:
 
 ## MapConfig
 
-* MapSeasonLengthDays (7)
+* MapSeasonLengthDays (3 dla MVP, tj. ok. 72h)
 * Adjacency (np. lista połączeń sektorów / sąsiedztwa)
 * Sectors[] (id, name, productionBonusPercent, pvpPowerBonusValue lub pvpPowerBonusPercent)
 * SectorBonusCapPercent (cap sumy bonusów) lub DiminishingReturnsThresholdPercent

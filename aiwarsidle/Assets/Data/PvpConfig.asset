@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a406b97eaa87478291b4a0bb3da874c1, type: 3}
+  m_Name: PvpConfig
+  m_EditorClassIdentifier: AIWarsIdle.PvP::AIWarsIdle.PvP.Config.PvpConfig
+  PowerVarianceMin: 0.95
+  PowerVarianceMax: 1.05
+  StrategyMultiplierAggressive: 1.05
+  StrategyMultiplierStable: 1
+  StrategyMultiplierRisky: 1.1
+  StabilityMultiplierMin: 0.9
+  StabilityMultiplierMax: 1.2
+  PrestigePvpPowerPerPrestige: 1
+  PermanentPvpPowerPerLevel: 1
+  SectorPvpPowerPerSector: 1
+  ProdToPvpMaxBonus: 0.2
+  ProdToPvpHalfCapPps: 100

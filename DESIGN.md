@@ -6,8 +6,8 @@
 
 # 0. Elevator Pitch
 
-**AI Wars Idle** to idle economy game, w której gracze rozwijają “moc obliczeniową” i przejmują **sektory na mapie świata** w async PvP.
-**Liga (sezon) trwa 30 dni**, a **mapa PvP resetuje się co 7 dni** (krótsze “wojny o mapę” w ramach sezonu ligi).
+**AI Wars Idle** to idle economy game, w której gracz rozwija “moc obliczeniową” i walczy o kontrolę nad mapą PvP w formule **PvE (gracz vs boty)**.
+**Liga (sezon) trwa 30 dni**, a pojedyncza **potyczka mapy PvP trwa ok. 72h** (krótkie, częste wojny o kontrolę).
 
 ---
 
@@ -67,15 +67,18 @@ Tylko 1 linia permanent upgrade (max 10 poziomów).
 
 ---
 
-## 3.3 Map PvP (Async, MVP)
+## 3.3 Map PvP (PvE vs boty, MVP)
 
-PvP w MVP to przejmowanie i utrzymywanie sektorów na mapie świata (2D).
+PvP w MVP jest realizowane jako **PvE na zasadach PvP**: gracz walczy o sektory przeciw 5 botom.
 Nie ma real-time, nie ma czatu, nie ma gildii.
 
 ### Mapa (UI i dane)
 
 * 1 ekran mapy
-* 20–30 sektorów (duże regiony, nie miasta)
+* heksagonalna siatka (`hex grid`) w kształcie dużego hexa
+* rozmiar mapy: `radius = 4` (ok. 61 sektorów)
+* 6 stron konfliktu: gracz + 5 botów
+* każdy uczestnik zaczyna w jednym narożniku mapy
 * Zasada mapy: **brak teleportu** — atakować możesz tylko sektory sąsiednie (połączenia definiuje `MapConfig`)
 * Sektor ma:
   * nazwę
@@ -83,10 +86,16 @@ Nie ma real-time, nie ma czatu, nie ma gildii.
   * właściciela (kolor)
   * `Stability` (0–100)
   * cooldown ataku (czas do kolejnej próby, jeśli dotyczy)
+* `Home Sector`:
+  * jest sektorem startowym
+  * jest nietykalny
+  * nie może zostać przejęty
+
+Większość mapy startuje jako neutralna, a fronty tworzą się naturalnie na granicach terytoriów.
 
 Kliknięcie sektora otwiera panel:
 
-* właściciel + liga
+* właściciel + frakcja/bot
 * bonus sektora
 * Twoja przybliżona szansa wygranej (widełki)
 * wybór strategii + przycisk ataku
@@ -103,7 +112,7 @@ Snapshot przechowuje minimum do rozstrzygnięcia walki:
 
 `Stability` ma zapobiegać flipowaniu sektorów co minutę:
 
-* Po przejęciu sektor startuje z niską stabilnością (łatwy do odbicia).
+* Po przejęciu sektor startuje z niską stabilnością (łatwy do odbicia przez okno niestabilności).
 * Z czasem stabilność rośnie (config).
 * Im wyższa stabilność, tym silniejsza obrona sektora.
 
@@ -149,12 +158,13 @@ Jeśli `AttackRoll > DefenseRoll` → sektor zmienia właściciela.
 
 * Całkowity bonus z sektorów ma **cap** (config) lub **diminishing returns** po przekroczeniu progu.
 * Najlepsze sektory nie powinny być dostępne wyłącznie dla top ligi w MVP (unikamy “murów”).
+* Boty działają na tych samych zasadach co gracz, ale mają różne style zachowań: agresywny / ekspansywny / defensywny.
 
 ### Ligi i leaderboard
 
 * Bronze / Silver / Gold / Diamond / Apex
 * Sezon ligi: 30 dni (reset punktów i lig)
-* Reset mapy PvP: co 7 dni (reset ownership i stability)
+* Reset mapy PvP: co ok. 72h (reset ownership i stability)
 * Reset punktów po sezonie
 * Leaderboard: Top 100 (MVP może być mock/lokalny; docelowo backend)
 

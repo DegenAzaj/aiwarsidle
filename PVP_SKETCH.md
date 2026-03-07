@@ -1,5 +1,7 @@
 # PVP_SKETCH.md
 
+> Uwaga: aktualny target MVP to mapa `hex grid` w kształcie dużego hexa, `radius = 4` (~61 sektorów), 6 stron konfliktu (gracz + 5 botów) i potyczka mapy trwająca ok. 72h. Starsze przykłady niżej traktuj jako szkice balansowe, nie obowiązujący layout mapy.
+
 Dobra. Projektujemy to tak, żeby:
 
 * dominacja była możliwa

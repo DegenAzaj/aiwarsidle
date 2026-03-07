@@ -27,6 +27,13 @@ namespace AIWarsIdle.Bootstrap
         private readonly OfflineClaimService _offline;
         private readonly PvpAttackChargesService _pvpAttacks;
         private readonly LeagueService _league;
+        private readonly MapConfig _mapConfig;
+        private readonly PvpConfig _pvpConfig;
+        private readonly SnapshotService _snapshot;
+        private readonly MatchmakingService _matchmaking;
+        private readonly BattleSimService _battleSim;
+        private readonly PvpMapCombatService _combat;
+        private readonly PvpBotService _bots;
         private readonly SessionTelemetryService _sessionTelemetry;
         private readonly SubscriptionService _subscription;
         private readonly RewardedAdsUseCaseService _rewardedAds;
@@ -45,7 +52,16 @@ namespace AIWarsIdle.Bootstrap
         public ProductionService Production => _production;
         public UpgradeService Upgrades => _upgrades;
         public PrestigeService Prestige => _prestige;
+        public MapService Map => _map;
+        public MapConfig MapConfig => _mapConfig;
         public OverclockService Overclock => _overclock;
+        public PvpConfig PvpConfig => _pvpConfig;
+        public PvpAttackChargesService PvpAttacks => _pvpAttacks;
+        public LeagueService League => _league;
+        public SnapshotService Snapshot => _snapshot;
+        public MatchmakingService Matchmaking => _matchmaking;
+        public BattleSimService BattleSim => _battleSim;
+        public PvpMapCombatService PvpCombat => _combat;
         public ISubscriptionService Subscription => _subscription;
         public RewardedAdsUseCaseService RewardedAds => _rewardedAds;
         public long NowUnixSeconds => LastNowUnixSeconds;
@@ -56,6 +72,7 @@ namespace AIWarsIdle.Bootstrap
             BalanceConfig balanceConfig,
             OverclockConfig overclockConfig,
             MapConfig mapConfig,
+            PvpConfig pvpConfig,
             PvpAttacksConfig pvpAttacksConfig,
             LeagueConfig leagueConfig,
             float autosaveIntervalSeconds = 30f,
@@ -89,7 +106,10 @@ namespace AIWarsIdle.Bootstrap
 
             _overclock = new OverclockService(State, overclockConfig, _eventBus);
 
-            var productionBonus = new MapProductionBonusProvider(State.MapState, mapConfig);
+            _mapConfig = PvpRuntimeConfigFactory.CreateRuntimeMapConfig(mapConfig);
+            _pvpConfig = pvpConfig;
+
+            var productionBonus = new MapProductionBonusProvider(State.MapState, _mapConfig);
             _production = new ProductionService(
                 State,
                 balanceConfig,
@@ -103,10 +123,27 @@ namespace AIWarsIdle.Bootstrap
 
             _offline = new OfflineClaimService(State, balanceConfig, _production, _economy, _eventBus);
 
-            _map = new MapService(State.MapState, mapConfig, _overclock);
+            _map = new MapService(State.MapState, _mapConfig, _overclock);
 
             _pvpAttacks = pvpAttacksConfig == null ? null : new PvpAttackChargesService(State, pvpAttacksConfig);
             _league = leagueConfig == null ? null : new LeagueService(State, leagueConfig);
+            _snapshot = pvpConfig == null ? null : new SnapshotService(State, pvpConfig, _production, _mapConfig.LocalPlayerId, _mapConfig);
+            _matchmaking = _mapConfig == null ? null : new MatchmakingService(_mapConfig);
+            _battleSim = pvpConfig == null ? null : new BattleSimService(pvpConfig, _overclock);
+            _combat =
+                _pvpAttacks != null &&
+                _league != null &&
+                _snapshot != null &&
+                _matchmaking != null &&
+                _battleSim != null
+                    ? new PvpMapCombatService(State, _map, _mapConfig, _pvpAttacks, _snapshot, _matchmaking, _battleSim, _economy, _league, _eventBus)
+                    : null;
+            _bots =
+                _snapshot != null &&
+                _matchmaking != null &&
+                _battleSim != null
+                    ? new PvpBotService(State, _map, _mapConfig, _snapshot, _matchmaking, _battleSim, _eventBus)
+                    : null;
             _rewardedAds = new RewardedAdsUseCaseService(new AdsService(), _offline, _pvpAttacks, _eventBus);
 
             _sessionTelemetry = new SessionTelemetryService(_eventBus);
@@ -129,6 +166,7 @@ namespace AIWarsIdle.Bootstrap
             _league?.ResetSeasonIfNeeded(now);
 
             _map.AdvanceTime(now);
+            _bots?.Tick(now);
 
             _offline.BankOfflineGain(now);
 
@@ -148,6 +186,7 @@ namespace AIWarsIdle.Bootstrap
             _pvpAttacks?.Tick(now);
             _league?.ResetSeasonIfNeeded(now);
             _map.AdvanceTime(now);
+            _bots?.Tick(now);
 
             _production.Tick(now, deltaSeconds);
 
@@ -176,6 +215,7 @@ namespace AIWarsIdle.Bootstrap
                 _pvpAttacks?.Tick(now);
                 _league?.ResetSeasonIfNeeded(now);
                 _map.AdvanceTime(now);
+                _bots?.Tick(now);
                 _offline.MarkBackgrounded(now);
                 _autosave.OnApplicationPause(isPaused);
                 return;
@@ -192,6 +232,7 @@ namespace AIWarsIdle.Bootstrap
             _pvpAttacks?.Tick(now);
             _league?.ResetSeasonIfNeeded(now);
             _map.AdvanceTime(now);
+            _bots?.Tick(now);
             _offline.BankOfflineGain(now);
             _autosave.OnApplicationPause(isPaused);
             _autosave.ForceSave();

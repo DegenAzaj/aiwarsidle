@@ -6,7 +6,8 @@
     "AIWarsIdle.PvP",
     "AIWarsIdle.Persistence",
     "AIWarsIdle.Analytics",
-    "AIWarsIdle.Monetization"
+    "AIWarsIdle.Monetization",
+    "AIWarsIdle.UI"
   ],
   "includePlatforms": [
     "Editor"

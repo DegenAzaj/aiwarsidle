@@ -86,12 +86,12 @@ Repo/notes + projekt Unity: `aiwarsidle/` (Unity 6.3, Android-only, uGUI).
 
 ## EPIC 6 — PvP: Mapa sektorów (core) (DONE)
 
-Założenie MVP: na starcie gracz ma **Home Sector**, którego nie może stracić; dalej może przejmować tylko sektory sąsiadujące (no-teleport).
+Aktualne założenie dokumentacyjne MVP: mapa PvP ma być docelowo rozgrywana jako **PvE (gracz vs 5 botów)** na heksagonalnej siatce (`radius = 4`, ok. 61 sektorów), z jednym nietykalnym **Home Sector** na stronę.
 
 - `MapConfig` (ScriptableObject) z:
-  - sezonem mapy (reset co 7 dni), definicjami sektorów + adjacency, stability/capture/cooldown
+  - sezonem mapy (czas resetu konfigurowalny; obecny target produktowy: ~72h), definicjami sektorów + adjacency, stability/capture/cooldown
   - bonusami produkcji (cap/diminishing + maintenance) oraz bonusami PvP per-sektor
-  - walidacjami (unikalne `SectorId`, brak self-loop/duplikatów, opcjonalnie graf spójny i zakres 20–30 sektorów)
+  - walidacjami (unikalne `SectorId`, brak self-loop/duplikatów, opcjonalnie graf spójny)
   w `aiwarsidle/Assets/PvP/Config/MapConfig.cs`.
 - `MapService`:
   - `ResetMapSeasonIfNeeded(now)` i `TickStability(now)` (clamp 0..100)
@@ -100,6 +100,8 @@ Założenie MVP: na starcie gracz ma **Home Sector**, którego nie może straci�
 - Matchmaking obrońcy (MVP):
   - bot snapshot w widełkach (config) lub użycie `OwnerSnapshot` jeśli sektor ma ownera
   w `aiwarsidle/Assets/PvP/Services/MatchmakingService.cs`.
+
+Uwaga: dokumentacja produktowa została zaktualizowana do docelowego układu hex-grid / 6 stron / ~72h; kod runtime nie został jeszcze w tym commicie przepięty do tych nowych założeń.
 - PvP na mapie:
   - `GetAttackPreview` (widełki szansy) oraz `AttackSector` (walidacje adjacency/cooldown/charge’y, symulacja, update sektora, reward + season points)
   w `aiwarsidle/Assets/PvP/Services/PvpMapCombatService.cs`.

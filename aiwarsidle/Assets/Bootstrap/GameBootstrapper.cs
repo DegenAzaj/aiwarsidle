@@ -14,6 +14,7 @@ namespace AIWarsIdle.Bootstrap
         [SerializeField] private BalanceConfig _balanceConfig;
         [SerializeField] private OverclockConfig _overclockConfig;
         [SerializeField] private MapConfig _mapConfig;
+        [SerializeField] private PvpConfig _pvpConfig;
         [SerializeField] private PvpAttacksConfig _pvpAttacksConfig;
         [SerializeField] private LeagueConfig _leagueConfig;
 
@@ -34,6 +35,7 @@ namespace AIWarsIdle.Bootstrap
         public BalanceConfig BalanceConfig { get => _balanceConfig; set => _balanceConfig = value; }
         public OverclockConfig OverclockConfig { get => _overclockConfig; set => _overclockConfig = value; }
         public MapConfig MapConfig { get => _mapConfig; set => _mapConfig = value; }
+        public PvpConfig PvpConfig { get => _pvpConfig; set => _pvpConfig = value; }
         public PvpAttacksConfig PvpAttacksConfig { get => _pvpAttacksConfig; set => _pvpAttacksConfig = value; }
         public LeagueConfig LeagueConfig { get => _leagueConfig; set => _leagueConfig = value; }
 
@@ -71,6 +73,7 @@ namespace AIWarsIdle.Bootstrap
                 _balanceConfig,
                 _overclockConfig,
                 _mapConfig,
+                _pvpConfig,
                 _pvpAttacksConfig,
                 _leagueConfig,
                 autosaveIntervalSeconds: _autosaveIntervalSeconds,

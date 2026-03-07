@@ -46,7 +46,7 @@ namespace AIWarsIdle.PvP.Services
 
         public bool IsHomeSector(int sectorId)
         {
-            return sectorId == _config.HomeSectorId;
+            return _config.IsHomeSector(sectorId);
         }
 
         public bool IsAdjacent(int fromSectorId, int toSectorId)
@@ -81,6 +81,21 @@ namespace AIWarsIdle.PvP.Services
             return _state.MapSeasonId != currentSeasonId;
         }
 
+        public long GetCurrentSeasonEndsAtUnixSeconds(long nowUnixSeconds)
+        {
+            if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");
+
+            var seasonLenSeconds = (long)_config.MapSeasonLengthDays * 24L * 60L * 60L;
+            if (seasonLenSeconds <= 0) throw new InvalidOperationException("Map season length must be > 0.");
+
+            var anchor = _config.MapSeasonAnchorUnixSecondsUtc;
+            var delta = nowUnixSeconds - anchor;
+            if (delta < 0) return anchor + seasonLenSeconds;
+
+            var seasonId = ComputeSeasonId(nowUnixSeconds);
+            return anchor + ((seasonId + 1L) * seasonLenSeconds);
+        }
+
         public void AdvanceTime(long nowUnixSeconds)
         {
             ResetMapSeasonIfNeeded(nowUnixSeconds);
@@ -96,7 +111,7 @@ namespace AIWarsIdle.PvP.Services
             EnsureSectorsMatchConfigIfPossible();
 
             var home = FindSectorById(_config.HomeSectorId);
-            var needsInit = home == null || home.OwnerPlayerId != _config.LocalPlayerId;
+            var needsInit = home == null || home.OwnerPlayerId != _config.LocalPlayerId || !AreAdditionalHomesInitialized();
 
             if (_state.MapSeasonId != currentSeasonId)
             {
@@ -180,7 +195,8 @@ namespace AIWarsIdle.PvP.Services
                 var sector = _state.Sectors[i] ??= new SectorState();
                 if (IsHomeSector(sector.SectorId))
                 {
-                    sector.OwnerPlayerId = _config.LocalPlayerId;
+                    sector.OwnerPlayerId = _config.GetHomeOwnerPlayerId(sector.SectorId);
+                    sector.OwnerSnapshot = new PvpSnapshot();
                     sector.Stability = _config.HomeSectorStability;
                     sector.LastCombatUnixSeconds = 0;
                     sector.CapturedUnixSeconds = nowUnixSeconds;
@@ -197,12 +213,16 @@ namespace AIWarsIdle.PvP.Services
 
         private void EnsureHomeSectorInvariants(long nowUnixSeconds)
         {
-            var home = FindSectorById(_config.HomeSectorId);
-            if (home == null) return;
+            var homeIds = _config.GetEffectiveHomeSectorIds();
+            for (var i = 0; i < homeIds.Length; i++)
+            {
+                var home = FindSectorById(homeIds[i]);
+                if (home == null) continue;
 
-            home.OwnerPlayerId = _config.LocalPlayerId;
-            home.Stability = _config.HomeSectorStability;
-            if (home.CapturedUnixSeconds <= 0) home.CapturedUnixSeconds = nowUnixSeconds;
+                home.OwnerPlayerId = _config.GetHomeOwnerPlayerId(home.SectorId);
+                home.Stability = _config.HomeSectorStability;
+                if (home.CapturedUnixSeconds <= 0) home.CapturedUnixSeconds = nowUnixSeconds;
+            }
         }
 
         private void EnsureSectorsMatchConfigIfPossible()
@@ -251,6 +271,19 @@ namespace AIWarsIdle.PvP.Services
             }
 
             return null;
+        }
+
+        private bool AreAdditionalHomesInitialized()
+        {
+            var homeIds = _config.GetEffectiveHomeSectorIds();
+            for (var i = 0; i < homeIds.Length; i++)
+            {
+                var sector = FindSectorById(homeIds[i]);
+                if (sector == null) return false;
+                if (sector.OwnerPlayerId != _config.GetHomeOwnerPlayerId(homeIds[i])) return false;
+            }
+
+            return true;
         }
 
         private static Dictionary<int, HashSet<int>> BuildNeighborMap(MapConfig config)

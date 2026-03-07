@@ -25,6 +25,12 @@ Cel: dowieźć działające MVP zgodne z `DESIGN.md` i `TECH_SPEC.md`, budując 
   * SoftCurrency i kalkulacje ekonomii: **double** (zgodnie z `TECH_SPEC.md`), unikać `float` w walutach
 * Event system (domena → UI/telemetria):
   * W core: **lekki EventBus / domenowe eventy** (bez zależności od UI), testowalny przez fake/mock
+* PvP mapa (MVP, pinned):
+  * **PvE (gracz vs boty)**, 6 stron konfliktu
+  * **hex grid** w kształcie dużego hexa
+  * `radius = 4` (~61 sektorów)
+  * 1 nietykalny `Home Sector` na stronę
+  * czas jednej potyczki mapy: **~72h**
 * Walidacja configów:
   * ScriptableObject configi walidowane **również runtime (fail-fast)** + testy walidacji
 * Resume / “single entry” przez Splash:
@@ -245,18 +251,18 @@ Parametry MVP (config):
 
 ## STORY 6.1 — MapConfig
 
-* [x] `MapConfig` (reset mapy co 7 dni, lista sektorów + sąsiedztwo, bonusy produkcji + bonusy PvP, cap/diminishing returns, stability parametry, cooldown)
+* [x] `MapConfig` (reset mapy konfigurowalny; target MVP: ~72h, lista sektorów + sąsiedztwo, bonusy produkcji + bonusy PvP, cap/diminishing returns, stability parametry, cooldown)
 * [x] `FreshCaptureWindowSeconds` (okno “świeżo zdobytego” sektora pod bonus Overclock)
 
 **TESTS**
-* [x] Walidacja: 20–30 sektorów, unikalne `SectorId`, bonusy w sensownym zakresie
+* [x] Walidacja: unikalne `SectorId`, bonusy w sensownym zakresie
 * [x] Walidacja sąsiedztwa: brak self-loop, brak duplikatów, graf spójny (lub jawnie dopuszczamy “wyspy”)
 
 ## STORY 6.2 — MapService: stan mapy i stability tick
 
 * [x] Inicjalizacja mapy na nowy sezon (neutral owner + home sector local playera)
 * [x] `TickStability(now)` — rośnie w czasie, clamp 0..100
-* [x] `ResetMapSeasonIfNeeded(now)` — reset mapy + mapSeasonId (co 7 dni)
+* [x] `ResetMapSeasonIfNeeded(now)` — reset mapy + mapSeasonId (czas resetu z configu; target MVP: ~72h)
 
 **TESTS**
 * [x] Stability rośnie zgodnie z config i nie przekracza 100
@@ -473,25 +479,34 @@ Zasada: UI jest cienką warstwą, tylko prezentacja + input → wywołania serwi
 
 ## STORY 11.4 — Mapa PvP
 
-* [ ] Mapa 2D + 20–30 sektorów (kolor ownera)
+* [ ] Mapa heksagonalna (`hex grid`) w kształcie dużego hexa
+* [ ] Rozmiar mapy: `radius = 4` (~61 sektorów)
+* [ ] 6 stron konfliktu: gracz + 5 botów
+* [ ] Każda strona startuje w narożniku mapy z jednym nietykalnym `Home Sector`
+* [ ] Neutralne sektory zajmują większość mapy na starcie
+* [ ] Kolor ownera na hexie + czytelne fronty na granicach terytoriów
 * [ ] Panel sektora: bonus, owner, preview widełek, wybór strategii, atak
 * [ ] Tooltip/info w panelu: “Skąd bierze się `PvpPower`?”
   * prestige + permanent upgrades + sektory
   * mały udział z produkcji (soft-cap)
   * subskrypcja: ×2 `ProductionPps`, **nie** zwiększa `PvpPower` bezpośrednio
 * [ ] Powiadomienie o wyniku + zmiana koloru sektora
+* [ ] Boty wykonują akcje okresowo na tych samych zasadach co gracz
+* [ ] Boty mają profile zachowań: agresywny / ekspansywny / defensywny
 
 **TESTS**
 * [ ] PlayMode: atak sektora zmienia ownera i aktualizuje UI
 * [ ] PlayMode: Overclock aktywny przed atakiem wpływa na wynik/preview (w granicach widełek)
 * [ ] PlayMode: klik info/tooltip pokazuje i chowa opis `PvpPower` (bez crasha)
+* [ ] PlayMode: `Home Sector` jest oznaczony i nie da się go zaatakować
+* [ ] PlayMode: bot wykonuje ruch po swoim ticku i mapa się odświeża
 
 ## STORY 11.4b — PvP HUD + statusy (ataki/regen/season)
 
 * [ ] Na ekranie mapy:
   * licznik `PvPAttacksRemaining` + timer do kolejnego regen (jeśli < cap)
   * aktualna liga + `SeasonPoints`
-  * stan sezonu (np. “Season reset soon” / id) lub chociaż informacja o resetach (żeby uniknąć “why it reset?”)
+  * stan potyczki mapy (np. “Map resets in …”) oraz informacja o dłuższym sezonie ligi
 * [ ] Panel sektora pokazuje (oprócz istniejących wymagań):
   * `Stability` + tempo zmian (jeśli jest) lub przynajmniej wartość + “meaning”
   * cooldown do kolejnego ataku (jeśli aktywny)

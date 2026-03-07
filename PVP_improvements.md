@@ -1,3 +1,5 @@
+> Uwaga: aktualne założenia MVP zostały uproszczone do modelu PvE (gracz vs 5 botów) na hex gridzie `radius = 4` (~61 sektorów), z potyczką mapy trwającą ok. 72h. Jeśli niżej pojawiają się starsze odniesienia do mapy świata / 7 dni / 20 sektorów, traktuj je jako historyczne szkice.
+
 Dobra. Przeprojektujmy to tak, żeby miało **wyraźne USP**, emocję i realny powód do rywalizacji.
 
 Nie „idle z PvP”.
@@ -359,4 +361,3 @@ ten sam silnik ekonomiczny
 
 * silniejsza fantazja
 * PvP jako walka o terytorium zamiast punkty
-

@@ -15,18 +15,11 @@ Nie robisz 3D globusa.
 ## MVP wersja:
 
 * 1 ekran
-* Stylizowana mapa świata (flat 2D)
-* 20–30 sektorów (duże regiony, nie miasta)
-
-Przykład podziału:
-
-* Ameryka Płn (3 sektory)
-* Ameryka Płd (2)
-* Europa (4)
-* Afryka (2)
-* Azja (6)
-* Australia (1)
-* “Cloud Zones” (specjalne sektory)
+* heksagonalna siatka (`hex grid`) w kształcie dużego hexa
+* `radius = 4` → ok. 61 sektorów
+* 6 stron konfliktu: gracz + 5 botów
+* każdy uczestnik startuje w jednym narożniku mapy
+* większość sektorów jest neutralna na starcie
 
 Każdy sektor:
 
@@ -34,6 +27,7 @@ Każdy sektor:
 * ma bonus (np. +5% global production)
 * ma właściciela (kolor)
 * ma wskaźnik “stability”
+* może być `Home Sector` (nietykalny, nie do przejęcia)
 
 Klikasz sektor → panel z info:
 
@@ -61,6 +55,9 @@ Krok 1: Klikasz sektor
 Krok 2: Wybierasz strategię
 Krok 3: Symulacja
 
+Możesz atakować tylko sąsiedni hex.
+To naturalnie tworzy fronty na granicach terytoriów.
+
 ### Siła ataku:
 
 TwojaPvpPower × StrategyMultiplier × Random
@@ -86,11 +83,11 @@ Jeśli przegrasz:
 
 To zapobiega flipowaniu sektorów co minutę.
 
-Każdy sektor:
+Każdy świeżo przejęty sektor:
 
 * startuje z niską stabilnością
+* ma okno niestabilności
 * rośnie z czasem
-* rośnie szybciej, jeśli właściciel jest aktywny
 
 Im wyższa stabilność:
 
@@ -139,21 +136,21 @@ Tracisz punkty za:
 Liga daje:
 
 * lepsze nagrody sezonowe
-* dostęp do wyższych sektorów (opcjonalnie)
+* meta-progres poza pojedynczą potyczką mapy
 
 ---
 
-# 5️⃣ Cykle: Mapa PvP (7 dni) + Liga (30 dni)
+# 5️⃣ Cykle: Mapa PvP (~72h) + Liga (30 dni)
 
 Mapa PvP:
 
-* resetuje się **co 7 dni** (ownership + stability)
+* resetuje się **co ok. 72h** (ownership + stability)
 * daje “krótką wojnę” i powód do częstych powrotów
 
 Liga (sezon):
 
 * trwa **30 dni**
-* punkty ligi/Season Points zbierasz przez cały sezon (w tym przez kolejne tygodniowe reset-y mapy)
+* punkty ligi/Season Points zbierasz przez cały sezon (w tym przez kolejne 72h reset-y mapy)
 
 Na koniec sezonu ligi:
 
@@ -194,7 +191,6 @@ Masz:
 * sojusze
 * czat
 * real-time
-* frakcje
 * 100+ sektorów
 * dynamiczne eventy per sektor
 
@@ -210,7 +206,7 @@ Mapa musi być:
 
 1. Odbierasz offline
 2. Upgrade
-3. Widzisz, że ktoś przejął Twój sektor
+3. Widzisz, że bot przejął graniczny sektor
 4. Atakujesz inny
 5. Zdobywasz region
 6. Wychodzisz

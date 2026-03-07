@@ -63,6 +63,12 @@ namespace AIWarsIdle.PvP.Config
         [Range(0f, 100f)]
         public float HomeSectorStability = 100f;
 
+        [Tooltip("Optional protected home sectors for multi-faction maps. If empty, HomeSectorId is used.")]
+        public int[] HomeSectorIds = Array.Empty<int>();
+
+        [Tooltip("Optional owner ids aligned with HomeSectorIds. If empty, ids default to LocalPlayerId for the first home and increment for the rest.")]
+        public int[] HomeSectorOwnerPlayerIds = Array.Empty<int>();
+
         [Header("Sectors")]
         public SectorDefinition[] SectorDefinitions = Array.Empty<SectorDefinition>();
 
@@ -171,6 +177,8 @@ namespace AIWarsIdle.PvP.Config
                 throw new InvalidOperationException($"{nameof(LocalPlayerId)} must be > 0.");
             }
 
+            ValidateHomeSectorsOrThrow();
+
             if (float.IsNaN(StabilityGrowthPerSecond) || float.IsInfinity(StabilityGrowthPerSecond) || StabilityGrowthPerSecond < 0f)
             {
                 throw new InvalidOperationException($"{nameof(StabilityGrowthPerSecond)} must be finite and >= 0.");
@@ -227,6 +235,53 @@ namespace AIWarsIdle.PvP.Config
 
             ValidateSectorDefinitionsAndAdjacencyOrThrow();
             ValidateDiminishingTiersOrThrow();
+        }
+
+        public bool IsHomeSector(int sectorId)
+        {
+            var homeIds = GetEffectiveHomeSectorIds();
+            for (var i = 0; i < homeIds.Length; i++)
+            {
+                if (homeIds[i] == sectorId) return true;
+            }
+
+            return false;
+        }
+
+        public int[] GetEffectiveHomeSectorIds()
+        {
+            if (HomeSectorIds != null && HomeSectorIds.Length > 0)
+            {
+                return HomeSectorIds;
+            }
+
+            return new[] { HomeSectorId };
+        }
+
+        public int GetHomeOwnerPlayerId(int sectorId)
+        {
+            var homeIds = GetEffectiveHomeSectorIds();
+            for (var i = 0; i < homeIds.Length; i++)
+            {
+                if (homeIds[i] != sectorId) continue;
+                return ResolveHomeOwnerPlayerIdByIndex(i);
+            }
+
+            return 0;
+        }
+
+        public int ResolveHomeOwnerPlayerIdByIndex(int index)
+        {
+            if (index < 0) return 0;
+
+            if (HomeSectorOwnerPlayerIds != null &&
+                index < HomeSectorOwnerPlayerIds.Length &&
+                HomeSectorOwnerPlayerIds[index] > 0)
+            {
+                return HomeSectorOwnerPlayerIds[index];
+            }
+
+            return index == 0 ? LocalPlayerId : LocalPlayerId + index;
         }
 
         public float GetCaptureStabilityStart(AttackStrategy strategy)
@@ -368,6 +423,46 @@ namespace AIWarsIdle.PvP.Config
                 if (visited.Count != ids.Count)
                 {
                     throw new InvalidOperationException($"{nameof(Adjacency)} graph must be connected (reachable from {nameof(HomeSectorId)}).");
+                }
+            }
+        }
+
+        private void ValidateHomeSectorsOrThrow()
+        {
+            var homeIds = GetEffectiveHomeSectorIds();
+            if (homeIds.Length == 0)
+            {
+                throw new InvalidOperationException("At least one home sector is required.");
+            }
+
+            var seen = new HashSet<int>();
+            for (var i = 0; i < homeIds.Length; i++)
+            {
+                if (homeIds[i] < 0)
+                {
+                    throw new InvalidOperationException($"{nameof(HomeSectorIds)}[{i}] must be >= 0.");
+                }
+
+                if (!seen.Add(homeIds[i]))
+                {
+                    throw new InvalidOperationException($"{nameof(HomeSectorIds)} must not contain duplicates.");
+                }
+            }
+
+            if (HomeSectorOwnerPlayerIds != null &&
+                HomeSectorOwnerPlayerIds.Length > 0 &&
+                HomeSectorOwnerPlayerIds.Length != homeIds.Length)
+            {
+                throw new InvalidOperationException($"{nameof(HomeSectorOwnerPlayerIds)} length must match {nameof(HomeSectorIds)} length when provided.");
+            }
+
+            if (HomeSectorOwnerPlayerIds == null) return;
+
+            for (var i = 0; i < HomeSectorOwnerPlayerIds.Length; i++)
+            {
+                if (HomeSectorOwnerPlayerIds[i] <= 0)
+                {
+                    throw new InvalidOperationException($"{nameof(HomeSectorOwnerPlayerIds)}[{i}] must be > 0.");
                 }
             }
         }

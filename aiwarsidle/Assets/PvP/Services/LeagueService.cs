@@ -55,6 +55,18 @@ namespace AIWarsIdle.PvP.Services
             return league;
         }
 
+        public long GetCurrentSeasonEndsAtUnixSeconds(long nowUnixSeconds)
+        {
+            if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");
+
+            return _config.SeasonMode switch
+            {
+                LeagueSeasonMode.CalendarMonthUtc => GetCalendarMonthEndUnixSeconds(nowUnixSeconds),
+                LeagueSeasonMode.FixedDays => GetFixedSeasonEndUnixSeconds(nowUnixSeconds),
+                _ => throw new InvalidOperationException("Unknown season mode.")
+            };
+        }
+
         private int ComputeSeasonId(long nowUnixSeconds)
         {
             // NOTE: If you change the season scheme in a live build, you may want to apply it from the next season boundary
@@ -86,6 +98,22 @@ namespace AIWarsIdle.PvP.Services
             if (delta <= 0) return 0;
             return (int)(delta / seasonLenSeconds);
         }
+
+        private static long GetCalendarMonthEndUnixSeconds(long nowUnixSeconds)
+        {
+            var utc = DateTimeOffset.FromUnixTimeSeconds(nowUnixSeconds).UtcDateTime;
+            var nextMonth = new DateTimeOffset(new DateTime(utc.Year, utc.Month, 1, 0, 0, 0, DateTimeKind.Utc)).AddMonths(1);
+            return nextMonth.ToUnixTimeSeconds();
+        }
+
+        private long GetFixedSeasonEndUnixSeconds(long nowUnixSeconds)
+        {
+            var seasonLenSeconds = (long)_config.FixedSeasonLengthDays * 24L * 60L * 60L;
+            if (seasonLenSeconds <= 0) throw new InvalidOperationException("Fixed season length must be > 0.");
+
+            var anchor = _config.FixedSeasonAnchorUnixSecondsUtc;
+            var seasonId = ComputeFixedDaysId(nowUnixSeconds);
+            return anchor + ((seasonId + 1L) * seasonLenSeconds);
+        }
     }
 }
-

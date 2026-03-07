@@ -7,7 +7,7 @@ Jeśli inne `.md` są niespójne, **wygrywa `MVP_LOCK.md`**.
 
 # 1) Pitch / USP
 
-Idle economy + async PvP na mapie sektorów.
+Idle economy + mapa PvP w formule **PvE (gracz vs boty)**.
 Gracz buduje “moc obliczeniową”, a następnie walczy o terytoria, które realnie zmieniają produkcję.
 
 ---
@@ -25,9 +25,9 @@ Gracz buduje “moc obliczeniową”, a następnie walczy o terytoria, które re
 
 ## Cykle czasowe
 
-### Mapa PvP: 7 dni
+### Mapa PvP: ~72h
 
-* Reset **co 7 dni**:
+* Reset **co ok. 72h**:
   * ownership sektorów wraca do neutral/bot
   * stability reset
 * Cel: częste “końcówki”, dynamika, brak zastania mapy.
@@ -35,7 +35,7 @@ Gracz buduje “moc obliczeniową”, a następnie walczy o terytoria, które re
 ### Liga (sezon): 30 dni
 
 * Sezon ligi trwa **30 dni**.
-* Punkty ligi/Season Points (SP) zbierasz przez cały sezon (przez kolejne tygodniowe reset-y mapy).
+* Punkty ligi/Season Points (SP) zbierasz przez cały sezon (przez kolejne krótkie reset-y mapy).
 * Koniec sezonu ligi:
   * reset SP i lig
   * nagrody dla top graczy (np. top 100)
@@ -62,7 +62,13 @@ Ataki są **charge’ami**:
 
 ---
 
-# 4) Zasady mapy (sąsiedztwo / brak teleportu)
+# 4) Zasady mapy (hex grid / sąsiedztwo / brak teleportu)
+
+* Układ mapy: duży hex z siatki heksagonalnej (`radius = 4`, ok. 61 sektorów).
+* Uczestnicy: 6 stron konfliktu (gracz + 5 botów).
+* Każda strona ma własny `Home Sector` w narożniku mapy.
+* `Home Sector` jest nietykalny.
+* Większość mapy startuje jako neutralna.
 
 * **Brak teleportu**: atak jest możliwy tylko na sektor sąsiedni.
 * Sąsiedztwo jest zdefiniowane w `MapConfig` (graf połączeń sektorów).
@@ -84,6 +90,7 @@ Snapshot zawiera minimum:
 * Po przejęciu sektor startuje z niską stabilnością.
 * Stabilność rośnie w czasie (clamp 0..100).
 * Stability wpływa na obronę sektora.
+* Świeżo przejęty sektor ma okno niestabilności i łatwiej go odbić.
 
 ## Strategie (3 opcje)
 
@@ -96,6 +103,12 @@ Snapshot zawiera minimum:
 * `AttackRoll = AttackerPvpPower × StrategyMultiplier × Random(0.95–1.05)`
 * `DefenseRoll = DefenderPvpPower × StabilityMultiplier(Stability) × Random(0.95–1.05)`
 * `AttackRoll > DefenseRoll` → przejęcie sektora
+
+## Boty
+
+* Boty grają na tych samych zasadach co gracz.
+* Działają okresowo (np. co kilka-kilkanaście minut).
+* Profile MVP: agresywny / ekspansywny / defensywny.
 
 ---
 
