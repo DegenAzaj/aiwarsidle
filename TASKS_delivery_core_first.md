@@ -438,15 +438,15 @@ Zasada: UI jest cienką warstwą, tylko prezentacja + input → wywołania serwi
 
 ## STORY 11.2 — Hub + Generatory
 
-* [ ] HUD: waluty, production/s, pasek prestiżu
-* [ ] Lista generatorów: upgrade x1/x10/max
-* [ ] Przycisk **OVERCLOCK AI** (input, bez spamowania)
+* [x] HUD: waluty, production/s, pasek prestiżu
+* [x] Lista generatorów: upgrade x1/x10/max
+* [x] Przycisk **OVERCLOCK AI** (input, bez spamowania)
   * pokazanie charges + cooldown
   * feedback na aktywność (10s) i brak ładunków
 
 **TESTS**
-* [ ] PlayMode: klik upgrade → rośnie level i PPS na HUD
-* [ ] PlayMode: klik Overclock → PPS wzrasta ×3 na czas aktywności i wraca po 10s
+* [x] PlayMode: klik upgrade → rośnie level i PPS na HUD
+* [x] PlayMode: klik Overclock → PPS wzrasta ×3 na czas aktywności i wraca po 10s
 
 ## STORY 11.2b — Offline claim modal (pending gain)
 

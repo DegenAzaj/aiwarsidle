@@ -217,3 +217,30 @@ UIRouter + ekrany (STORY 11.1, etap: 2 taby — PvP + Generatory):
 - Testy PlayMode EPIC 11:
   - Resume policy: `aiwarsidle/Assets/Tests/PlayMode/Epic11ResumePolicyPlayModeTests.cs`
   - Force update + download URL wiring: `aiwarsidle/Assets/Tests/PlayMode/Epic11UpdateRequiredPlayModeTests.cs`
+
+---
+
+## Overclock UI + HUD (update)
+
+Zmiany zrobione w ramach dopięcia przycisku **Overclock AI** i feedbacku na HUD:
+
+- Przycisk Overclock:
+  - Controller: `aiwarsidle/Assets/UI/Generators/OverclockButtonController.cs`
+    - Renderuje stan na jednym, oryginalnym TMP labelu (2 linie).
+    - Stany:
+      - idle: `OVERCLOCK` + `charges/max`
+      - active: `ACTIVATED` + countdown sekund do końca
+      - cooldown (gdy `charges < max`): `OVERCLOCK` + `charges/max MM:SS`
+    - Włącza `Glow` (child o nazwie `Glow` lub przypięty ręcznie) i pulsuje nim tylko podczas aktywnego Overclock.
+  - Wiring w scenie: `aiwarsidle/Assets/Scenes/SampleScene.unity` (button `button_overclock`).
+
+- HUD PPS pulse podczas aktywnego Overclock:
+  - `aiwarsidle/Assets/UI/Generators/HudController.cs` pulsuje sekcją PPS (label + wartość) tylko, gdy Overclock jest aktywny.
+
+- Testy PlayMode (click-flow):
+  - `aiwarsidle/Assets/Tests/PlayMode/Epic04OverclockAndUpgradePlayModeTests.cs`:
+    - klik upgrade → rośnie level generatora i PPS na HUD
+    - klik Overclock → PPS ×3 na czas aktywności i wraca po ~10s
+  - asmdef: `aiwarsidle/Assets/Tests/PlayMode/AIWarsIdle.Tests.PlayMode.asmdef` (dopisane `Unity.TextMeshPro`)
+
+Uruchamianie: Unity Test Runner → **PlayMode**.
