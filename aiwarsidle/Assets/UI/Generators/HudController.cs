@@ -17,6 +17,13 @@ namespace AIWarsIdle.UI.Generators
         [SerializeField] private TMP_Text _prestigeProgressText;
         [SerializeField] private TMP_Text _prestigeLevelText;
 
+        [Header("PPS Pulse (Overclock)")]
+        [SerializeField] private bool _pulsePpsWhenOverclockActive = true;
+        [SerializeField] private RectTransform _ppsPulseTarget;
+        [SerializeField] private float _ppsPulseScaleAmplitude = 0.12f;
+        [SerializeField] private float _ppsPulseFrequencyHz = 6f;
+        [SerializeField, Range(0f, 1f)] private float _ppsPulseToWhite = 0.35f;
+
         [Header("Prestige Progress (optional)")]
         [SerializeField] private Slider _prestigeSlider;
         [SerializeField] private Image _prestigeFillImage;
@@ -25,20 +32,28 @@ namespace AIWarsIdle.UI.Generators
         [SerializeField] private float _refreshIntervalSeconds = 0.25f;
 
         private float _carry;
+        private bool _pulseInitialized;
+        private Vector3 _ppsBaseScale;
+        private TMP_Text[] _ppsPulseTexts;
+        private Color[] _ppsBaseColors;
 
         private void Awake()
         {
             if (_context == null) _context = GetComponentInParent<GeneratorsScreenContext>();
+            if (_ppsPulseTarget == null && _ppsText != null) _ppsPulseTarget = _ppsText.transform.parent as RectTransform;
         }
 
         private void OnEnable()
         {
             _carry = 0;
+            EnsurePulseInitialized();
+            ResetPpsPulse();
             Refresh();
         }
 
         private void Update()
         {
+            ApplyPpsPulse();
             if (_refreshIntervalSeconds <= 0f)
             {
                 Refresh();
@@ -49,6 +64,89 @@ namespace AIWarsIdle.UI.Generators
             if (_carry < _refreshIntervalSeconds) return;
             _carry = 0;
             Refresh();
+        }
+
+        private void OnDisable()
+        {
+            ResetPpsPulse();
+        }
+
+        private void EnsurePulseInitialized()
+        {
+            if (_pulseInitialized) return;
+            _pulseInitialized = true;
+
+            if (_ppsPulseTarget == null)
+            {
+                _ppsPulseTexts = null;
+                _ppsBaseColors = null;
+                _ppsBaseScale = Vector3.one;
+                return;
+            }
+
+            _ppsBaseScale = _ppsPulseTarget.localScale;
+            _ppsPulseTexts = _ppsPulseTarget.GetComponentsInChildren<TMP_Text>(includeInactive: true);
+            _ppsBaseColors = new Color[_ppsPulseTexts.Length];
+            for (var i = 0; i < _ppsPulseTexts.Length; i++)
+            {
+                _ppsBaseColors[i] = _ppsPulseTexts[i] != null ? _ppsPulseTexts[i].color : Color.white;
+            }
+        }
+
+        private void ResetPpsPulse()
+        {
+            if (_ppsPulseTarget != null) _ppsPulseTarget.localScale = _ppsBaseScale;
+            if (_ppsPulseTexts == null || _ppsBaseColors == null) return;
+            for (var i = 0; i < _ppsPulseTexts.Length && i < _ppsBaseColors.Length; i++)
+            {
+                if (_ppsPulseTexts[i] == null) continue;
+                _ppsPulseTexts[i].color = _ppsBaseColors[i];
+            }
+        }
+
+        private void ApplyPpsPulse()
+        {
+            if (!_pulsePpsWhenOverclockActive || _ppsPulseTarget == null)
+            {
+                ResetPpsPulse();
+                return;
+            }
+
+            var loop = _context != null ? _context.Loop : null;
+            if (loop == null && _context != null && _context.Bootstrapper != null)
+            {
+                _context.Bootstrapper.Initialize();
+                loop = _context.Loop;
+            }
+            if (loop == null)
+            {
+                ResetPpsPulse();
+                return;
+            }
+
+            var now = loop.NowUnixSeconds;
+            var isActive = loop.Overclock.IsActive(now);
+            if (!isActive)
+            {
+                ResetPpsPulse();
+                return;
+            }
+
+            var hz = Mathf.Max(0.1f, _ppsPulseFrequencyHz);
+            var t01 = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * (Mathf.PI * 2f * hz));
+
+            var amp = Mathf.Clamp(_ppsPulseScaleAmplitude, 0f, 0.5f);
+            var scale = _ppsBaseScale * (1f + amp * (0.35f + 0.65f * t01));
+            _ppsPulseTarget.localScale = scale;
+
+            if (_ppsPulseTexts == null || _ppsBaseColors == null) return;
+            var toWhite = Mathf.Clamp01(_ppsPulseToWhite) * (0.35f + 0.65f * t01);
+            for (var i = 0; i < _ppsPulseTexts.Length && i < _ppsBaseColors.Length; i++)
+            {
+                var txt = _ppsPulseTexts[i];
+                if (txt == null) continue;
+                txt.color = Color.Lerp(_ppsBaseColors[i], Color.white, toWhite);
+            }
         }
 
         public void Refresh()

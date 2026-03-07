@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: OverclockConfig
   m_EditorClassIdentifier: AIWarsIdle.GameCore::AIWarsIdle.GameCore.Config.OverclockConfig
   DurationSeconds: 10
-  RegenSeconds: 90
-  MaxCharges: 2
+  RegenSeconds: 900
+  MaxCharges: 3
   ProductionMultiplier: 3
   PvpAttackMultiplier: 1.2
   FreshCaptureStabilityGrowthMultiplier: 1.1

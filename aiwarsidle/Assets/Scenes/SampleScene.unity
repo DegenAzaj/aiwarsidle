@@ -2645,6 +2645,81 @@ MonoBehaviour:
     PreserveAlpha: 0
   _outlines: []
   _selectables: []
+--- !u!1 &563813021
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 563813022}
+  - component: {fileID: 563813024}
+  - component: {fileID: 563813023}
+  m_Layer: 0
+  m_Name: Glow
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &563813022
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 563813021}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1250512661}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &563813023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 563813021}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.20528887, g: 1, b: 0.11792451, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: 108ed488e556d4418ad8f8d2fe7fa642, type: 3}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &563813024
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 563813021}
+  m_CullTransparentMesh: 1
 --- !u!1 &577094850
 GameObject:
   m_ObjectHideFlags: 0
@@ -5271,6 +5346,11 @@ MonoBehaviour:
   _lifetimeProducedText: {fileID: 941939108}
   _prestigeProgressText: {fileID: 55997902}
   _prestigeLevelText: {fileID: 4322775791314709758}
+  _pulsePpsWhenOverclockActive: 1
+  _ppsPulseTarget: {fileID: 0}
+  _ppsPulseScaleAmplitude: 0.12
+  _ppsPulseFrequencyHz: 6
+  _ppsPulseToWhite: 0.35
   _prestigeSlider: {fileID: 6856003529852685470}
   _prestigeFillImage: {fileID: 4946871390254458196}
   _refreshIntervalSeconds: 0.25
@@ -6104,6 +6184,7 @@ GameObject:
   - component: {fileID: 1250512664}
   - component: {fileID: 1250512663}
   - component: {fileID: 1250512662}
+  - component: {fileID: 1250512666}
   m_Layer: 0
   m_Name: button_overclock
   m_TagString: Untagged
@@ -6123,6 +6204,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 563813022}
   - {fileID: 1753362438}
   - {fileID: 1970304777}
   m_Father: {fileID: 1614520175}
@@ -6197,6 +6279,9 @@ MonoBehaviour:
   - Target: {fileID: 1250512664}
     Color: 10
     PreserveAlpha: 0
+  - Target: {fileID: 563813023}
+    Color: 10
+    PreserveAlpha: 0
   _outlines: []
   _selectables: []
 --- !u!114 &1250512664
@@ -6237,6 +6322,26 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1250512660}
   m_CullTransparentMesh: 1
+--- !u!114 &1250512666
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1250512660}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0b4ba049d3c81f4583caacc72f6f64a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: AIWarsIdle.UI::AIWarsIdle.UI.Generators.OverclockButtonController
+  _context: {fileID: 1802415413}
+  _button: {fileID: 1250512662}
+  _labelText: {fileID: 1970304778}
+  _chargesText: {fileID: 0}
+  _timerText: {fileID: 0}
+  _progressFill: {fileID: 0}
+  _clickDebounceSeconds: 0.12
+  _refreshIntervalSeconds: 0.25
 --- !u!1 &1256580773
 GameObject:
   m_ObjectHideFlags: 0
@@ -8920,6 +9025,18 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: a594097979ed4e1ada548bc2bef877d9, type: 3}
+    - target: {fileID: 3194138532696416920, guid: b094ab16b0937ffabb2b3d9f24455efe, type: 3}
+      propertyPath: m_Color.b
+      value: 0.6462264
+      objectReference: {fileID: 0}
+    - target: {fileID: 3194138532696416920, guid: b094ab16b0937ffabb2b3d9f24455efe, type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3194138532696416920, guid: b094ab16b0937ffabb2b3d9f24455efe, type: 3}
+      propertyPath: m_Color.r
+      value: 0.735849
+      objectReference: {fileID: 0}
     - target: {fileID: 4963035213634711393, guid: b094ab16b0937ffabb2b3d9f24455efe, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -11417,6 +11534,18 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: 1ed039308f70d7ed89e91218021b7fc0, type: 3}
+    - target: {fileID: 3194138532696416920, guid: b094ab16b0937ffabb2b3d9f24455efe, type: 3}
+      propertyPath: m_Color.b
+      value: 0.64705884
+      objectReference: {fileID: 0}
+    - target: {fileID: 3194138532696416920, guid: b094ab16b0937ffabb2b3d9f24455efe, type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3194138532696416920, guid: b094ab16b0937ffabb2b3d9f24455efe, type: 3}
+      propertyPath: m_Color.r
+      value: 0.7372549
+      objectReference: {fileID: 0}
     - target: {fileID: 4963035213634711393, guid: b094ab16b0937ffabb2b3d9f24455efe, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5

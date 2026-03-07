@@ -42,5 +42,19 @@ namespace AIWarsIdle.UI.Generators
             }
             return $"{ts.Minutes}m {ts.Seconds:D2}s";
         }
+
+        public static string DurationHms(long seconds)
+        {
+            if (seconds < 0) seconds = 0;
+            var ts = TimeSpan.FromSeconds(seconds);
+            return $"{(int)ts.TotalHours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}";
+        }
+
+        public static string DurationMmSs(long seconds)
+        {
+            if (seconds < 0) seconds = 0;
+            var ts = TimeSpan.FromSeconds(seconds);
+            return $"{(int)ts.TotalMinutes:D2}:{ts.Seconds:D2}";
+        }
     }
 }
