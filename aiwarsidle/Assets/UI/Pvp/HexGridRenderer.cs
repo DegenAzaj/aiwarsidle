@@ -17,6 +17,7 @@ namespace AIWarsIdle.UI.Pvp
         private const string GeneratedHudName = "__hex_grid_hud";
         private const string GeneratedToastName = "__hex_grid_toast";
         private const string GeneratedDismissLayerName = "__hex_grid_dismiss";
+        private const string GeneratedFrontierName = "__hex_grid_frontier";
 
         [Header("Context")]
         [SerializeField] private PvpScreenContext _context;
@@ -30,6 +31,10 @@ namespace AIWarsIdle.UI.Pvp
         [Header("Labels")]
         [SerializeField] private bool _showCoordinates = true;
         [SerializeField] private bool _showHomeBadge = true;
+        [SerializeField, Range(0.1f, 1f)] private float _ownedHexAlpha = 0.72f;
+        [SerializeField] private bool _showFrontlines = true;
+        [SerializeField] private Color _frontlineColor = new(0.72f, 0.96f, 0.78f, 1f);
+        [SerializeField, Min(1f)] private float _frontlineThickness = 4f;
 
         [Header("Refresh")]
         [SerializeField] private float _refreshIntervalSeconds = 0.25f;
@@ -43,6 +48,8 @@ namespace AIWarsIdle.UI.Pvp
         private SectorDetailPanelView _detailPanel;
         private PvpHudView _hud;
         private PvpToastView _toast;
+        private TMP_Text _externalAttacksText;
+        private TMP_Text _externalRegenText;
         private HexCellView _selected;
         private float _refreshCarry;
         private int _lastLayoutHash;
@@ -107,6 +114,8 @@ namespace AIWarsIdle.UI.Pvp
             _radius = Mathf.Max(0, _radius);
             _hexRadius = Mathf.Max(8f, _hexRadius);
             _cellFill = Mathf.Clamp(_cellFill, 0.5f, 1f);
+            _ownedHexAlpha = Mathf.Clamp(_ownedHexAlpha, 0.1f, 1f);
+            _frontlineThickness = Mathf.Max(1f, _frontlineThickness);
             _refreshIntervalSeconds = Mathf.Max(0f, _refreshIntervalSeconds);
 
             if (!isActiveAndEnabled) return;
@@ -282,6 +291,8 @@ namespace AIWarsIdle.UI.Pvp
                 CreateCell(root, snapshot.Sectors[i]);
             }
 
+            UpdateFrontlines(root, snapshot);
+
             FitGridToViewport(root);
 
             UpdateHud(snapshot);
@@ -302,7 +313,7 @@ namespace AIWarsIdle.UI.Pvp
                     return;
                 }
 
-                cell.Apply(sector, _showCoordinates, _showHomeBadge);
+                cell.Apply(sector, _showCoordinates, _showHomeBadge, _ownedHexAlpha);
             }
 
             if (_selected != null)
@@ -317,6 +328,7 @@ namespace AIWarsIdle.UI.Pvp
                 }
             }
 
+            UpdateFrontlines(_generatedRoot, snapshot);
             UpdateHud(snapshot);
         }
 
@@ -594,7 +606,7 @@ namespace AIWarsIdle.UI.Pvp
                 CreateLabel(rect),
                 CreateInfoLabel(rect),
                 CreateHomeBadge(rect));
-            cell.Apply(sector, _showCoordinates, _showHomeBadge);
+            cell.Apply(sector, _showCoordinates, _showHomeBadge, _ownedHexAlpha);
 
             button.onClick.AddListener(() => SelectCell(cell));
             _cells.Add(cell);
@@ -664,6 +676,120 @@ namespace AIWarsIdle.UI.Pvp
             root.anchoredPosition = new Vector2(
                 -(contentCenterX * scale),
                 parentBottomY - scaledBottomY);
+        }
+
+        private void UpdateFrontlines(RectTransform root, GridSnapshot snapshot)
+        {
+            if (root == null) return;
+
+            var graphic = GetOrCreateFrontlineGraphic(root);
+            if (graphic == null) return;
+
+            if (!_showFrontlines)
+            {
+                graphic.SetSegments(Array.Empty<HexFrontierGraphic.LineSegment>(), _frontlineThickness);
+                graphic.gameObject.SetActive(false);
+                return;
+            }
+
+            var segments = BuildFrontlineSegments(snapshot);
+            graphic.gameObject.SetActive(segments.Count > 0);
+            graphic.SetSegments(segments, _frontlineThickness);
+        }
+
+        private HexFrontierGraphic GetOrCreateFrontlineGraphic(RectTransform parent)
+        {
+            var existing = parent.Find(GeneratedFrontierName);
+            if (existing != null)
+            {
+                return existing.GetComponent<HexFrontierGraphic>();
+            }
+
+            var go = new GameObject(GeneratedFrontierName, typeof(RectTransform), typeof(CanvasRenderer), typeof(HexFrontierGraphic));
+            go.transform.SetParent(parent, worldPositionStays: false);
+            go.transform.SetSiblingIndex(Math.Min(1, parent.childCount - 1));
+            HideEditorObject(go);
+
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            rect.localScale = Vector3.one;
+
+            var graphic = go.GetComponent<HexFrontierGraphic>();
+            graphic.raycastTarget = false;
+            return graphic;
+        }
+
+        private List<HexFrontierGraphic.LineSegment> BuildFrontlineSegments(GridSnapshot snapshot)
+        {
+            var segments = new List<HexFrontierGraphic.LineSegment>();
+            if (snapshot.Sectors == null || snapshot.Sectors.Count == 0) return segments;
+
+            var byCoord = new Dictionary<HexCoord, DisplaySector>(snapshot.Sectors.Count);
+            var processedEdges = new HashSet<long>();
+            for (var i = 0; i < snapshot.Sectors.Count; i++)
+            {
+                byCoord[snapshot.Sectors[i].Coord] = snapshot.Sectors[i];
+            }
+
+            for (var i = 0; i < snapshot.Sectors.Count; i++)
+            {
+                var sector = snapshot.Sectors[i];
+                if (sector.OwnerPlayerId <= 0) continue;
+
+                for (var neighborIndex = 0; neighborIndex < HexGridMath.NeighborDirections.Length; neighborIndex++)
+                {
+                    var neighborCoord = new HexCoord(
+                        sector.Coord.Q + HexGridMath.NeighborDirections[neighborIndex].Q,
+                        sector.Coord.R + HexGridMath.NeighborDirections[neighborIndex].R);
+
+                    if (!byCoord.TryGetValue(neighborCoord, out var neighbor)) continue;
+                    if (neighbor.OwnerPlayerId == sector.OwnerPlayerId) continue;
+
+                    var edgeKey = GetEdgeKey(sector.SectorId, neighbor.SectorId);
+                    if (!processedEdges.Add(edgeKey)) continue;
+
+                    var a = HexGridMath.AxialToLocalPosition(sector.Coord, _hexRadius);
+                    var b = HexGridMath.AxialToLocalPosition(neighbor.Coord, _hexRadius);
+                    var edge = HexGridMath.GetSharedEdge(a, b, _hexRadius);
+                    var centerDirection = (b - a).normalized;
+
+                    if (sector.OwnerPlayerId > 0 && neighbor.OwnerPlayerId > 0)
+                    {
+                        var splitOffset = centerDirection * (_frontlineThickness * 0.65f);
+                        segments.Add(new HexFrontierGraphic.LineSegment(
+                            edge.start - splitOffset,
+                            edge.end - splitOffset,
+                            HexGridPalette.GetFrontlineColor(sector.OwnerPlayerId, _frontlineColor)));
+                        segments.Add(new HexFrontierGraphic.LineSegment(
+                            edge.start + splitOffset,
+                            edge.end + splitOffset,
+                            HexGridPalette.GetFrontlineColor(neighbor.OwnerPlayerId, _frontlineColor)));
+                    }
+                    else
+                    {
+                        var ownerPlayerId = sector.OwnerPlayerId > 0 ? sector.OwnerPlayerId : neighbor.OwnerPlayerId;
+                        segments.Add(new HexFrontierGraphic.LineSegment(
+                            edge.start,
+                            edge.end,
+                            HexGridPalette.GetFrontlineColor(ownerPlayerId, _frontlineColor)));
+                    }
+                }
+            }
+
+            return segments;
+        }
+
+        private static long GetEdgeKey(int a, int b)
+        {
+            if (a > b)
+            {
+                (a, b) = (b, a);
+            }
+
+            return ((long)a << 32) | (uint)b;
         }
 
         private TMP_Text CreatePanelTitle(RectTransform parent)
@@ -982,9 +1108,10 @@ namespace AIWarsIdle.UI.Pvp
             var remaining = attacks != null ? attacks.GetRemaining(now) : 0;
             var max = attacks != null ? attacks.MaxAttacks : 0;
             var nextRegenAt = attacks != null ? attacks.GetNextRegenAt(now) : 0;
-            var regenText = max > 0 && remaining < max && nextRegenAt > now
-                ? $"Attacks: {remaining}/{max}  |  Regen in {FormatDuration(nextRegenAt - now)}"
-                : $"Attacks: {remaining}/{Mathf.Max(max, remaining)}";
+            var attackCountText = $"{remaining}/{Mathf.Max(max, remaining)}";
+            var regenTimerText = max > 0 && remaining < max && nextRegenAt > now
+                ? FormatClockDuration(nextRegenAt - now)
+                : string.Empty;
 
             var leagueText = league != null
                 ? $"League {loop.State.League}  |  Season points {loop.State.SeasonPoints}"
@@ -1001,7 +1128,81 @@ namespace AIWarsIdle.UI.Pvp
                 ? $"League season ends in {FormatDuration(Math.Max(0, league.GetCurrentSeasonEndsAtUnixSeconds(now) - now))}"
                 : "Tap PvpPower for breakdown";
 
-            hud.ShowState(regenText, leagueText, mapResetText, powerText, hint, _powerInfoVisible);
+            UpdateExternalAttackHud(attackCountText, regenTimerText);
+            hud.ShowState(_externalAttacksText != null ? string.Empty : $"Attacks: {attackCountText}",
+                leagueText,
+                mapResetText,
+                powerText,
+                hint,
+                _powerInfoVisible);
+        }
+
+        private void UpdateExternalAttackHud(string countText, string regenText)
+        {
+            EnsureExternalHudRefs();
+
+            if (_externalAttacksText != null)
+            {
+                _externalAttacksText.text = countText;
+            }
+
+            if (_externalRegenText != null)
+            {
+                _externalRegenText.text = string.IsNullOrEmpty(regenText) ? string.Empty : regenText;
+            }
+        }
+
+        private void EnsureExternalHudRefs()
+        {
+            if (_externalAttacksText != null && _externalRegenText != null) return;
+            if (!CanQuerySceneHierarchy()) return;
+
+            var attacksBarRoot = FindNamedChildInScene("res_bar");
+            if (_externalAttacksText == null && attacksBarRoot != null)
+            {
+                var energyBar = FindNamedChildRecursive(attacksBarRoot, "ResourceBar_Energy");
+                _externalAttacksText = FindNamedChildRecursive(energyBar, "Text_Energy")?.GetComponent<TMP_Text>()
+                    ?? FindNamedChildRecursive(energyBar, "Text (TMP)")?.GetComponent<TMP_Text>();
+            }
+
+            var timerRoot = FindNamedChildInScene("res_bar_2");
+            if (_externalRegenText == null && timerRoot != null)
+            {
+                _externalRegenText = timerRoot.Find("energy_regen/Text (TMP)")?.GetComponent<TMP_Text>();
+            }
+        }
+
+        private Transform FindNamedChildInScene(string name)
+        {
+            if (!CanQuerySceneHierarchy()) return null;
+
+            var roots = gameObject.scene.GetRootGameObjects();
+            for (var i = 0; i < roots.Length; i++)
+            {
+                var found = FindNamedChildRecursive(roots[i].transform, name);
+                if (found != null) return found;
+            }
+
+            return null;
+        }
+
+        private bool CanQuerySceneHierarchy()
+        {
+            var scene = gameObject.scene;
+            return scene.IsValid() && scene.isLoaded;
+        }
+
+        private static Transform FindNamedChildRecursive(Transform root, string name)
+        {
+            if (root.name == name) return root;
+
+            for (var i = 0; i < root.childCount; i++)
+            {
+                var found = FindNamedChildRecursive(root.GetChild(i), name);
+                if (found != null) return found;
+            }
+
+            return null;
         }
 
         private SectorDetailState BuildDetailState(DisplaySector sector)
@@ -1132,6 +1333,14 @@ namespace AIWarsIdle.UI.Pvp
             if (ts.TotalHours >= 1d) return $"{(int)ts.TotalHours}h {ts.Minutes:D2}m";
             if (ts.TotalMinutes >= 1d) return $"{(int)ts.TotalMinutes}m {ts.Seconds:D2}s";
             return $"{ts.Seconds}s";
+        }
+
+        private static string FormatClockDuration(long seconds)
+        {
+            if (seconds <= 0) return "0:00:00";
+
+            var ts = TimeSpan.FromSeconds(seconds);
+            return $"{Math.Max(0, (int)ts.TotalHours)}:{ts.Minutes:D2}:{ts.Seconds:D2}";
         }
 
         private void HideEditorObject(GameObject go)
@@ -1275,6 +1484,15 @@ namespace AIWarsIdle.UI.Pvp
     public static class HexGridMath
     {
         private static readonly float Sqrt3 = Mathf.Sqrt(3f);
+        public static readonly HexCoord[] NeighborDirections =
+        {
+            new(1, 0),
+            new(1, -1),
+            new(0, -1),
+            new(-1, 0),
+            new(-1, 1),
+            new(0, 1)
+        };
 
         public static List<HexCoord> EnumerateAxial(int radius)
         {
@@ -1326,6 +1544,15 @@ namespace AIWarsIdle.UI.Pvp
         {
             return new Vector2(Sqrt3 * hexRadius, 2f * hexRadius);
         }
+
+        public static (Vector2 start, Vector2 end) GetSharedEdge(Vector2 a, Vector2 b, float hexRadius)
+        {
+            var mid = (a + b) * 0.5f;
+            var dir = (b - a).normalized;
+            var perp = new Vector2(-dir.y, dir.x);
+            var halfLength = Mathf.Max(0.5f, hexRadius * 0.5f);
+            return (mid - (perp * halfLength), mid + (perp * halfLength));
+        }
     }
 
     internal static class HexGridPalette
@@ -1341,14 +1568,29 @@ namespace AIWarsIdle.UI.Pvp
             new(0.86f, 0.31f, 0.63f, 1f),
         };
 
-        public static Color GetColorForOwner(int ownerPlayerId, bool isHome)
+        public static Color GetColorForOwner(int ownerPlayerId, bool isHome, float ownedHexAlpha)
         {
             if (ownerPlayerId <= 0)
             {
                 return isHome ? Color.Lerp(NeutralColor, new Color(0.94f, 0.82f, 0.38f, 1f), 0.35f) : NeutralColor;
             }
 
-            return OwnerColors[(ownerPlayerId - 1) % OwnerColors.Length];
+            var color = OwnerColors[(ownerPlayerId - 1) % OwnerColors.Length];
+            if (!isHome)
+            {
+                color.a = Mathf.Clamp01(ownedHexAlpha);
+            }
+
+            return color;
+        }
+
+        public static Color GetFrontlineColor(int ownerPlayerId, Color fallback)
+        {
+            if (ownerPlayerId <= 0) return fallback;
+
+            var color = OwnerColors[(ownerPlayerId - 1) % OwnerColors.Length];
+            color.a = 1f;
+            return color;
         }
     }
 
@@ -1379,11 +1621,11 @@ namespace AIWarsIdle.UI.Pvp
             _homeBadge = homeBadge;
         }
 
-        public void Apply(HexGridRenderer.DisplaySector sector, bool showCoordinates, bool showHomeBadge)
+        public void Apply(HexGridRenderer.DisplaySector sector, bool showCoordinates, bool showHomeBadge, float ownedHexAlpha)
         {
             CurrentSector = sector;
             SectorId = sector.SectorId;
-            _baseColor = HexGridPalette.GetColorForOwner(sector.OwnerPlayerId, sector.IsHome);
+            _baseColor = HexGridPalette.GetColorForOwner(sector.OwnerPlayerId, sector.IsHome, ownedHexAlpha);
 
             if (_graphic != null)
             {
@@ -1392,16 +1634,27 @@ namespace AIWarsIdle.UI.Pvp
 
             if (_label != null)
             {
-                _label.text = showCoordinates
-                    ? $"{sector.Label}\n{sector.Coord.Q},{sector.Coord.R}"
-                    : sector.Label;
+                if (sector.IsHome)
+                {
+                    _label.text = showCoordinates
+                        ? $"{sector.Label}\n{sector.Coord.Q},{sector.Coord.R}"
+                        : sector.Label;
+                    _label.gameObject.SetActive(true);
+                }
+                else
+                {
+                    _label.text = string.Empty;
+                    _label.gameObject.SetActive(false);
+                }
             }
 
             if (_info != null)
             {
-                _info.text = sector.OwnerPlayerId > 0
-                    ? $"P{sector.OwnerPlayerId} | {Mathf.RoundToInt(sector.Stability)}%"
-                    : $"Neutral | {Mathf.RoundToInt(sector.Stability)}%";
+                var shouldShowStability = sector.IsHome || sector.Stability < 100f;
+                _info.text = shouldShowStability
+                    ? $"{Mathf.RoundToInt(sector.Stability)}%"
+                    : string.Empty;
+                _info.gameObject.SetActive(shouldShowStability);
             }
 
             if (_homeBadge != null)
@@ -1454,6 +1707,73 @@ namespace AIWarsIdle.UI.Pvp
                 var next = i == 6 ? 1 : i + 1;
                 vh.AddTriangle(0, i, next);
             }
+        }
+    }
+
+    internal sealed class HexFrontierGraphic : MaskableGraphic
+    {
+        internal readonly struct LineSegment
+        {
+            public readonly Vector2 Start;
+            public readonly Vector2 End;
+            public readonly Color Color;
+
+            public LineSegment(Vector2 start, Vector2 end, Color color)
+            {
+                Start = start;
+                End = end;
+                Color = color;
+            }
+        }
+
+        private readonly List<LineSegment> _segments = new();
+        private float _thickness = 4f;
+
+        public void SetSegments(IReadOnlyList<LineSegment> segments, float thickness)
+        {
+            _segments.Clear();
+            if (segments != null)
+            {
+                for (var i = 0; i < segments.Count; i++)
+                {
+                    _segments.Add(segments[i]);
+                }
+            }
+
+            _thickness = Mathf.Max(1f, thickness);
+            SetVerticesDirty();
+        }
+
+        protected override void OnPopulateMesh(VertexHelper vh)
+        {
+            vh.Clear();
+
+            if (_segments.Count == 0) return;
+
+            for (var i = 0; i < _segments.Count; i++)
+            {
+                AddLineQuad(vh, _segments[i], _segments[i].Color, _thickness);
+            }
+        }
+
+        private static void AddLineQuad(VertexHelper vh, LineSegment segment, Color color, float thickness)
+        {
+            var delta = segment.End - segment.Start;
+            if (delta.sqrMagnitude <= 0.0001f) return;
+
+            var normal = new Vector2(-delta.y, delta.x).normalized * (thickness * 0.5f);
+            var v0 = segment.Start - normal;
+            var v1 = segment.Start + normal;
+            var v2 = segment.End + normal;
+            var v3 = segment.End - normal;
+
+            var index = vh.currentVertCount;
+            vh.AddVert(v0, color, Vector2.zero);
+            vh.AddVert(v1, color, Vector2.up);
+            vh.AddVert(v2, color, Vector2.one);
+            vh.AddVert(v3, color, Vector2.right);
+            vh.AddTriangle(index, index + 1, index + 2);
+            vh.AddTriangle(index, index + 2, index + 3);
         }
     }
 
