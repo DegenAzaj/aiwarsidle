@@ -38,6 +38,7 @@ namespace AIWarsIdle.Tests.EditMode
             cfg.PrestigeMultiplierIncrease = 0.0;
             cfg.PermanentUpgradeCap = 10;
             cfg.OfflineCapSeconds = 12 * 60 * 60;
+            cfg.OfflineEfficiency = 0.6;
             cfg.ValidateOrThrow();
             return cfg;
         }
@@ -71,8 +72,8 @@ namespace AIWarsIdle.Tests.EditMode
             var production = new ProductionService(state, balance, economy);
             var offline = new OfflineClaimService(state, balance, production, economy, eventBus);
 
-            offline.BankOfflineGain(nowUnixSeconds: 100); // pending = 10 * 100 = 1000
-            Assert.AreEqual(1000.0, offline.PendingOfflineGain);
+            offline.BankOfflineGain(nowUnixSeconds: 100); // pending = 10 * 100 * 0.6 = 600
+            Assert.AreEqual(600.0, offline.PendingOfflineGain);
 
             var attacks = new PvpAttackChargesService(state, CreatePvpAttacksConfig());
             var ads = new FakeAdsService();
@@ -81,7 +82,7 @@ namespace AIWarsIdle.Tests.EditMode
 
             Assert.IsTrue(uc.TryShowOfflineClaimX2(nowUnixSeconds: 100));
             Assert.AreEqual(1, ads.ShowCalls);
-            Assert.AreEqual(2000.0, economy.Balance);
+            Assert.AreEqual(1200.0, economy.Balance);
 
             analytics.Flush(maxEvents: 100);
             Assert.IsTrue(ContainsEvent(sink, "ad_watched"));

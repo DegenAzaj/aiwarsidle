@@ -244,3 +244,49 @@ Zmiany zrobione w ramach dopięcia przycisku **Overclock AI** i feedbacku na HUD
   - asmdef: `aiwarsidle/Assets/Tests/PlayMode/AIWarsIdle.Tests.PlayMode.asmdef` (dopisane `Unity.TextMeshPro`)
 
 Uruchamianie: Unity Test Runner → **PlayMode**.
+
+---
+
+## Offline claim modal (STORY 11.2b)
+
+Zmiany zrobione w ramach dopięcia offline claim z UI:
+
+- Modal offline claim:
+  - Controller: `aiwarsidle/Assets/UI/Generators/OfflineClaimModalController.cs`
+  - Pokazuje `claim_offline_root` po wejściu do gry, gdy `PendingOfflineGain > 0`.
+  - Wypełnia GUI:
+    - `offline_gain_number` kwotą rewarda w tym samym compact formacie co reszta HUD,
+    - `offline_time_description` w formacie `Offline Time: 3h 25m 43s (CAP: 12h)`.
+  - Obsługuje akcje:
+    - `Claim` → `OfflineClaimService.Claim(1)`
+    - `Claim x2` → rewarded stub (`offline_x2`) + `OfflineClaimService.Claim(2)`
+    - `Not now` → zamyka modal bez claim, pending zostaje.
+
+- HUD button do ponownego otwierania:
+  - Istniejący `button_claim_offline` z HUD otwiera ten sam modal.
+  - Jest aktywny tylko wtedy, gdy istnieje reward możliwy do odebrania (`PendingOfflineGain > 0`).
+  - Pokrywa use case:
+    - gracz wybrał `Claim later`,
+    - gracz wrócił do gry bez przejścia przez Splash (resume krótszy niż timeout).
+
+- Core / persistence pod modal:
+  - `OfflineClaimService` przechowuje też metadane ostatniego bankowania offline:
+    - raw offline seconds,
+    - effective offline seconds po capie.
+  - Dane są mapowane do save, żeby UI mogło poprawnie pokazać czas offline po restarcie aplikacji.
+
+- Offline efficiency:
+  - Dodane pole `OfflineEfficiency` do `BalanceConfig` w `aiwarsidle/Assets/GameCore/Config/BalanceConfig.cs`.
+  - Aktualna wartość domyślna: `0.6`.
+  - Offline gain jest teraz liczony jako:
+    - `CalculateProductionPerSecond() * seconds * OfflineEfficiency`
+  - Oznacza to, że offline zarobek jest celowo mniej efektywny niż aktywna gra.
+
+- Testy:
+  - EditMode:
+    - `aiwarsidle/Assets/Tests/EditMode/Epic10OfflineClaimServiceTests.cs`
+    - `aiwarsidle/Assets/Tests/EditMode/Epic7RewardedAdsUseCaseTests.cs`
+    - `aiwarsidle/Assets/Tests/EditMode/DomainModelValidationTests.cs`
+  - PlayMode:
+    - `aiwarsidle/Assets/Tests/PlayMode/Epic11OfflineClaimModalPlayModeTests.cs`
+    - pokryte: auto-show, claim x1, claim x2, `Not now`, reopen z HUD.

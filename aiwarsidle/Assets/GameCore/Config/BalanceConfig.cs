@@ -22,6 +22,7 @@ namespace AIWarsIdle.GameCore.Config
 
         [Header("Offline")]
         public double OfflineCapSeconds = 12 * 60 * 60; // 12h
+        public double OfflineEfficiency = 0.6;
 
         public void ValidateOrThrow()
         {
@@ -74,6 +75,11 @@ namespace AIWarsIdle.GameCore.Config
             }
 
             ValidateFinitePositiveOrThrow(OfflineCapSeconds, nameof(OfflineCapSeconds));
+            ValidateFiniteOrThrow(OfflineEfficiency, nameof(OfflineEfficiency));
+            if (OfflineEfficiency <= 0 || OfflineEfficiency > 1.0)
+            {
+                throw new InvalidOperationException($"{nameof(OfflineEfficiency)} must be > 0 and <= 1.");
+            }
         }
 
         private static void ValidateArrayOrThrow(Array array, string name)

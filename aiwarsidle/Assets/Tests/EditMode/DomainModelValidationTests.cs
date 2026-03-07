@@ -92,6 +92,7 @@ namespace AIWarsIdle.Tests
             cfg.PrestigeMultiplierIncrease = 0.05;
 
             cfg.OfflineCapSeconds = 12 * 60 * 60;
+            cfg.OfflineEfficiency = 0.6;
             cfg.ValidateOrThrow();
             return cfg;
         }
@@ -181,6 +182,22 @@ namespace AIWarsIdle.Tests
             var gain20h = production.CalculateOfflineGain(20 * 60 * 60);
 
             Assert.AreEqual(gain12h, gain20h);
+        }
+
+        [Test]
+        public void ProductionService_OfflineGain_Uses_Configured_Efficiency()
+        {
+            var state = new GameState();
+            var cfg = CreateValidBalanceConfig();
+            var economy = new EconomyService(state);
+            var production = new ProductionService(state, cfg, economy);
+
+            state.GeneratorLevels[0] = 10;
+
+            var pps = production.CalculateProductionPerSecond();
+            var gain = production.CalculateOfflineGain(100);
+
+            Assert.AreEqual(pps * 100 * cfg.OfflineEfficiency, gain);
         }
 
         [Test]

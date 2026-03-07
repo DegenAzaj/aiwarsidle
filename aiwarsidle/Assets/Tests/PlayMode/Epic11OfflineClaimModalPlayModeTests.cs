@@ -206,6 +206,7 @@ namespace AIWarsIdle.Tests
             balance.GeneratorCostGrowthFactors = new[] { 1.15, 1.15, 1.15, 1.15, 1.15 };
             balance.GeneratorBaseOutputs = new[] { 1.0, 0.5, 0.25, 0.1, 0.05 };
             balance.OfflineCapSeconds = 12 * 60 * 60;
+            balance.OfflineEfficiency = 0.6;
 
             var overclock = ScriptableObject.CreateInstance<OverclockConfig>();
             overclock.DurationSeconds = 10;

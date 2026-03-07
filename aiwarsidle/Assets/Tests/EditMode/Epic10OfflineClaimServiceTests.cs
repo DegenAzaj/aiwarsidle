@@ -24,6 +24,7 @@ namespace AIWarsIdle.Tests.EditMode
             cfg.PrestigeMultiplierIncrease = 0.0;
             cfg.PermanentUpgradeCap = 10;
             cfg.OfflineCapSeconds = 12 * 60 * 60;
+            cfg.OfflineEfficiency = 0.6;
             cfg.ValidateOrThrow();
             return cfg;
         }
@@ -41,7 +42,7 @@ namespace AIWarsIdle.Tests.EditMode
 
             offline.BankOfflineGain(nowUnixSeconds: 100);
 
-            Assert.AreEqual(1000.0, offline.PendingOfflineGain);
+            Assert.AreEqual(600.0, offline.PendingOfflineGain);
         }
 
         [Test]
@@ -57,7 +58,7 @@ namespace AIWarsIdle.Tests.EditMode
 
             offline.BankOfflineGain(nowUnixSeconds: 20 * 60 * 60);
 
-            Assert.AreEqual(10.0 * (12 * 60 * 60), offline.PendingOfflineGain);
+            Assert.AreEqual(10.0 * (12 * 60 * 60) * 0.6, offline.PendingOfflineGain);
         }
 
         [Test]
@@ -89,17 +90,17 @@ namespace AIWarsIdle.Tests.EditMode
             var offline = new OfflineClaimService(state, cfg, production, economy);
 
             offline.BankOfflineGain(nowUnixSeconds: 100);
-            Assert.AreEqual(1000.0, offline.PendingOfflineGain);
+            Assert.AreEqual(600.0, offline.PendingOfflineGain);
 
             offline.Claim(multiplier: 1);
-            Assert.AreEqual(1000.0, state.SoftCurrency);
+            Assert.AreEqual(600.0, state.SoftCurrency);
             Assert.AreEqual(0.0, offline.PendingOfflineGain);
 
             offline.BankOfflineGain(nowUnixSeconds: 200);
-            Assert.AreEqual(1000.0, offline.PendingOfflineGain);
+            Assert.AreEqual(600.0, offline.PendingOfflineGain);
 
             offline.Claim(multiplier: 2);
-            Assert.AreEqual(3000.0, state.SoftCurrency);
+            Assert.AreEqual(1800.0, state.SoftCurrency);
             Assert.AreEqual(0.0, offline.PendingOfflineGain);
         }
     }

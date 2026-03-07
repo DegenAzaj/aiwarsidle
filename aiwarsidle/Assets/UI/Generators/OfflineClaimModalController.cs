@@ -54,6 +54,7 @@ namespace AIWarsIdle.UI.Generators
         private void OnEnable()
         {
             BindButtons();
+            TickVisibility();
             RefreshVisuals();
         }
 
@@ -64,14 +65,14 @@ namespace AIWarsIdle.UI.Generators
 
         private void Update()
         {
+            TickVisibility();
+
             if (_refreshIntervalSeconds > 0f)
             {
                 _refreshCarry += Time.unscaledDeltaTime;
                 if (_refreshCarry < _refreshIntervalSeconds) return;
                 _refreshCarry = 0f;
             }
-
-            TickVisibility();
             RefreshVisuals();
         }
 
@@ -148,6 +149,7 @@ namespace AIWarsIdle.UI.Generators
             if (loop.OfflineClaim.PendingOfflineGain <= 0)
             {
                 SetVisible(false);
+                RefreshVisuals();
                 return;
             }
 
@@ -155,6 +157,7 @@ namespace AIWarsIdle.UI.Generators
             loop.ForceSave();
             _dismissedForCurrentEntry = true;
             SetVisible(false);
+            RefreshVisuals();
         }
 
         private void OnClaimX2Clicked()
@@ -164,6 +167,7 @@ namespace AIWarsIdle.UI.Generators
             if (loop.OfflineClaim.PendingOfflineGain <= 0)
             {
                 SetVisible(false);
+                RefreshVisuals();
                 return;
             }
 
@@ -179,6 +183,7 @@ namespace AIWarsIdle.UI.Generators
                 loop.ForceSave();
                 _dismissedForCurrentEntry = true;
                 SetVisible(false);
+                RefreshVisuals();
                 return;
             }
 
@@ -189,6 +194,7 @@ namespace AIWarsIdle.UI.Generators
         {
             _dismissedForCurrentEntry = true;
             SetVisible(false);
+            RefreshVisuals();
         }
 
         private void OnHudClaimClicked()

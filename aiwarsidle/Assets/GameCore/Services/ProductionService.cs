@@ -121,7 +121,7 @@ namespace AIWarsIdle.GameCore.Services
             if (seconds <= 0) return 0;
             if (seconds > _config.OfflineCapSeconds) seconds = _config.OfflineCapSeconds;
 
-            return CalculateProductionPerSecond() * seconds;
+            return CalculateProductionPerSecond() * seconds * _config.OfflineEfficiency;
         }
 
         public void Tick(double deltaSeconds)
