@@ -119,9 +119,8 @@ namespace AIWarsIdle.Bootstrap
                 subscription: _subscription);
 
             _upgrades = new UpgradeService(State, balanceConfig, _economy, _eventBus);
-            _prestige = new PrestigeService(State, balanceConfig, _eventBus);
-
             _offline = new OfflineClaimService(State, balanceConfig, _production, _economy, _eventBus);
+            _prestige = new PrestigeService(State, balanceConfig, _eventBus, _offline);
 
             _map = new MapService(State.MapState, _mapConfig, _overclock);
 

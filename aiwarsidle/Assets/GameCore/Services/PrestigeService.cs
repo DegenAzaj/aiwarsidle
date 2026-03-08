@@ -9,12 +9,14 @@ namespace AIWarsIdle.GameCore.Services
         private readonly GameState _state;
         private readonly BalanceConfig _config;
         private readonly IEventBus _eventBus;
+        private readonly OfflineClaimService _offlineClaim;
 
-        public PrestigeService(GameState state, BalanceConfig config, IEventBus eventBus = null)
+        public PrestigeService(GameState state, BalanceConfig config, IEventBus eventBus = null, OfflineClaimService offlineClaim = null)
         {
             _state = state ?? throw new ArgumentNullException(nameof(state));
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _eventBus = eventBus;
+            _offlineClaim = offlineClaim;
 
             _config.ValidateOrThrow();
         }
@@ -56,6 +58,8 @@ namespace AIWarsIdle.GameCore.Services
                 throw new InvalidOperationException("Cannot prestige yet.");
             }
 
+            AutoClaimPendingOfflineGain();
+
             // Apply as many prestiges as the player can afford from the earned-since-last-prestige pool,
             // and keep the remaining progress towards the next prestige.
             var earnedSinceLast = GetEarnedSinceLastPrestige();
@@ -93,12 +97,12 @@ namespace AIWarsIdle.GameCore.Services
 
         public void ExecutePrestigeSingle()
         {
-            var earnedSinceLast = GetEarnedSinceLastPrestige();
-            var threshold = GetPrestigeThreshold();
-            if (earnedSinceLast < threshold)
+            if (!CanPrestige())
             {
                 throw new InvalidOperationException("Cannot prestige yet.");
             }
+
+            AutoClaimPendingOfflineGain();
 
             // Single prestige: progress to the next prestige starts from 0.
             _state.LifetimeEarnedSoftCurrencyAtLastPrestige = _state.LifetimeEarnedSoftCurrency;
@@ -130,6 +134,13 @@ namespace AIWarsIdle.GameCore.Services
             if (baseline > _state.LifetimeEarnedSoftCurrency) baseline = _state.LifetimeEarnedSoftCurrency;
             var earned = _state.LifetimeEarnedSoftCurrency - baseline;
             return earned < 0 ? 0 : earned;
+        }
+
+        private void AutoClaimPendingOfflineGain()
+        {
+            if (_offlineClaim == null) return;
+            if (_offlineClaim.PendingOfflineGain <= 0) return;
+            _offlineClaim.Claim(multiplier: 1d);
         }
 
         private int CalculatePrestigeGains(double earnedSinceLastPrestige, out double remainingEarned)

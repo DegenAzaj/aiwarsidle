@@ -341,6 +341,76 @@ namespace AIWarsIdle.Tests
         }
 
         [Test]
+        public void PrestigeService_ExecutePrestigeSingle_AutoClaimsPendingOfflineGain_BeforeReset()
+        {
+            var state = new GameState
+            {
+                SoftCurrency = 123,
+                LifetimeEarnedSoftCurrency = 1_000,
+                LifetimeEarnedSoftCurrencyAtLastPrestige = 0,
+                PermanentUpgradeLevel = 0,
+                PrestigeCount = 0,
+                LastLoginUnixSeconds = 0
+            };
+            state.GeneratorLevels[0] = 1;
+
+            var cfg = CreateValidBalanceConfig();
+            cfg.PrestigeThresholdBase = 1_000;
+            cfg.PrestigeThresholdGrowthFactor = 1.6;
+            cfg.PermanentUpgradeCap = 10;
+
+            var economy = new EconomyService(state);
+            var production = new ProductionService(state, cfg, economy);
+            var offline = new OfflineClaimService(state, cfg, production, economy);
+            state.PendingOfflineGain = 200;
+
+            var prestige = new PrestigeService(state, cfg, offlineClaim: offline);
+
+            Assert.IsTrue(prestige.CanPrestige());
+            Assert.AreEqual(1, prestige.PreviewPrestigeGains(max: false));
+
+            prestige.ExecutePrestigeSingle();
+
+            Assert.AreEqual(0d, offline.PendingOfflineGain);
+            Assert.AreEqual(1, state.PrestigeCount);
+            Assert.AreEqual(1, state.PermanentUpgradeLevel);
+            Assert.AreEqual(1_200d, state.LifetimeEarnedSoftCurrency, 1e-9);
+            Assert.AreEqual(1_200d, state.LifetimeEarnedSoftCurrencyAtLastPrestige, 1e-9);
+            Assert.AreEqual(0d, state.SoftCurrency, 1e-9);
+            Assert.AreEqual(1, state.GeneratorLevels[0]);
+        }
+
+        [Test]
+        public void PrestigeService_PendingOfflineGain_DoesNotUnlockRebootEarly()
+        {
+            var state = new GameState
+            {
+                SoftCurrency = 123,
+                LifetimeEarnedSoftCurrency = 900,
+                LifetimeEarnedSoftCurrencyAtLastPrestige = 0,
+                PermanentUpgradeLevel = 0,
+                PrestigeCount = 0
+            };
+            state.GeneratorLevels[0] = 1;
+
+            var cfg = CreateValidBalanceConfig();
+            cfg.PrestigeThresholdBase = 1_000;
+            cfg.PrestigeThresholdGrowthFactor = 1.6;
+
+            var economy = new EconomyService(state);
+            var production = new ProductionService(state, cfg, economy);
+            var offline = new OfflineClaimService(state, cfg, production, economy);
+            state.PendingOfflineGain = 200;
+
+            var prestige = new PrestigeService(state, cfg, offlineClaim: offline);
+
+            Assert.IsFalse(prestige.CanPrestige());
+            Assert.AreEqual(0, prestige.PreviewPrestigeGains(max: false));
+            Assert.Throws<InvalidOperationException>(() => prestige.ExecutePrestigeSingle());
+            Assert.AreEqual(200d, offline.PendingOfflineGain, 1e-9);
+        }
+
+        [Test]
         public void OfflineClaimService_Claim_Adds_Currency_And_LifetimeEarned()
         {
             var state = new GameState
