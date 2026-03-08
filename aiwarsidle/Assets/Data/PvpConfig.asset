@@ -19,6 +19,14 @@ MonoBehaviour:
   StrategyMultiplierRisky: 1.1
   StabilityMultiplierMin: 0.9
   StabilityMultiplierMax: 1.2
+  DefenseBonus: 1.1
+  FlankBonusPerExtraAttacker: 0.1
+  FlankBonusMaxMultiplier: 1.3
+  CombatMaintenanceFreeSectors: 6
+  CombatMaintenancePenaltyPerExtraSector: 0.03
+  CombatMaintenanceMinMultiplier: 0.75
+  UnderdogMaxAttackBonus: 0.25
+  UnderdogSectorDeficitForMaxBonus: 8
   PrestigePvpPowerPerPrestige: 1
   PermanentPvpPowerPerLevel: 1
   SectorPvpPowerPerSector: 1

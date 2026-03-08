@@ -25,15 +25,15 @@ namespace AIWarsIdle.PvP.Services
                 return CloneSnapshot(owner);
             }
 
-            return GenerateBotSnapshot(attackerSnapshot, seed);
+            return defenderSector.OwnerPlayerId == 0
+                ? GenerateSnapshot(attackerSnapshot, seed, _mapConfig.NeutralPowerMinMultiplier, _mapConfig.NeutralPowerMaxMultiplier)
+                : GenerateSnapshot(attackerSnapshot, seed, _mapConfig.BotPowerMinMultiplier, _mapConfig.BotPowerMaxMultiplier);
         }
 
-        private PvpSnapshot GenerateBotSnapshot(PvpSnapshot attackerSnapshot, int seed)
+        private PvpSnapshot GenerateSnapshot(PvpSnapshot attackerSnapshot, int seed, float min, float max)
         {
             var rng = new Random(seed);
 
-            var min = _mapConfig.BotPowerMinMultiplier;
-            var max = _mapConfig.BotPowerMaxMultiplier;
             var u = rng.NextDouble();
             var mult = min + ((max - min) * u);
 
@@ -59,4 +59,3 @@ namespace AIWarsIdle.PvP.Services
         }
     }
 }
-

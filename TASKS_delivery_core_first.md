@@ -479,18 +479,18 @@ Zasada: UI jest cienką warstwą, tylko prezentacja + input → wywołania serwi
 
 ## STORY 11.4 — Mapa PvP
 
-* [ ] Mapa heksagonalna (`hex grid`) w kształcie dużego hexa
-* [ ] Rozmiar mapy: `radius = 4` (~61 sektorów)
-* [ ] 6 stron konfliktu: gracz + 5 botów
-* [ ] Każda strona startuje w narożniku mapy z jednym nietykalnym `Home Sector`
-* [ ] Neutralne sektory zajmują większość mapy na starcie
-* [ ] Kolor ownera na hexie + czytelne fronty na granicach terytoriów
-* [ ] Panel sektora: bonus, owner, preview widełek, wybór strategii, atak
-* [ ] Tooltip/info w panelu: “Skąd bierze się `PvpPower`?”
+* [x] Mapa heksagonalna (`hex grid`) w kształcie dużego hexa
+* [x] Rozmiar mapy: `radius = 4` (~61 sektorów)
+* [x] 6 stron konfliktu: gracz + 5 botów
+* [x] Każda strona startuje w narożniku mapy z jednym nietykalnym `Home Sector`
+* [x] Neutralne sektory zajmują większość mapy na starcie
+* [x] Kolor ownera na hexie + czytelne fronty na granicach terytoriów
+* [x] Panel sektora: bonus, owner, preview widełek, wybór strategii, atak
+* [x] Tooltip/info w panelu: “Skąd bierze się `PvpPower`?”
   * prestige + permanent upgrades + sektory
   * mały udział z produkcji (soft-cap)
   * subskrypcja: ×2 `ProductionPps`, **nie** zwiększa `PvpPower` bezpośrednio
-* [ ] Powiadomienie o wyniku + zmiana koloru sektora
+* [x] Powiadomienie o wyniku + zmiana koloru sektora
 * [ ] Boty wykonują akcje okresowo na tych samych zasadach co gracz
 * [ ] Boty mają profile zachowań: agresywny / ekspansywny / defensywny
 
@@ -503,11 +503,11 @@ Zasada: UI jest cienką warstwą, tylko prezentacja + input → wywołania serwi
 
 ## STORY 11.4b — PvP HUD + statusy (ataki/regen/season)
 
-* [ ] Na ekranie mapy:
+* [x] Na ekranie mapy:
   * licznik `PvPAttacksRemaining` + timer do kolejnego regen (jeśli < cap)
   * aktualna liga + `SeasonPoints`
   * stan potyczki mapy (np. “Map resets in …”) oraz informacja o dłuższym sezonie ligi
-* [ ] Panel sektora pokazuje (oprócz istniejących wymagań):
+* [x] Panel sektora pokazuje (oprócz istniejących wymagań):
   * `Stability` + tempo zmian (jeśli jest) lub przynajmniej wartość + “meaning”
   * cooldown do kolejnego ataku (jeśli aktywny)
   * powód braku możliwości ataku (brak adjacency, home sector, sektor już jest Twój, brak ataków, cooldown, season reset)

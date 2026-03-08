@@ -40,6 +40,14 @@ namespace AIWarsIdle.Tests.EditMode
             cfg.StrategyMultiplierRisky = 1.0f;
             cfg.StabilityMultiplierMin = 1.0f;
             cfg.StabilityMultiplierMax = 1.0f;
+            cfg.DefenseBonus = 1.0f;
+            cfg.FlankBonusPerExtraAttacker = 0.0f;
+            cfg.FlankBonusMaxMultiplier = 1.0f;
+            cfg.CombatMaintenanceFreeSectors = 999;
+            cfg.CombatMaintenancePenaltyPerExtraSector = 0.0f;
+            cfg.CombatMaintenanceMinMultiplier = 1.0f;
+            cfg.UnderdogMaxAttackBonus = 0.0f;
+            cfg.UnderdogSectorDeficitForMaxBonus = 1;
 
             cfg.PrestigePvpPowerPerPrestige = prestigePowerPerPrestige;
             cfg.PermanentPvpPowerPerLevel = 0.0;
@@ -110,6 +118,8 @@ namespace AIWarsIdle.Tests.EditMode
 
             cfg.BotPowerMinMultiplier = botMult;
             cfg.BotPowerMaxMultiplier = botMult;
+            cfg.NeutralPowerMinMultiplier = 0.5f;
+            cfg.NeutralPowerMaxMultiplier = 0.5f;
 
             cfg.WinSeasonPoints = 10;
             cfg.LoseSeasonPoints = -2;
@@ -229,6 +239,31 @@ namespace AIWarsIdle.Tests.EditMode
             Assert.AreEqual(1, map.GetSector(0).OwnerPlayerId);
             Assert.AreEqual(0, map.GetSector(1).OwnerPlayerId);
             Assert.AreEqual(cfg.StabilityStartNeutral, map.GetSector(1).Stability);
+        }
+
+        [Test]
+        public void DebugResetCurrentMatch_ResetsMapToSeasonStart()
+        {
+            var state = new GameState();
+            var cfg = CreateSmallMapConfig(botMult: 1.0f, stabilityStartNeutral: 7f);
+            var map = new MapService(state.MapState, cfg);
+
+            map.AdvanceTime(1000);
+
+            var neutral = map.GetSector(1);
+            neutral.OwnerPlayerId = 3;
+            neutral.Stability = 44f;
+            neutral.CapturedUnixSeconds = 999;
+            neutral.LastCombatUnixSeconds = 998;
+
+            map.DebugResetCurrentMatch(2000);
+
+            Assert.AreEqual(1, map.GetSector(0).OwnerPlayerId);
+            Assert.AreEqual(100f, map.GetSector(0).Stability);
+            Assert.AreEqual(0, map.GetSector(1).OwnerPlayerId);
+            Assert.AreEqual(cfg.StabilityStartNeutral, map.GetSector(1).Stability);
+            Assert.AreEqual(0, map.GetSector(1).CapturedUnixSeconds);
+            Assert.AreEqual(0, map.GetSector(1).LastCombatUnixSeconds);
         }
 
         [Test]
@@ -421,7 +456,7 @@ namespace AIWarsIdle.Tests.EditMode
         public void AttackSector_Win_ChangesOwner_SetsCaptureStability_AndAwards()
         {
             var state = new GameState { PvpAttacksRemaining = 1 };
-            var mapCfg = CreateSmallMapConfig(botMult: 0.5f);
+            var mapCfg = CreateSmallMapConfig(botMult: 0.01f);
             var map = new MapService(state.MapState, mapCfg);
             map.AdvanceTime(nowUnixSeconds: 1000);
 
@@ -458,7 +493,7 @@ namespace AIWarsIdle.Tests.EditMode
         public void AttackSector_Lose_DoesNotChangeOwner_IncreasesStability_AndAwardsConsolation()
         {
             var state = new GameState { PvpAttacksRemaining = 1 };
-            var mapCfg = CreateSmallMapConfig(botMult: 2.0f);
+            var mapCfg = CreateSmallMapConfig(botMult: 100.0f);
             var map = new MapService(state.MapState, mapCfg);
             map.AdvanceTime(nowUnixSeconds: 1000);
 
@@ -521,6 +556,418 @@ namespace AIWarsIdle.Tests.EditMode
             Assert.GreaterOrEqual(preview.WinChanceMin, 0f);
             Assert.LessOrEqual(preview.WinChanceMax, 1f);
             Assert.LessOrEqual(preview.WinChanceMin, preview.WinChanceMax);
+            Assert.AreEqual(preview.WinChanceMin, preview.WinChanceMax, 1e-6f);
+        }
+
+        [Test]
+        public void GetAttackPreview_FlankBonus_IncreasesWinChance()
+        {
+            var state = new GameState { PvpAttacksRemaining = 1, PrestigeCount = 1 };
+            state.MapState.Sectors = new[]
+            {
+                new SectorState { SectorId = 0, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 1, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 2, OwnerPlayerId = 2, Stability = 0f },
+            };
+
+            var mapCfg = ScriptableObject.CreateInstance<MapConfig>();
+            mapCfg.MapSeasonLengthDays = 7;
+            mapCfg.MapSeasonAnchorUnixSecondsUtc = 0;
+            mapCfg.LocalPlayerId = 1;
+            mapCfg.HomeSectorId = 0;
+            mapCfg.HomeSectorStability = 100f;
+            mapCfg.EnforceSectorCountRange = false;
+            mapCfg.RequireConnectedGraph = true;
+            mapCfg.SectorDefinitions = new[]
+            {
+                new MapConfig.SectorDefinition { SectorId = 0, Name = "Home" },
+                new MapConfig.SectorDefinition { SectorId = 1, Name = "Flank" },
+                new MapConfig.SectorDefinition { SectorId = 2, Name = "Target" },
+            };
+            mapCfg.Adjacency = new[]
+            {
+                new MapConfig.SectorEdge { A = 0, B = 2 },
+                new MapConfig.SectorEdge { A = 1, B = 2 },
+                new MapConfig.SectorEdge { A = 0, B = 1 },
+            };
+            mapCfg.StabilityGrowthPerSecond = 0f;
+            mapCfg.FreshCaptureWindowSeconds = 60;
+            mapCfg.StabilityStartNeutral = 0f;
+            mapCfg.StabilityStartOnCapture = 10f;
+            mapCfg.StabilityGainOnDefenseWin = 5f;
+            mapCfg.CaptureStabilityMultiplierAggressive = 1f;
+            mapCfg.CaptureStabilityMultiplierStable = 1f;
+            mapCfg.CaptureStabilityMultiplierRisky = 1f;
+            mapCfg.BotPowerMinMultiplier = 1f;
+            mapCfg.BotPowerMaxMultiplier = 1f;
+            mapCfg.ValidateOrThrow();
+
+            var economy = new EconomyService(state);
+            var balance = CreateValidBalanceConfig();
+            var production = new ProductionService(state, balance, economy);
+            var withoutFlank = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 99);
+            withoutFlank.FlankBonusPerExtraAttacker = 0f;
+            withoutFlank.FlankBonusMaxMultiplier = 1f;
+            withoutFlank.ValidateOrThrow();
+
+            var withFlank = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 99);
+            withFlank.FlankBonusPerExtraAttacker = 0.25f;
+            withFlank.FlankBonusMaxMultiplier = 2f;
+            withFlank.ValidateOrThrow();
+
+            var map = new MapService(state.MapState, mapCfg);
+            map.AdvanceTime(1000);
+
+            var snapshotNoFlank = new SnapshotService(state, withoutFlank, production, mapConfig: mapCfg);
+            var snapshotWithFlank = new SnapshotService(state, withFlank, production, mapConfig: mapCfg);
+            var matchmaking = new MatchmakingService(mapCfg);
+            var attacks = new PvpAttackChargesService(state, CreateDefaultPvpAttacksConfig());
+            var league = new LeagueService(state, CreateValidLeagueConfig());
+
+            var combatNoFlank = new PvpMapCombatService(state, map, mapCfg, attacks, snapshotNoFlank, matchmaking, new BattleSimService(withoutFlank), economy, league);
+            var combatWithFlank = new PvpMapCombatService(state, map, mapCfg, attacks, snapshotWithFlank, matchmaking, new BattleSimService(withFlank), economy, league);
+
+            var previewNoFlank = combatNoFlank.GetAttackPreview(2, AttackStrategy.Stable, 1001, seedBase: 1);
+            var previewWithFlank = combatWithFlank.GetAttackPreview(2, AttackStrategy.Stable, 1001, seedBase: 1);
+
+            Assert.Greater(previewWithFlank.WinChanceMin, previewNoFlank.WinChanceMin);
+        }
+
+        [Test]
+        public void GetAttackPreview_MaintenancePenalty_ReducesWinChance_ForExpandedAttacker()
+        {
+            var state = new GameState { PvpAttacksRemaining = 1, PrestigeCount = 1 };
+            state.MapState.Sectors = new[]
+            {
+                new SectorState { SectorId = 0, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 1, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 2, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 3, OwnerPlayerId = 2, Stability = 0f },
+            };
+
+            var mapCfg = ScriptableObject.CreateInstance<MapConfig>();
+            mapCfg.MapSeasonLengthDays = 7;
+            mapCfg.MapSeasonAnchorUnixSecondsUtc = 0;
+            mapCfg.LocalPlayerId = 1;
+            mapCfg.HomeSectorId = 0;
+            mapCfg.HomeSectorStability = 100f;
+            mapCfg.EnforceSectorCountRange = false;
+            mapCfg.RequireConnectedGraph = true;
+            mapCfg.SectorDefinitions = new[]
+            {
+                new MapConfig.SectorDefinition { SectorId = 0, Name = "Home" },
+                new MapConfig.SectorDefinition { SectorId = 1, Name = "A" },
+                new MapConfig.SectorDefinition { SectorId = 2, Name = "B" },
+                new MapConfig.SectorDefinition { SectorId = 3, Name = "Target" },
+            };
+            mapCfg.Adjacency = new[]
+            {
+                new MapConfig.SectorEdge { A = 0, B = 1 },
+                new MapConfig.SectorEdge { A = 1, B = 2 },
+                new MapConfig.SectorEdge { A = 2, B = 3 },
+            };
+            mapCfg.StabilityGrowthPerSecond = 0f;
+            mapCfg.FreshCaptureWindowSeconds = 60;
+            mapCfg.StabilityStartNeutral = 0f;
+            mapCfg.StabilityStartOnCapture = 10f;
+            mapCfg.StabilityGainOnDefenseWin = 5f;
+            mapCfg.CaptureStabilityMultiplierAggressive = 1f;
+            mapCfg.CaptureStabilityMultiplierStable = 1f;
+            mapCfg.CaptureStabilityMultiplierRisky = 1f;
+            mapCfg.BotPowerMinMultiplier = 1f;
+            mapCfg.BotPowerMaxMultiplier = 1f;
+            mapCfg.ValidateOrThrow();
+
+            var economy = new EconomyService(state);
+            var balance = CreateValidBalanceConfig();
+            var production = new ProductionService(state, balance, economy);
+            var noMaintenance = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 99);
+            noMaintenance.CombatMaintenanceFreeSectors = 999;
+            noMaintenance.CombatMaintenancePenaltyPerExtraSector = 0f;
+            noMaintenance.CombatMaintenanceMinMultiplier = 1f;
+            noMaintenance.ValidateOrThrow();
+
+            var withMaintenance = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 99);
+            withMaintenance.CombatMaintenanceFreeSectors = 1;
+            withMaintenance.CombatMaintenancePenaltyPerExtraSector = 0.2f;
+            withMaintenance.CombatMaintenanceMinMultiplier = 0.5f;
+            withMaintenance.ValidateOrThrow();
+
+            var map = new MapService(state.MapState, mapCfg);
+            map.AdvanceTime(1000);
+
+            var snapshotNoMaintenance = new SnapshotService(state, noMaintenance, production, mapConfig: mapCfg);
+            var snapshotWithMaintenance = new SnapshotService(state, withMaintenance, production, mapConfig: mapCfg);
+            var matchmaking = new MatchmakingService(mapCfg);
+            var attacks = new PvpAttackChargesService(state, CreateDefaultPvpAttacksConfig());
+            var league = new LeagueService(state, CreateValidLeagueConfig());
+
+            var combatNoMaintenance = new PvpMapCombatService(state, map, mapCfg, attacks, snapshotNoMaintenance, matchmaking, new BattleSimService(noMaintenance), economy, league);
+            var combatWithMaintenance = new PvpMapCombatService(state, map, mapCfg, attacks, snapshotWithMaintenance, matchmaking, new BattleSimService(withMaintenance), economy, league);
+
+            var previewNoMaintenance = combatNoMaintenance.GetAttackPreview(3, AttackStrategy.Stable, 1001, seedBase: 1);
+            var previewWithMaintenance = combatWithMaintenance.GetAttackPreview(3, AttackStrategy.Stable, 1001, seedBase: 1);
+
+            Assert.Less(previewWithMaintenance.WinChanceMin, previewNoMaintenance.WinChanceMin);
+        }
+
+        [Test]
+        public void GetAttackPreview_UnderdogBonus_IncreasesWinChance_WhenDefenderHasMoreSectors()
+        {
+            var state = new GameState { PvpAttacksRemaining = 1, PrestigeCount = 1 };
+            state.MapState.Sectors = new[]
+            {
+                new SectorState { SectorId = 0, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 1, OwnerPlayerId = 2, Stability = 0f },
+                new SectorState { SectorId = 2, OwnerPlayerId = 2, Stability = 100f },
+            };
+
+            var mapCfg = ScriptableObject.CreateInstance<MapConfig>();
+            mapCfg.MapSeasonLengthDays = 7;
+            mapCfg.MapSeasonAnchorUnixSecondsUtc = 0;
+            mapCfg.LocalPlayerId = 1;
+            mapCfg.HomeSectorId = 0;
+            mapCfg.HomeSectorIds = new[] { 0, 2 };
+            mapCfg.HomeSectorOwnerPlayerIds = new[] { 1, 2 };
+            mapCfg.HomeSectorStability = 100f;
+            mapCfg.EnforceSectorCountRange = false;
+            mapCfg.RequireConnectedGraph = true;
+            mapCfg.SectorDefinitions = new[]
+            {
+                new MapConfig.SectorDefinition { SectorId = 0, Name = "PlayerHome" },
+                new MapConfig.SectorDefinition { SectorId = 1, Name = "Frontier" },
+                new MapConfig.SectorDefinition { SectorId = 2, Name = "BotHome" },
+            };
+            mapCfg.Adjacency = new[]
+            {
+                new MapConfig.SectorEdge { A = 0, B = 1 },
+                new MapConfig.SectorEdge { A = 1, B = 2 },
+            };
+            mapCfg.StabilityGrowthPerSecond = 0f;
+            mapCfg.FreshCaptureWindowSeconds = 60;
+            mapCfg.StabilityStartNeutral = 0f;
+            mapCfg.StabilityStartOnCapture = 10f;
+            mapCfg.StabilityGainOnDefenseWin = 5f;
+            mapCfg.CaptureStabilityMultiplierAggressive = 1f;
+            mapCfg.CaptureStabilityMultiplierStable = 1f;
+            mapCfg.CaptureStabilityMultiplierRisky = 1f;
+            mapCfg.BotPowerMinMultiplier = 1f;
+            mapCfg.BotPowerMaxMultiplier = 1f;
+            mapCfg.ValidateOrThrow();
+
+            var economy = new EconomyService(state);
+            var balance = CreateValidBalanceConfig();
+            var production = new ProductionService(state, balance, economy);
+            var noUnderdog = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 99);
+            noUnderdog.UnderdogMaxAttackBonus = 0f;
+            noUnderdog.UnderdogSectorDeficitForMaxBonus = 1;
+            noUnderdog.ValidateOrThrow();
+
+            var withUnderdog = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 99);
+            withUnderdog.UnderdogMaxAttackBonus = 0.5f;
+            withUnderdog.UnderdogSectorDeficitForMaxBonus = 2;
+            withUnderdog.ValidateOrThrow();
+
+            var map = new MapService(state.MapState, mapCfg);
+            map.AdvanceTime(1000);
+
+            var snapshotNoUnderdog = new SnapshotService(state, noUnderdog, production, mapConfig: mapCfg);
+            var snapshotWithUnderdog = new SnapshotService(state, withUnderdog, production, mapConfig: mapCfg);
+            var matchmaking = new MatchmakingService(mapCfg);
+            var attacks = new PvpAttackChargesService(state, CreateDefaultPvpAttacksConfig());
+            var league = new LeagueService(state, CreateValidLeagueConfig());
+
+            var combatNoUnderdog = new PvpMapCombatService(state, map, mapCfg, attacks, snapshotNoUnderdog, matchmaking, new BattleSimService(noUnderdog), economy, league);
+            var combatWithUnderdog = new PvpMapCombatService(state, map, mapCfg, attacks, snapshotWithUnderdog, matchmaking, new BattleSimService(withUnderdog), economy, league);
+
+            var previewNoUnderdog = combatNoUnderdog.GetAttackPreview(1, AttackStrategy.Stable, 1001, seedBase: 1);
+            var previewWithUnderdog = combatWithUnderdog.GetAttackPreview(1, AttackStrategy.Stable, 1001, seedBase: 1);
+
+            Assert.Greater(previewWithUnderdog.WinChanceMin, previewNoUnderdog.WinChanceMin);
+        }
+
+        [Test]
+        public void NeutralSector_Uses_Weaker_DefenderSnapshot_Than_BotSector()
+        {
+            var mapCfg = CreateSmallMapConfig(botMult: 1.0f);
+            mapCfg.NeutralPowerMinMultiplier = 0.5f;
+            mapCfg.NeutralPowerMaxMultiplier = 0.5f;
+            mapCfg.ValidateOrThrow();
+
+            var matchmaking = new MatchmakingService(mapCfg);
+            var attacker = new PvpSnapshot { PvpPower = 100 };
+
+            var neutralSector = new SectorState { SectorId = 1, OwnerPlayerId = 0, Stability = 0f };
+            var botSector = new SectorState { SectorId = 2, OwnerPlayerId = 2, Stability = 0f };
+
+            var neutral = matchmaking.GetDefenderSnapshot(attacker, neutralSector, seed: 1);
+            var bot = matchmaking.GetDefenderSnapshot(attacker, botSector, seed: 1);
+
+            Assert.AreEqual(50d, neutral.PvpPower, 1e-9);
+            Assert.AreEqual(100d, bot.PvpPower, 1e-9);
+        }
+
+        [Test]
+        public void BotService_Uses_AttackCharges_And_DoesNotAttackAgain_WithoutRegen()
+        {
+            var state = new GameState { PrestigeCount = 1 };
+            state.MapState.Sectors = new[]
+            {
+                new SectorState { SectorId = 0, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 1, OwnerPlayerId = 0, Stability = 0f },
+                new SectorState { SectorId = 2, OwnerPlayerId = 3, Stability = 100f },
+                new SectorState { SectorId = 3, OwnerPlayerId = 0, Stability = 0f },
+            };
+
+            var mapCfg = ScriptableObject.CreateInstance<MapConfig>();
+            mapCfg.MapSeasonLengthDays = 7;
+            mapCfg.MapSeasonAnchorUnixSecondsUtc = 0;
+            mapCfg.LocalPlayerId = 1;
+            mapCfg.HomeSectorId = 0;
+            mapCfg.HomeSectorIds = new[] { 0, 2 };
+            mapCfg.HomeSectorOwnerPlayerIds = new[] { 1, 3 };
+            mapCfg.HomeSectorStability = 100f;
+            mapCfg.EnforceSectorCountRange = false;
+            mapCfg.RequireConnectedGraph = true;
+            mapCfg.SectorDefinitions = new[]
+            {
+                new MapConfig.SectorDefinition { SectorId = 0, Name = "PlayerHome" },
+                new MapConfig.SectorDefinition { SectorId = 1, Name = "N1" },
+                new MapConfig.SectorDefinition { SectorId = 2, Name = "BotHome" },
+                new MapConfig.SectorDefinition { SectorId = 3, Name = "N2" },
+            };
+            mapCfg.Adjacency = new[]
+            {
+                new MapConfig.SectorEdge { A = 2, B = 1 },
+                new MapConfig.SectorEdge { A = 2, B = 3 },
+                new MapConfig.SectorEdge { A = 0, B = 1 },
+            };
+            mapCfg.StabilityGrowthPerSecond = 0f;
+            mapCfg.FreshCaptureWindowSeconds = 60;
+            mapCfg.StabilityStartNeutral = 0f;
+            mapCfg.StabilityStartOnCapture = 10f;
+            mapCfg.StabilityGainOnDefenseWin = 5f;
+            mapCfg.CaptureStabilityMultiplierAggressive = 1f;
+            mapCfg.CaptureStabilityMultiplierStable = 1f;
+            mapCfg.CaptureStabilityMultiplierRisky = 1f;
+            mapCfg.BotPowerMinMultiplier = 0.5f;
+            mapCfg.BotPowerMaxMultiplier = 0.5f;
+            mapCfg.NeutralPowerMinMultiplier = 0.5f;
+            mapCfg.NeutralPowerMaxMultiplier = 0.5f;
+            mapCfg.ValidateOrThrow();
+
+            var economy = new EconomyService(state);
+            var balance = CreateValidBalanceConfig();
+            var production = new ProductionService(state, balance, economy);
+            var pvp = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 99);
+            var snapshot = new SnapshotService(state, pvp, production, mapConfig: mapCfg);
+            var matchmaking = new MatchmakingService(mapCfg);
+            var sim = new BattleSimService(pvp);
+            var attacksCfg = CreateDefaultPvpAttacksConfig(maxAttacks: 1, regenSeconds: 10_000);
+
+            var map = new MapService(state.MapState, mapCfg);
+            map.AdvanceTime(1_000);
+
+            var bots = new PvpBotService(state, map, mapCfg, snapshot, matchmaking, sim, attacksCfg);
+
+            bots.Tick(300);
+            var ownedAfterFirst = 0;
+            for (var i = 0; i < state.MapState.Sectors.Length; i++)
+            {
+                if (state.MapState.Sectors[i].OwnerPlayerId == 3) ownedAfterFirst++;
+            }
+
+            bots.Tick(600);
+            var ownedAfterSecond = 0;
+            for (var i = 0; i < state.MapState.Sectors.Length; i++)
+            {
+                if (state.MapState.Sectors[i].OwnerPlayerId == 3) ownedAfterSecond++;
+            }
+
+            Assert.AreEqual(2, ownedAfterFirst);
+            Assert.AreEqual(ownedAfterFirst, ownedAfterSecond);
+        }
+
+        [Test]
+        public void DebugResetMatch_RestoresPlayerAndBotAttackChargesToMax()
+        {
+            var state = new GameState { PvpAttacksRemaining = 0, PrestigeCount = 1 };
+            state.MapState.Sectors = new[]
+            {
+                new SectorState { SectorId = 0, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 1, OwnerPlayerId = 0, Stability = 0f },
+                new SectorState { SectorId = 2, OwnerPlayerId = 3, Stability = 100f },
+                new SectorState { SectorId = 3, OwnerPlayerId = 0, Stability = 0f },
+            };
+
+            var mapCfg = ScriptableObject.CreateInstance<MapConfig>();
+            mapCfg.MapSeasonLengthDays = 7;
+            mapCfg.MapSeasonAnchorUnixSecondsUtc = 0;
+            mapCfg.LocalPlayerId = 1;
+            mapCfg.HomeSectorId = 0;
+            mapCfg.HomeSectorIds = new[] { 0, 2 };
+            mapCfg.HomeSectorOwnerPlayerIds = new[] { 1, 3 };
+            mapCfg.HomeSectorStability = 100f;
+            mapCfg.EnforceSectorCountRange = false;
+            mapCfg.RequireConnectedGraph = true;
+            mapCfg.SectorDefinitions = new[]
+            {
+                new MapConfig.SectorDefinition { SectorId = 0, Name = "PlayerHome" },
+                new MapConfig.SectorDefinition { SectorId = 1, Name = "N1" },
+                new MapConfig.SectorDefinition { SectorId = 2, Name = "BotHome" },
+                new MapConfig.SectorDefinition { SectorId = 3, Name = "N2" },
+            };
+            mapCfg.Adjacency = new[]
+            {
+                new MapConfig.SectorEdge { A = 2, B = 1 },
+                new MapConfig.SectorEdge { A = 2, B = 3 },
+                new MapConfig.SectorEdge { A = 0, B = 1 },
+            };
+            mapCfg.StabilityGrowthPerSecond = 0f;
+            mapCfg.FreshCaptureWindowSeconds = 60;
+            mapCfg.StabilityStartNeutral = 0f;
+            mapCfg.StabilityStartOnCapture = 10f;
+            mapCfg.StabilityGainOnDefenseWin = 5f;
+            mapCfg.CaptureStabilityMultiplierAggressive = 1f;
+            mapCfg.CaptureStabilityMultiplierStable = 1f;
+            mapCfg.CaptureStabilityMultiplierRisky = 1f;
+            mapCfg.BotPowerMinMultiplier = 0.5f;
+            mapCfg.BotPowerMaxMultiplier = 0.5f;
+            mapCfg.NeutralPowerMinMultiplier = 0.5f;
+            mapCfg.NeutralPowerMaxMultiplier = 0.5f;
+            mapCfg.ValidateOrThrow();
+
+            var economy = new EconomyService(state);
+            var balance = CreateValidBalanceConfig();
+            var production = new ProductionService(state, balance, economy);
+            var pvp = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 99);
+            var snapshot = new SnapshotService(state, pvp, production, mapConfig: mapCfg);
+            var matchmaking = new MatchmakingService(mapCfg);
+            var sim = new BattleSimService(pvp);
+            var attacksCfg = CreateDefaultPvpAttacksConfig(maxAttacks: 2, regenSeconds: 10_000);
+
+            var map = new MapService(state.MapState, mapCfg);
+            map.AdvanceTime(1_000);
+
+            var playerAttacks = new PvpAttackChargesService(state, attacksCfg);
+            var bots = new PvpBotService(state, map, mapCfg, snapshot, matchmaking, sim, attacksCfg);
+
+            bots.Tick(300);
+            bots.Tick(600);
+
+            playerAttacks.DebugResetToMax(700);
+            bots.DebugResetMatch(700);
+
+            Assert.AreEqual(2, state.PvpAttacksRemaining);
+
+            bots.Tick(600);
+            var ownedByBotAfterSameBucket = 0;
+            for (var i = 0; i < state.MapState.Sectors.Length; i++)
+            {
+                if (state.MapState.Sectors[i].OwnerPlayerId == 3) ownedByBotAfterSameBucket++;
+            }
+
+            Assert.Greater(ownedByBotAfterSameBucket, 2);
         }
 
         [Test]

@@ -1788,7 +1788,7 @@ namespace AIWarsIdle.UI.Pvp
                 if (evaluation.CanAttack)
                 {
                     var preview = loop.PvpCombat.GetAttackPreview(sector.SectorId, _selectedStrategy, now);
-                    previewText = $"Preview: {preview.WinChanceMin:P0} - {preview.WinChanceMax:P0}  ({_selectedStrategy})";
+                    previewText = $"Preview: {FormatPreviewChance(preview)} win  ({_selectedStrategy})";
                     statusText = "Attack available.";
                     canAttack = true;
                 }
@@ -1903,6 +1903,20 @@ namespace AIWarsIdle.UI.Pvp
 
             var ts = TimeSpan.FromSeconds(seconds);
             return $"{Math.Max(0, (int)ts.TotalHours)}:{ts.Minutes:D2}:{ts.Seconds:D2}";
+        }
+
+        private static string FormatPreviewChance(AttackPreview preview)
+        {
+            if (preview == null) return "-";
+
+            var min = Mathf.Clamp01(preview.WinChanceMin);
+            var max = Mathf.Clamp01(preview.WinChanceMax);
+            if (Mathf.Abs(min - max) <= 0.0001f)
+            {
+                return max.ToString("P0");
+            }
+
+            return $"{min:P0} - {max:P0}";
         }
 
         private void HideEditorObject(GameObject go)

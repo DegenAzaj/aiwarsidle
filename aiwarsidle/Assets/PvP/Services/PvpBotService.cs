@@ -18,8 +18,10 @@ namespace AIWarsIdle.PvP.Services
         private readonly SnapshotService _snapshot;
         private readonly MatchmakingService _matchmaking;
         private readonly BattleSimService _battleSim;
+        private readonly PvpAttacksConfig _attacksConfig;
         private readonly IEventBus _eventBus;
         private readonly Dictionary<int, long> _lastDecisionBucketByPlayerId = new();
+        private readonly Dictionary<int, BotAttackChargesState> _attackStateByPlayerId = new();
 
         public PvpBotService(
             GameState state,
@@ -28,6 +30,7 @@ namespace AIWarsIdle.PvP.Services
             SnapshotService snapshot,
             MatchmakingService matchmaking,
             BattleSimService battleSim,
+            PvpAttacksConfig attacksConfig,
             IEventBus eventBus = null)
         {
             _state = state ?? throw new ArgumentNullException(nameof(state));
@@ -36,6 +39,7 @@ namespace AIWarsIdle.PvP.Services
             _snapshot = snapshot ?? throw new ArgumentNullException(nameof(snapshot));
             _matchmaking = matchmaking ?? throw new ArgumentNullException(nameof(matchmaking));
             _battleSim = battleSim ?? throw new ArgumentNullException(nameof(battleSim));
+            _attacksConfig = attacksConfig ?? throw new ArgumentNullException(nameof(attacksConfig));
             _eventBus = eventBus;
         }
 
@@ -54,10 +58,31 @@ namespace AIWarsIdle.PvP.Services
             }
         }
 
+        public void DebugResetMatch(long nowUnixSeconds)
+        {
+            if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds));
+
+            _lastDecisionBucketByPlayerId.Clear();
+
+            var homeIds = _mapConfig.GetEffectiveHomeSectorIds();
+            for (var i = 0; i < homeIds.Length; i++)
+            {
+                var playerId = _mapConfig.ResolveHomeOwnerPlayerIdByIndex(i);
+                if (playerId <= 0 || playerId == _mapConfig.LocalPlayerId) continue;
+
+                var state = GetOrCreateAttackState(playerId);
+                state.Remaining = Math.Max(0, _attacksConfig.MaxAttacks);
+                state.LastRegenUnixSeconds = 0;
+                state.NextRegenAtUnixSeconds = 0;
+            }
+        }
+
         private void TryRunBotTurn(int playerId, long nowUnixSeconds)
         {
             var interval = GetDecisionIntervalSeconds(playerId);
             if (interval <= 0) return;
+            TickBotCharges(playerId, nowUnixSeconds);
+            if (!CanSpendAttack(playerId)) return;
 
             var bucket = nowUnixSeconds / interval;
             if (_lastDecisionBucketByPlayerId.TryGetValue(playerId, out var lastBucket) && lastBucket == bucket)
@@ -69,6 +94,8 @@ namespace AIWarsIdle.PvP.Services
 
             var candidate = ChooseAttack(playerId, nowUnixSeconds, seed: MixSeed(playerId, (int)bucket));
             if (candidate == null) return;
+
+            if (!TrySpendAttack(playerId, nowUnixSeconds)) return;
 
             ResolveAttack(playerId, candidate.Value.SectorId, candidate.Value.Strategy, nowUnixSeconds, seed: MixSeed(playerId, candidate.Value.SectorId, (int)bucket, 991));
         }
@@ -119,7 +146,18 @@ namespace AIWarsIdle.PvP.Services
 
             var attacker = BuildBotSnapshot(playerId);
             var defender = _matchmaking.GetDefenderSnapshot(attacker, sector, MixSeed(seed, 101));
-            var battle = _battleSim.Simulate(attacker.PvpPower, defender.PvpPower, strategy, sector.Stability, nowUnixSeconds, seed);
+            var modifiers = BuildCombatModifiers(playerId, sector.OwnerPlayerId, sectorId);
+            var battle = _battleSim.Simulate(
+                attacker.PvpPower,
+                defender.PvpPower,
+                strategy,
+                sector.Stability,
+                nowUnixSeconds,
+                seed,
+                flankBonus: modifiers.FlankBonus,
+                defenseBonus: modifiers.DefenseBonus,
+                maintenanceMultiplier: modifiers.MaintenanceMultiplier,
+                underdogBonus: modifiers.UnderdogBonus);
 
             sector.LastCombatUnixSeconds = nowUnixSeconds;
             _eventBus?.Publish(new SectorAttackEvent(sectorId, strategy));
@@ -167,16 +205,56 @@ namespace AIWarsIdle.PvP.Services
 
         private int CountOwnedSectors(int playerId)
         {
-            var count = 0;
-            var sectors = _state.MapState?.Sectors;
-            if (sectors == null) return 0;
+            return MapConnectivityService.BuildHomeConnectedSectorSet(_state.MapState, _mapConfig, playerId).Count;
+        }
 
-            for (var i = 0; i < sectors.Length; i++)
+        private CombatModifiers BuildCombatModifiers(int attackerPlayerId, int defenderPlayerId, int targetSectorId)
+        {
+            return new CombatModifiers(
+                ComputeFlankBonus(attackerPlayerId, targetSectorId),
+                _battleSim.Config.DefenseBonus,
+                ComputeMaintenanceMultiplier(attackerPlayerId),
+                ComputeUnderdogBonus(attackerPlayerId, defenderPlayerId));
+        }
+
+        private double ComputeFlankBonus(int attackerPlayerId, int targetSectorId)
+        {
+            var connectedOwned = MapConnectivityService.BuildHomeConnectedSectorSet(_state.MapState, _mapConfig, attackerPlayerId);
+            if (connectedOwned.Count == 0) return 1.0;
+
+            var adjacentAttackers = 0;
+            foreach (var ownedSectorId in connectedOwned)
             {
-                if (sectors[i]?.OwnerPlayerId == playerId) count++;
+                if (_map.IsAdjacent(ownedSectorId, targetSectorId)) adjacentAttackers++;
             }
 
-            return count;
+            var extraAttackers = Math.Max(0, adjacentAttackers - 1);
+            var raw = 1.0 + (_battleSim.Config.FlankBonusPerExtraAttacker * extraAttackers);
+            return Math.Min(_battleSim.Config.FlankBonusMaxMultiplier, raw);
+        }
+
+        private double ComputeMaintenanceMultiplier(int attackerPlayerId)
+        {
+            var ownedConnected = CountOwnedSectors(attackerPlayerId);
+            var extra = Math.Max(0, ownedConnected - _battleSim.Config.CombatMaintenanceFreeSectors);
+            var penalty = extra * _battleSim.Config.CombatMaintenancePenaltyPerExtraSector;
+            var multiplier = 1.0 - penalty;
+            if (multiplier < _battleSim.Config.CombatMaintenanceMinMultiplier) multiplier = _battleSim.Config.CombatMaintenanceMinMultiplier;
+            if (multiplier > 1.0) multiplier = 1.0;
+            return multiplier;
+        }
+
+        private double ComputeUnderdogBonus(int attackerPlayerId, int defenderPlayerId)
+        {
+            if (defenderPlayerId <= 0 || defenderPlayerId == attackerPlayerId) return 1.0;
+
+            var attackerCount = CountOwnedSectors(attackerPlayerId);
+            var defenderCount = CountOwnedSectors(defenderPlayerId);
+            var deficit = defenderCount - attackerCount;
+            if (deficit <= 0) return 1.0;
+
+            var t = Math.Min(1.0, deficit / (double)_battleSim.Config.UnderdogSectorDeficitForMaxBonus);
+            return 1.0 + (_battleSim.Config.UnderdogMaxAttackBonus * t);
         }
 
         private static BotProfile GetProfile(int playerId)
@@ -249,6 +327,110 @@ namespace AIWarsIdle.PvP.Services
             public int SectorId;
             public AttackStrategy Strategy;
             public float Score;
+        }
+
+        private void TickBotCharges(int playerId, long nowUnixSeconds)
+        {
+            var state = GetOrCreateAttackState(playerId);
+            if (_attacksConfig.MaxAttacks <= 0)
+            {
+                state.Remaining = 0;
+                state.NextRegenAtUnixSeconds = 0;
+                state.LastRegenUnixSeconds = 0;
+                return;
+            }
+
+            if (state.Remaining >= _attacksConfig.MaxAttacks)
+            {
+                if (state.NextRegenAtUnixSeconds > 0 && state.NextRegenAtUnixSeconds <= nowUnixSeconds)
+                {
+                    state.NextRegenAtUnixSeconds = 0;
+                }
+                return;
+            }
+
+            if (state.NextRegenAtUnixSeconds <= 0)
+            {
+                state.NextRegenAtUnixSeconds = nowUnixSeconds + _attacksConfig.RegenSeconds;
+            }
+
+            while (state.Remaining < _attacksConfig.MaxAttacks && nowUnixSeconds >= state.NextRegenAtUnixSeconds)
+            {
+                state.Remaining++;
+                state.LastRegenUnixSeconds = state.NextRegenAtUnixSeconds;
+
+                if (state.Remaining >= _attacksConfig.MaxAttacks)
+                {
+                    state.Remaining = _attacksConfig.MaxAttacks;
+                    state.NextRegenAtUnixSeconds = 0;
+                    break;
+                }
+
+                state.NextRegenAtUnixSeconds += _attacksConfig.RegenSeconds;
+            }
+        }
+
+        private bool CanSpendAttack(int playerId)
+        {
+            return GetOrCreateAttackState(playerId).Remaining > 0;
+        }
+
+        private bool TrySpendAttack(int playerId, long nowUnixSeconds)
+        {
+            var state = GetOrCreateAttackState(playerId);
+            if (state.Remaining <= 0) return false;
+
+            state.Remaining--;
+            if (state.Remaining < 0) state.Remaining = 0;
+
+            if (state.Remaining < _attacksConfig.MaxAttacks &&
+                (state.NextRegenAtUnixSeconds <= 0 || state.NextRegenAtUnixSeconds <= nowUnixSeconds))
+            {
+                state.LastRegenUnixSeconds = nowUnixSeconds;
+                state.NextRegenAtUnixSeconds = nowUnixSeconds + _attacksConfig.RegenSeconds;
+            }
+
+            return true;
+        }
+
+        private BotAttackChargesState GetOrCreateAttackState(int playerId)
+        {
+            if (_attackStateByPlayerId.TryGetValue(playerId, out var existing))
+            {
+                return existing;
+            }
+
+            var created = new BotAttackChargesState
+            {
+                Remaining = Math.Max(0, _attacksConfig.MaxAttacks),
+                LastRegenUnixSeconds = 0,
+                NextRegenAtUnixSeconds = 0
+            };
+            _attackStateByPlayerId.Add(playerId, created);
+            return created;
+        }
+
+        private sealed class BotAttackChargesState
+        {
+            public int Remaining;
+            public long LastRegenUnixSeconds;
+            public long NextRegenAtUnixSeconds;
+        }
+
+        private readonly struct CombatModifiers
+        {
+            public readonly double FlankBonus;
+            public readonly double DefenseBonus;
+            public readonly double MaintenanceMultiplier;
+            public readonly double UnderdogBonus;
+
+            public CombatModifiers(double flankBonus, double defenseBonus, double maintenanceMultiplier, double underdogBonus)
+            {
+                FlankBonus = flankBonus;
+                DefenseBonus = defenseBonus;
+                MaintenanceMultiplier = maintenanceMultiplier;
+                UnderdogBonus = underdogBonus;
+            }
         }
     }
 }

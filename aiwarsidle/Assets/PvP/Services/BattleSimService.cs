@@ -10,6 +10,8 @@ namespace AIWarsIdle.PvP.Services
         private readonly PvpConfig _config;
         private readonly OverclockService _overclock;
 
+        public PvpConfig Config => _config;
+
         public BattleSimService(PvpConfig config, OverclockService overclock = null)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
@@ -23,7 +25,11 @@ namespace AIWarsIdle.PvP.Services
             AttackStrategy strategy,
             float stability,
             int seed,
-            double attackerAttackMultiplier = 1.0)
+            double attackerAttackMultiplier = 1.0,
+            double flankBonus = 1.0,
+            double defenseBonus = 1.0,
+            double maintenanceMultiplier = 1.0,
+            double underdogBonus = 1.0)
         {
             if (double.IsNaN(attackerPvpPower) || double.IsInfinity(attackerPvpPower) || attackerPvpPower < 0)
             {
@@ -41,23 +47,40 @@ namespace AIWarsIdle.PvP.Services
             {
                 throw new ArgumentOutOfRangeException(nameof(attackerAttackMultiplier), "Attack multiplier must be finite and > 0.");
             }
+            if (double.IsNaN(flankBonus) || double.IsInfinity(flankBonus) || flankBonus <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(flankBonus), "Flank bonus must be finite and > 0.");
+            }
+            if (double.IsNaN(defenseBonus) || double.IsInfinity(defenseBonus) || defenseBonus <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(defenseBonus), "Defense bonus must be finite and > 0.");
+            }
+            if (double.IsNaN(maintenanceMultiplier) || double.IsInfinity(maintenanceMultiplier) || maintenanceMultiplier <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(maintenanceMultiplier), "Maintenance multiplier must be finite and > 0.");
+            }
+            if (double.IsNaN(underdogBonus) || double.IsInfinity(underdogBonus) || underdogBonus <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(underdogBonus), "Underdog bonus must be finite and > 0.");
+            }
 
             var rng = new Random(seed);
-
             var strategyMultiplier = GetStrategyMultiplier(strategy);
-            var varianceA = NextUniform(rng, _config.PowerVarianceMin, _config.PowerVarianceMax);
-            var varianceD = NextUniform(rng, _config.PowerVarianceMin, _config.PowerVarianceMax);
-
             var stabilityMultiplier = GetStabilityMultiplier(stability);
-
-            var attackRoll = attackerPvpPower * strategyMultiplier * attackerAttackMultiplier * varianceA;
-            var defenseRoll = defenderPvpPower * stabilityMultiplier * varianceD;
+            var attackRoll = attackerPvpPower * strategyMultiplier * attackerAttackMultiplier * flankBonus * maintenanceMultiplier * underdogBonus;
+            var defenseRoll = defenderPvpPower * stabilityMultiplier * defenseBonus;
+            var total = attackRoll + defenseRoll;
+            var winChance = total <= 0 ? 0.5 : attackRoll / total;
+            if (double.IsNaN(winChance) || double.IsInfinity(winChance)) winChance = 0.5;
+            winChance = Math.Clamp(winChance, 0.0, 1.0);
+            var win = rng.NextDouble() < winChance;
 
             return new BattleResult
             {
                 AttackRoll = attackRoll,
                 DefenseRoll = defenseRoll,
-                Win = attackRoll > defenseRoll,
+                WinChance = winChance,
+                Win = win,
                 LeaguePointsDelta = 0,
                 SoftReward = 0
             };
@@ -69,11 +92,25 @@ namespace AIWarsIdle.PvP.Services
             AttackStrategy strategy,
             float stability,
             long nowUnixSeconds,
-            int seed)
+            int seed,
+            double flankBonus = 1.0,
+            double defenseBonus = 1.0,
+            double maintenanceMultiplier = 1.0,
+            double underdogBonus = 1.0)
         {
             if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");
             var attackMultiplier = _overclock?.GetPvpAttackMultiplier(nowUnixSeconds) ?? 1.0;
-            return Simulate(attackerPvpPower, defenderPvpPower, strategy, stability, seed, attackerAttackMultiplier: attackMultiplier);
+            return Simulate(
+                attackerPvpPower,
+                defenderPvpPower,
+                strategy,
+                stability,
+                seed,
+                attackerAttackMultiplier: attackMultiplier,
+                flankBonus: flankBonus,
+                defenseBonus: defenseBonus,
+                maintenanceMultiplier: maintenanceMultiplier,
+                underdogBonus: underdogBonus);
         }
 
         private double GetStrategyMultiplier(AttackStrategy strategy)
@@ -91,13 +128,6 @@ namespace AIWarsIdle.PvP.Services
         {
             var t = stability / 100f;
             return _config.StabilityMultiplierMin + ((_config.StabilityMultiplierMax - _config.StabilityMultiplierMin) * t);
-        }
-
-        private static double NextUniform(Random rng, float min, float max)
-        {
-            if (min == max) return min;
-            var u = rng.NextDouble();
-            return min + ((max - min) * u);
         }
     }
 }

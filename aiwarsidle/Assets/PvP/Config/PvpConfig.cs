@@ -30,6 +30,33 @@ namespace AIWarsIdle.PvP.Config
         [Min(0.01f)]
         public float StabilityMultiplierMax = 1.20f;
 
+        [Header("Combat Outcome")]
+        [Min(0.01f)]
+        public float DefenseBonus = 1.10f;
+
+        [Min(0f)]
+        public float FlankBonusPerExtraAttacker = 0.10f;
+
+        [Min(1f)]
+        public float FlankBonusMaxMultiplier = 1.30f;
+
+        [Header("Combat Maintenance")]
+        [Min(0)]
+        public int CombatMaintenanceFreeSectors = 6;
+
+        [Range(0f, 1f)]
+        public float CombatMaintenancePenaltyPerExtraSector = 0.03f;
+
+        [Range(0.01f, 1f)]
+        public float CombatMaintenanceMinMultiplier = 0.75f;
+
+        [Header("Underdog")]
+        [Range(0f, 1f)]
+        public float UnderdogMaxAttackBonus = 0.25f;
+
+        [Min(1)]
+        public int UnderdogSectorDeficitForMaxBonus = 8;
+
         [Header("PvpPower progression")]
         public double PrestigePvpPowerPerPrestige = 1.0;
         public double PermanentPvpPowerPerLevel = 1.0;
@@ -60,6 +87,39 @@ namespace AIWarsIdle.PvP.Config
             if (StabilityMultiplierMin > StabilityMultiplierMax)
             {
                 throw new InvalidOperationException($"{nameof(StabilityMultiplierMin)} must be <= {nameof(StabilityMultiplierMax)}.");
+            }
+
+            ValidateFinitePositiveOrThrow(DefenseBonus, nameof(DefenseBonus));
+            ValidateFiniteNonNegativeOrThrow(FlankBonusPerExtraAttacker, nameof(FlankBonusPerExtraAttacker));
+            ValidateFinitePositiveOrThrow(FlankBonusMaxMultiplier, nameof(FlankBonusMaxMultiplier));
+            if (FlankBonusMaxMultiplier < 1f)
+            {
+                throw new InvalidOperationException($"{nameof(FlankBonusMaxMultiplier)} must be >= 1.");
+            }
+
+            if (CombatMaintenanceFreeSectors < 0)
+            {
+                throw new InvalidOperationException($"{nameof(CombatMaintenanceFreeSectors)} must be >= 0.");
+            }
+            ValidateFiniteNonNegativeOrThrow(CombatMaintenancePenaltyPerExtraSector, nameof(CombatMaintenancePenaltyPerExtraSector));
+            if (CombatMaintenancePenaltyPerExtraSector > 1f)
+            {
+                throw new InvalidOperationException($"{nameof(CombatMaintenancePenaltyPerExtraSector)} must be <= 1.");
+            }
+            ValidateFinitePositiveOrThrow(CombatMaintenanceMinMultiplier, nameof(CombatMaintenanceMinMultiplier));
+            if (CombatMaintenanceMinMultiplier > 1f)
+            {
+                throw new InvalidOperationException($"{nameof(CombatMaintenanceMinMultiplier)} must be <= 1.");
+            }
+
+            ValidateFiniteNonNegativeOrThrow(UnderdogMaxAttackBonus, nameof(UnderdogMaxAttackBonus));
+            if (UnderdogMaxAttackBonus > 1f)
+            {
+                throw new InvalidOperationException($"{nameof(UnderdogMaxAttackBonus)} must be <= 1.");
+            }
+            if (UnderdogSectorDeficitForMaxBonus <= 0)
+            {
+                throw new InvalidOperationException($"{nameof(UnderdogSectorDeficitForMaxBonus)} must be > 0.");
             }
 
             ValidateFiniteNonNegativeOrThrow(PrestigePvpPowerPerPrestige, nameof(PrestigePvpPowerPerPrestige));

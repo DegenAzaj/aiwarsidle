@@ -64,24 +64,25 @@ namespace AIWarsIdle.PvP.Services
 
             var attacker = _snapshotService.BuildSnapshot();
             var defender = _matchmakingService.GetDefenderSnapshot(attacker, sector, seed: MixSeed(seedBase, 991));
-
-            const int n = 48;
-            var wins = 0;
-            for (var i = 0; i < n; i++)
-            {
-                var seed = MixSeed(seedBase, i + 1);
-                var r = _battleSim.Simulate(attacker.PvpPower, defender.PvpPower, strategy, sector.Stability, nowUnixSeconds, seed);
-                if (r.Win) wins++;
-            }
-
-            var (min, max) = WilsonScoreInterval95(wins, n);
+            var modifiers = BuildCombatModifiers(attackerPlayerId: _mapConfig.LocalPlayerId, defenderPlayerId: sector.OwnerPlayerId, targetSectorId: sector.SectorId);
+            var previewBattle = _battleSim.Simulate(
+                attacker.PvpPower,
+                defender.PvpPower,
+                strategy,
+                sector.Stability,
+                nowUnixSeconds,
+                seedBase,
+                flankBonus: modifiers.FlankBonus,
+                defenseBonus: modifiers.DefenseBonus,
+                maintenanceMultiplier: modifiers.MaintenanceMultiplier,
+                underdogBonus: modifiers.UnderdogBonus);
 
             return new AttackPreview
             {
                 SectorId = sectorId,
                 Strategy = strategy,
-                WinChanceMin = min,
-                WinChanceMax = max
+                WinChanceMin = (float)previewBattle.WinChance,
+                WinChanceMax = (float)previewBattle.WinChance
             };
         }
 
@@ -111,8 +112,18 @@ namespace AIWarsIdle.PvP.Services
 
             var attacker = _snapshotService.BuildSnapshot();
             var defender = _matchmakingService.GetDefenderSnapshot(attacker, sector, seed: MixSeed(seed, 12345));
-
-            var battle = _battleSim.Simulate(attacker.PvpPower, defender.PvpPower, strategy, sector.Stability, nowUnixSeconds, seed);
+            var modifiers = BuildCombatModifiers(attackerPlayerId: _mapConfig.LocalPlayerId, defenderPlayerId: sector.OwnerPlayerId, targetSectorId: sector.SectorId);
+            var battle = _battleSim.Simulate(
+                attacker.PvpPower,
+                defender.PvpPower,
+                strategy,
+                sector.Stability,
+                nowUnixSeconds,
+                seed,
+                flankBonus: modifiers.FlankBonus,
+                defenseBonus: modifiers.DefenseBonus,
+                maintenanceMultiplier: modifiers.MaintenanceMultiplier,
+                underdogBonus: modifiers.UnderdogBonus);
 
             var win = battle.Win;
 
@@ -312,24 +323,69 @@ namespace AIWarsIdle.PvP.Services
             return new PvpSnapshot { PvpPower = src.PvpPower, League = src.League, SeasonPoints = src.SeasonPoints };
         }
 
-        private static (float min, float max) WilsonScoreInterval95(int wins, int n)
+        private CombatModifiers BuildCombatModifiers(int attackerPlayerId, int defenderPlayerId, int targetSectorId)
         {
-            if (n <= 0) return (0f, 0f);
+            return new CombatModifiers(
+                ComputeFlankBonus(attackerPlayerId, targetSectorId),
+                _battleSim.Config.DefenseBonus,
+                ComputeMaintenanceMultiplier(attackerPlayerId),
+                ComputeUnderdogBonus(attackerPlayerId, defenderPlayerId));
+        }
 
-            const double z = 1.96;
-            var phat = wins / (double)n;
+        private double ComputeFlankBonus(int attackerPlayerId, int targetSectorId)
+        {
+            var connectedOwned = MapConnectivityService.BuildHomeConnectedSectorSet(_state.MapState, _mapConfig, attackerPlayerId);
+            if (connectedOwned.Count == 0) return 1.0;
 
-            var denom = 1.0 + ((z * z) / n);
-            var center = (phat + ((z * z) / (2.0 * n))) / denom;
-            var margin = (z * Math.Sqrt((phat * (1.0 - phat) / n) + ((z * z) / (4.0 * n * n)))) / denom;
+            var adjacentAttackers = 0;
+            foreach (var ownedSectorId in connectedOwned)
+            {
+                if (_map.IsAdjacent(ownedSectorId, targetSectorId)) adjacentAttackers++;
+            }
 
-            var lo = center - margin;
-            var hi = center + margin;
+            var extraAttackers = Math.Max(0, adjacentAttackers - 1);
+            var raw = 1.0 + (_battleSim.Config.FlankBonusPerExtraAttacker * extraAttackers);
+            return Math.Min(_battleSim.Config.FlankBonusMaxMultiplier, raw);
+        }
 
-            if (lo < 0) lo = 0;
-            if (hi > 1) hi = 1;
+        private double ComputeMaintenanceMultiplier(int attackerPlayerId)
+        {
+            var connectedOwned = MapConnectivityService.BuildHomeConnectedSectorSet(_state.MapState, _mapConfig, attackerPlayerId);
+            var extra = Math.Max(0, connectedOwned.Count - _battleSim.Config.CombatMaintenanceFreeSectors);
+            var penalty = extra * _battleSim.Config.CombatMaintenancePenaltyPerExtraSector;
+            var multiplier = 1.0 - penalty;
+            if (multiplier < _battleSim.Config.CombatMaintenanceMinMultiplier) multiplier = _battleSim.Config.CombatMaintenanceMinMultiplier;
+            if (multiplier > 1.0) multiplier = 1.0;
+            return multiplier;
+        }
 
-            return ((float)lo, (float)hi);
+        private double ComputeUnderdogBonus(int attackerPlayerId, int defenderPlayerId)
+        {
+            if (defenderPlayerId <= 0 || defenderPlayerId == attackerPlayerId) return 1.0;
+
+            var attackerCount = MapConnectivityService.BuildHomeConnectedSectorSet(_state.MapState, _mapConfig, attackerPlayerId).Count;
+            var defenderCount = MapConnectivityService.BuildHomeConnectedSectorSet(_state.MapState, _mapConfig, defenderPlayerId).Count;
+            var deficit = defenderCount - attackerCount;
+            if (deficit <= 0) return 1.0;
+
+            var t = Math.Min(1.0, deficit / (double)_battleSim.Config.UnderdogSectorDeficitForMaxBonus);
+            return 1.0 + (_battleSim.Config.UnderdogMaxAttackBonus * t);
+        }
+
+        private readonly struct CombatModifiers
+        {
+            public readonly double FlankBonus;
+            public readonly double DefenseBonus;
+            public readonly double MaintenanceMultiplier;
+            public readonly double UnderdogBonus;
+
+            public CombatModifiers(double flankBonus, double defenseBonus, double maintenanceMultiplier, double underdogBonus)
+            {
+                FlankBonus = flankBonus;
+                DefenseBonus = defenseBonus;
+                MaintenanceMultiplier = maintenanceMultiplier;
+                UnderdogBonus = underdogBonus;
+            }
         }
 
         private static int MixSeed(int a, int b, int c, int d)

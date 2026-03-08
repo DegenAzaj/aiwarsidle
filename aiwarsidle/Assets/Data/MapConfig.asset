@@ -34,6 +34,8 @@ MonoBehaviour:
   SectorAttackCooldownSeconds: 0
   BotPowerMinMultiplier: 0.8
   BotPowerMaxMultiplier: 1.2
+  NeutralPowerMinMultiplier: 0.45
+  NeutralPowerMaxMultiplier: 0.65
   WinSoftReward: 50
   LoseSoftReward: 10
   WinSeasonPoints: 10

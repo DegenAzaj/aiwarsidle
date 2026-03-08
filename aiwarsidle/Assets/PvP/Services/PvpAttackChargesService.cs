@@ -198,6 +198,23 @@ namespace AIWarsIdle.PvP.Services
             return true;
         }
 
+        public void DebugResetToMax(long nowUnixSeconds)
+        {
+            if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");
+
+            if (MaxAttacks <= 0)
+            {
+                _state.PvpAttacksRemaining = 0;
+                _state.LastPvpAttackRegenUnixSeconds = 0;
+                _state.NextPvpAttackRegenAtUnixSeconds = 0;
+                return;
+            }
+
+            _state.PvpAttacksRemaining = MaxAttacks;
+            _state.LastPvpAttackRegenUnixSeconds = 0;
+            _state.NextPvpAttackRegenAtUnixSeconds = 0;
+        }
+
         private int ClampAttacks(int value)
         {
             if (value < 0) return 0;

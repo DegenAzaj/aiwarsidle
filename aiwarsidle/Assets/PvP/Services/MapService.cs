@@ -147,6 +147,16 @@ namespace AIWarsIdle.PvP.Services
             EnsureHomeSectorInvariants(nowUnixSeconds);
         }
 
+        public void DebugResetCurrentMatch(long nowUnixSeconds)
+        {
+            if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");
+            if (_config.SectorDefinitions == null || _config.SectorDefinitions.Length == 0) return;
+
+            EnsureSectorsMatchConfigIfPossible();
+            ResetAllSectorsToSeasonStart(nowUnixSeconds);
+            _lastTickUnixSeconds = 0;
+        }
+
         public void TickStability(long nowUnixSeconds)
         {
             if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");

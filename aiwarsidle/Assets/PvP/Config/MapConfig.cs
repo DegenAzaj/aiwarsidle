@@ -126,6 +126,13 @@ namespace AIWarsIdle.PvP.Config
         [Min(0.01f)]
         public float BotPowerMaxMultiplier = 1.2f;
 
+        [Header("Neutral sectors")]
+        [Min(0.01f)]
+        public float NeutralPowerMinMultiplier = 0.45f;
+
+        [Min(0.01f)]
+        public float NeutralPowerMaxMultiplier = 0.65f;
+
         [Header("Rewards (MVP)")]
         [Min(0)]
         public double WinSoftReward = 50;
@@ -211,6 +218,13 @@ namespace AIWarsIdle.PvP.Config
             if (BotPowerMinMultiplier > BotPowerMaxMultiplier)
             {
                 throw new InvalidOperationException($"{nameof(BotPowerMinMultiplier)} must be <= {nameof(BotPowerMaxMultiplier)}.");
+            }
+
+            ValidateFinitePositiveOrThrow(NeutralPowerMinMultiplier, nameof(NeutralPowerMinMultiplier));
+            ValidateFinitePositiveOrThrow(NeutralPowerMaxMultiplier, nameof(NeutralPowerMaxMultiplier));
+            if (NeutralPowerMinMultiplier > NeutralPowerMaxMultiplier)
+            {
+                throw new InvalidOperationException($"{nameof(NeutralPowerMinMultiplier)} must be <= {nameof(NeutralPowerMaxMultiplier)}.");
             }
 
             ValidateFiniteNonNegativeOrThrow(WinSoftReward, nameof(WinSoftReward));

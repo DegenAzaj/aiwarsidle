@@ -140,8 +140,9 @@ namespace AIWarsIdle.Bootstrap
             _bots =
                 _snapshot != null &&
                 _matchmaking != null &&
-                _battleSim != null
-                    ? new PvpBotService(State, _map, _mapConfig, _snapshot, _matchmaking, _battleSim, _eventBus)
+                _battleSim != null &&
+                pvpAttacksConfig != null
+                    ? new PvpBotService(State, _map, _mapConfig, _snapshot, _matchmaking, _battleSim, pvpAttacksConfig, _eventBus)
                     : null;
             _rewardedAds = new RewardedAdsUseCaseService(new AdsService(), _offline, _pvpAttacks, _eventBus);
 
@@ -244,6 +245,17 @@ namespace AIWarsIdle.Bootstrap
 
         public void ForceSave()
         {
+            _autosave.ForceSave();
+        }
+
+        public void DebugResetMatch()
+        {
+            var now = _time.NowUnixSeconds;
+            LastNowUnixSeconds = now;
+
+            _map?.DebugResetCurrentMatch(now);
+            _pvpAttacks?.DebugResetToMax(now);
+            _bots?.DebugResetMatch(now);
             _autosave.ForceSave();
         }
 

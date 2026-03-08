@@ -178,6 +178,14 @@ namespace AIWarsIdle.Tests
             pvp.StrategyMultiplierRisky = 1.0f;
             pvp.StabilityMultiplierMin = 1.0f;
             pvp.StabilityMultiplierMax = 1.0f;
+            pvp.DefenseBonus = 1.0f;
+            pvp.FlankBonusPerExtraAttacker = 0.0f;
+            pvp.FlankBonusMaxMultiplier = 1.0f;
+            pvp.CombatMaintenanceFreeSectors = 999;
+            pvp.CombatMaintenancePenaltyPerExtraSector = 0.0f;
+            pvp.CombatMaintenanceMinMultiplier = 1.0f;
+            pvp.UnderdogMaxAttackBonus = 0.0f;
+            pvp.UnderdogSectorDeficitForMaxBonus = 1;
             pvp.PrestigePvpPowerPerPrestige = 1.0;
             pvp.PermanentPvpPowerPerLevel = 1.0;
             pvp.SectorPvpPowerPerSector = 1.0;
@@ -204,8 +212,122 @@ namespace AIWarsIdle.Tests
             Assert.IsTrue(overclock.Activate(nowUnixSeconds: 1000));
             var withOverclock = sim.Simulate(attackerPvpPower: 100, defenderPvpPower: 110, strategy: AttackStrategy.Stable, stability: 0f, nowUnixSeconds: 1001, seed: 123);
 
-            Assert.IsFalse(without.Win);
-            Assert.IsTrue(withOverclock.Win);
+            Assert.Less(without.WinChance, withOverclock.WinChance);
+        }
+
+        [Test]
+        public void AttackPreview_Uses_Overclock_AttackMultiplier()
+        {
+            var state = new GameState { PvpAttacksRemaining = 1, PrestigeCount = 1 };
+
+            var overclockCfg = ScriptableObject.CreateInstance<OverclockConfig>();
+            overclockCfg.DurationSeconds = 10;
+            overclockCfg.RegenSeconds = 90;
+            overclockCfg.MaxCharges = 2;
+            overclockCfg.ProductionMultiplier = 3.0;
+            overclockCfg.PvpAttackMultiplier = 1.5;
+            overclockCfg.FreshCaptureStabilityGrowthMultiplier = 1.1;
+
+            var overclock = new OverclockService(state, overclockCfg);
+            state.Overclock.Charges = 1;
+
+            var pvp = ScriptableObject.CreateInstance<PvpConfig>();
+            pvp.PowerVarianceMin = 1.0f;
+            pvp.PowerVarianceMax = 1.0f;
+            pvp.StrategyMultiplierAggressive = 1.0f;
+            pvp.StrategyMultiplierStable = 1.0f;
+            pvp.StrategyMultiplierRisky = 1.0f;
+            pvp.StabilityMultiplierMin = 1.0f;
+            pvp.StabilityMultiplierMax = 1.0f;
+            pvp.DefenseBonus = 1.0f;
+            pvp.FlankBonusPerExtraAttacker = 0.0f;
+            pvp.FlankBonusMaxMultiplier = 1.0f;
+            pvp.CombatMaintenanceFreeSectors = 999;
+            pvp.CombatMaintenancePenaltyPerExtraSector = 0.0f;
+            pvp.CombatMaintenanceMinMultiplier = 1.0f;
+            pvp.UnderdogMaxAttackBonus = 0.0f;
+            pvp.UnderdogSectorDeficitForMaxBonus = 1;
+            pvp.PrestigePvpPowerPerPrestige = 99.0;
+            pvp.PermanentPvpPowerPerLevel = 0.0;
+            pvp.SectorPvpPowerPerSector = 0.0;
+            pvp.ProdToPvpMaxBonus = 0.0;
+            pvp.ProdToPvpHalfCapPps = 1.0;
+            pvp.ValidateOrThrow();
+
+            var mapCfg = ScriptableObject.CreateInstance<MapConfig>();
+            mapCfg.MapSeasonLengthDays = 7;
+            mapCfg.MapSeasonAnchorUnixSecondsUtc = 0;
+            mapCfg.LocalPlayerId = 1;
+            mapCfg.HomeSectorId = 0;
+            mapCfg.HomeSectorStability = 100f;
+            mapCfg.EnforceSectorCountRange = false;
+            mapCfg.RequireConnectedGraph = true;
+            mapCfg.SectorDefinitions = new[]
+            {
+                new MapConfig.SectorDefinition { SectorId = 0, Name = "Home" },
+                new MapConfig.SectorDefinition { SectorId = 1, Name = "Neutral" },
+            };
+            mapCfg.Adjacency = new[]
+            {
+                new MapConfig.SectorEdge { A = 0, B = 1 },
+            };
+            mapCfg.StabilityGrowthPerSecond = 0f;
+            mapCfg.FreshCaptureWindowSeconds = 60;
+            mapCfg.StabilityStartNeutral = 0f;
+            mapCfg.StabilityStartOnCapture = 10f;
+            mapCfg.StabilityGainOnDefenseWin = 0f;
+            mapCfg.CaptureStabilityMultiplierAggressive = 1f;
+            mapCfg.CaptureStabilityMultiplierStable = 1f;
+            mapCfg.CaptureStabilityMultiplierRisky = 1f;
+            mapCfg.BotPowerMinMultiplier = 1f;
+            mapCfg.BotPowerMaxMultiplier = 1f;
+            mapCfg.NeutralPowerMinMultiplier = 1f;
+            mapCfg.NeutralPowerMaxMultiplier = 1f;
+            mapCfg.ValidateOrThrow();
+
+            var economy = new EconomyService(state);
+            var balance = ScriptableObject.CreateInstance<BalanceConfig>();
+            for (var i = 0; i < GameState.GeneratorCount; i++)
+            {
+                balance.GeneratorBaseCosts[i] = 1;
+                balance.GeneratorCostGrowthFactors[i] = 1.2;
+                balance.GeneratorBaseOutputs[i] = 100;
+            }
+            balance.MilestoneEveryLevels = 0;
+            balance.PrestigeThresholdBase = 1_000;
+            balance.PrestigeThresholdGrowthFactor = 1.6;
+            balance.PrestigeMultiplierIncrease = 0.0;
+            balance.PermanentUpgradeCap = 10;
+            balance.OfflineCapSeconds = 12 * 60 * 60;
+            balance.OfflineEfficiency = 0.6;
+            balance.ValidateOrThrow();
+
+            var production = new ProductionService(state, balance, economy, overclock: overclock);
+            var snapshot = new SnapshotService(state, pvp, production, mapConfig: mapCfg);
+            var leagueCfg = ScriptableObject.CreateInstance<LeagueConfig>();
+            leagueCfg.LeaguePointThresholds = new[] { 0, 100 };
+            leagueCfg.SeasonMode = LeagueSeasonMode.FixedDays;
+            leagueCfg.FixedSeasonLengthDays = 28;
+            leagueCfg.FixedSeasonAnchorUnixSecondsUtc = 0;
+            leagueCfg.ValidateOrThrow();
+
+            var map = new MapService(state.MapState, mapCfg, overclock);
+            map.AdvanceTime(1000);
+            var matchmaking = new MatchmakingService(mapCfg);
+            var attacksCfg = ScriptableObject.CreateInstance<PvpAttacksConfig>();
+            attacksCfg.MaxAttacks = 1;
+            attacksCfg.RegenSeconds = 60;
+            attacksCfg.ValidateOrThrow();
+            var attacks = new PvpAttackChargesService(state, attacksCfg);
+            var combat = new PvpMapCombatService(state, map, mapCfg, attacks, snapshot, matchmaking, new BattleSimService(pvp, overclock), economy, new LeagueService(state, leagueCfg));
+
+            var withoutOverclock = combat.GetAttackPreview(1, AttackStrategy.Stable, 1000, seedBase: 7);
+
+            Assert.IsTrue(overclock.Activate(nowUnixSeconds: 1000));
+
+            var withOverclock = combat.GetAttackPreview(1, AttackStrategy.Stable, 1001, seedBase: 7);
+
+            Assert.Greater(withOverclock.WinChanceMin, withoutOverclock.WinChanceMin);
         }
 
         [Test]
