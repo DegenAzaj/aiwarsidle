@@ -118,8 +118,8 @@ namespace AIWarsIdle.Tests.EditMode
 
             cfg.BotPowerMinMultiplier = botMult;
             cfg.BotPowerMaxMultiplier = botMult;
-            cfg.NeutralPowerMinMultiplier = 0.5f;
-            cfg.NeutralPowerMaxMultiplier = 0.5f;
+            cfg.NeutralPowerMinMultiplier = botMult;
+            cfg.NeutralPowerMaxMultiplier = botMult;
 
             cfg.WinSeasonPoints = 10;
             cfg.LoseSeasonPoints = -2;
@@ -1158,8 +1158,11 @@ namespace AIWarsIdle.Tests.EditMode
             var stable = sim.Simulate(attackerPvpPower: 100, defenderPvpPower: 110, strategy: AttackStrategy.Stable, stability: 0f, seed: 1);
             var aggressive = sim.Simulate(attackerPvpPower: 100, defenderPvpPower: 110, strategy: AttackStrategy.Aggressive, stability: 0f, seed: 1);
 
-            Assert.IsFalse(stable.Win);
-            Assert.IsTrue(aggressive.Win);
+            Assert.AreEqual(100d * pvp.StrategyMultiplierStable, stable.AttackRoll, 1e-6);
+            Assert.AreEqual(100d * pvp.StrategyMultiplierAggressive, aggressive.AttackRoll, 1e-6);
+            Assert.AreEqual(110d * pvp.StabilityMultiplierMin, stable.DefenseRoll, 1e-6);
+            Assert.AreEqual(110d * pvp.StabilityMultiplierMin, aggressive.DefenseRoll, 1e-6);
+            Assert.Greater(aggressive.WinChance, stable.WinChance);
         }
 
         [Test]

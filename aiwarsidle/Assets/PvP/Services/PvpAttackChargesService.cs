@@ -117,6 +117,13 @@ namespace AIWarsIdle.PvP.Services
         {
             if (amount <= 0) return 0;
 
+            var preservedFutureNextRegen = 0L;
+            if (_state.PvpAttacksRemaining < MaxAttacks &&
+                _state.NextPvpAttackRegenAtUnixSeconds > nowUnixSeconds)
+            {
+                preservedFutureNextRegen = _state.NextPvpAttackRegenAtUnixSeconds;
+            }
+
             Tick(nowUnixSeconds);
 
             var before = _state.PvpAttacksRemaining;
@@ -131,7 +138,11 @@ namespace AIWarsIdle.PvP.Services
             // - If the next regen is in the past, discard it (handled in Tick when capped).
             if (_state.PvpAttacksRemaining >= MaxAttacks)
             {
-                if (_state.NextPvpAttackRegenAtUnixSeconds > 0 && _state.NextPvpAttackRegenAtUnixSeconds <= nowUnixSeconds)
+                if (preservedFutureNextRegen > nowUnixSeconds)
+                {
+                    _state.NextPvpAttackRegenAtUnixSeconds = preservedFutureNextRegen;
+                }
+                else if (_state.NextPvpAttackRegenAtUnixSeconds > 0 && _state.NextPvpAttackRegenAtUnixSeconds <= nowUnixSeconds)
                 {
                     _state.NextPvpAttackRegenAtUnixSeconds = 0;
                 }

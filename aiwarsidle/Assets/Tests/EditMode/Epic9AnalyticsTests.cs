@@ -45,6 +45,7 @@ namespace AIWarsIdle.Tests.EditMode
 
             var state = new GameState
             {
+                PrestigeCount = 1,
                 PvpAttacksRemaining = 1,
                 LastPvpAttackRegenUnixSeconds = 0,
                 NextPvpAttackRegenAtUnixSeconds = 1_000_000_000L
@@ -82,6 +83,7 @@ namespace AIWarsIdle.Tests.EditMode
 
             var result = combat.AttackSector(sectorId: 1, strategy: AttackStrategy.Stable, nowUnixSeconds: 1000, seed: 123);
             Assert.NotNull(result);
+            Assert.IsTrue(result.Win);
 
             analytics.Flush(maxEvents: 100);
             Assert.IsTrue(ContainsEvent(sink, "session_start"));
@@ -134,7 +136,7 @@ namespace AIWarsIdle.Tests.EditMode
             cfg.StabilityMultiplierMin = 1.0f;
             cfg.StabilityMultiplierMax = 1.0f;
 
-            cfg.PrestigePvpPowerPerPrestige = 0.0;
+            cfg.PrestigePvpPowerPerPrestige = 99.0;
             cfg.PermanentPvpPowerPerLevel = 0.0;
             cfg.SectorPvpPowerPerSector = 0.0;
             cfg.ProdToPvpMaxBonus = 0.0;
@@ -178,6 +180,8 @@ namespace AIWarsIdle.Tests.EditMode
 
             cfg.BotPowerMinMultiplier = 0.5f;
             cfg.BotPowerMaxMultiplier = 0.5f;
+            cfg.NeutralPowerMinMultiplier = 0.01f;
+            cfg.NeutralPowerMaxMultiplier = 0.01f;
 
             cfg.WinSeasonPoints = 0;
             cfg.LoseSeasonPoints = 0;
