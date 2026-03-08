@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using AIWarsIdle.Bootstrap;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -63,10 +65,19 @@ namespace AIWarsIdle.UI
         [Tooltip("Optional. If enabled, EnterHub() is called when this component becomes enabled.")]
         [SerializeField] private bool _autoEnterOnEnable;
 
+        [Header("Shared HUD")]
+        [Tooltip("Optional. If null, will try to find one in the scene at runtime.")]
+        [SerializeField] private GameBootstrapper _bootstrapper;
+
+        [SerializeField] private float _sharedHudRefreshIntervalSeconds = 0.25f;
+
         public UIRoute CurrentRoute { get; private set; } = UIRoute.Generators;
 
         private Coroutine _autoEnterCoroutine;
         private Coroutine _reapplyTabVisualsCoroutine;
+        private readonly List<TMP_Text> _attackTexts = new();
+        private readonly List<TMP_Text> _regenTexts = new();
+        private float _sharedHudCarry;
 
         public GameObject LobbyRoot { get => _lobbyRoot; set => _lobbyRoot = value; }
         public GameObject GeneratorsRoot { get => _generatorsRoot; set => _generatorsRoot = value; }
@@ -125,12 +136,19 @@ namespace AIWarsIdle.UI
 
         private void Awake()
         {
+            if (_bootstrapper == null)
+            {
+                _bootstrapper = FindBootstrapper();
+            }
+
             WireTab(_generatorsTab, UIRoute.Generators);
             WireTab(_pvpTab, UIRoute.Pvp);
         }
 
         private void OnEnable()
         {
+            _sharedHudCarry = 0f;
+
             if (_autoEnterOnEnable)
             {
                 if (_autoEnterCoroutine != null)
@@ -156,6 +174,23 @@ namespace AIWarsIdle.UI
                 StopCoroutine(_reapplyTabVisualsCoroutine);
                 _reapplyTabVisualsCoroutine = null;
             }
+
+            _attackTexts.Clear();
+            _regenTexts.Clear();
+        }
+
+        private void Update()
+        {
+            if (_sharedHudRefreshIntervalSeconds <= 0f)
+            {
+                RefreshSharedAttackHud();
+                return;
+            }
+
+            _sharedHudCarry += Time.unscaledDeltaTime;
+            if (_sharedHudCarry < _sharedHudRefreshIntervalSeconds) return;
+            _sharedHudCarry = 0f;
+            RefreshSharedAttackHud();
         }
 
         private IEnumerator AutoEnterNextFrame()
@@ -242,6 +277,159 @@ namespace AIWarsIdle.UI
 
             ApplyTabState(_generatorsTab, isActive: CurrentRoute == UIRoute.Generators);
             ApplyTabState(_pvpTab, isActive: CurrentRoute == UIRoute.Pvp);
+        }
+
+        private void RefreshSharedAttackHud()
+        {
+            EnsureSharedHudRefs();
+
+            var loop = _bootstrapper != null ? _bootstrapper.Loop : null;
+            var attacks = loop?.PvpAttacks;
+            if (attacks == null)
+            {
+                ApplySharedHud(string.Empty, string.Empty);
+                return;
+            }
+
+            var now = loop.NowUnixSeconds;
+            var remaining = Mathf.Clamp(loop.State.PvpAttacksRemaining, 0, attacks.MaxAttacks);
+            var max = attacks.MaxAttacks;
+            var nextRegenAt = loop.State.NextPvpAttackRegenAtUnixSeconds;
+
+            var countText = $"{remaining}/{Mathf.Max(max, remaining)}";
+            var regenText = max > 0 && remaining < max && nextRegenAt > now
+                ? FormatClockDuration(nextRegenAt - now)
+                : string.Empty;
+
+            ApplySharedHud(countText, regenText);
+        }
+
+        private void ApplySharedHud(string countText, string regenText)
+        {
+            for (var i = 0; i < _attackTexts.Count; i++)
+            {
+                if (_attackTexts[i] != null) _attackTexts[i].text = countText;
+            }
+
+            for (var i = 0; i < _regenTexts.Count; i++)
+            {
+                if (_regenTexts[i] != null) _regenTexts[i].text = regenText;
+            }
+        }
+
+        private void EnsureSharedHudRefs()
+        {
+            if (_attackTexts.Count > 0 && _regenTexts.Count > 0) return;
+
+            var attacksBarRoot = FindNamedChildInScene("res_bar");
+            if (_attackTexts.Count == 0 && attacksBarRoot != null)
+            {
+                var energyBar = FindNamedChildRecursive(attacksBarRoot, "ResourceBar_Energy");
+                CollectTextComponents(
+                    energyBar,
+                    _attackTexts,
+                    text => text.name == "Text_Energy" || text.name == "Text (TMP)");
+            }
+
+            var timerRoot = FindNamedChildInScene("res_bar_2");
+            if (_regenTexts.Count == 0 && timerRoot != null)
+            {
+                var regenRoot = FindNamedChildRecursive(timerRoot, "energy_regen");
+                CollectTextComponents(
+                    regenRoot,
+                    _regenTexts,
+                    text => text.name == "Text (TMP)");
+            }
+        }
+
+        private Transform FindNamedChildInScene(string name)
+        {
+            var scene = gameObject.scene;
+            if (!scene.IsValid() || !scene.isLoaded) return null;
+
+            var roots = scene.GetRootGameObjects();
+            for (var i = 0; i < roots.Length; i++)
+            {
+                var found = FindNamedChildRecursive(roots[i].transform, name);
+                if (found != null) return found;
+            }
+
+            return null;
+        }
+
+        private static Transform FindNamedChildRecursive(Transform root, string name)
+        {
+            if (root == null) return null;
+            if (root.name == name) return root;
+
+            for (var i = 0; i < root.childCount; i++)
+            {
+                var found = FindNamedChildRecursive(root.GetChild(i), name);
+                if (found != null) return found;
+            }
+
+            return null;
+        }
+
+        private static void CollectTextComponents(Transform root, List<TMP_Text> target, Predicate<TMP_Text> predicate)
+        {
+            if (root == null || target == null) return;
+
+            var matches = new List<TMP_Text>();
+            CollectTextComponentsRecursive(root, matches, predicate);
+            if (matches.Count == 0) return;
+
+            var hasActiveMatch = false;
+            for (var i = 0; i < matches.Count; i++)
+            {
+                if (matches[i] != null && matches[i].gameObject.activeInHierarchy)
+                {
+                    hasActiveMatch = true;
+                    break;
+                }
+            }
+
+            for (var i = 0; i < matches.Count; i++)
+            {
+                var text = matches[i];
+                if (text == null) continue;
+                if (hasActiveMatch && !text.gameObject.activeInHierarchy) continue;
+                target.Add(text);
+            }
+        }
+
+        private static void CollectTextComponentsRecursive(Transform root, List<TMP_Text> target, Predicate<TMP_Text> predicate)
+        {
+            if (root == null) return;
+
+            if (root.TryGetComponent<TMP_Text>(out var text) && (predicate == null || predicate(text)))
+            {
+                target.Add(text);
+            }
+
+            for (var i = 0; i < root.childCount; i++)
+            {
+                CollectTextComponentsRecursive(root.GetChild(i), target, predicate);
+            }
+        }
+
+        private static string FormatClockDuration(long seconds)
+        {
+            if (seconds <= 0) return "0:00:00";
+
+            var ts = TimeSpan.FromSeconds(seconds);
+            return $"{Math.Max(0, (int)ts.TotalHours)}:{ts.Minutes:D2}:{ts.Seconds:D2}";
+        }
+
+        private static GameBootstrapper FindBootstrapper()
+        {
+#if UNITY_2023_1_OR_NEWER
+            var found = UnityEngine.Object.FindFirstObjectByType<GameBootstrapper>(FindObjectsInactive.Exclude);
+            if (found != null) return found;
+            return UnityEngine.Object.FindAnyObjectByType<GameBootstrapper>(FindObjectsInactive.Exclude);
+#else
+            return UnityEngine.Object.FindObjectOfType<GameBootstrapper>();
+#endif
         }
     }
 }

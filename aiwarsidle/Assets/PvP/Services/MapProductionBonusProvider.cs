@@ -25,6 +25,7 @@ namespace AIWarsIdle.PvP.Services
         {
             var sectors = _mapState.Sectors;
             if (sectors == null || sectors.Length == 0) return 1.0;
+            var connectedOwnedSectors = MapConnectivityService.BuildHomeConnectedSectorSet(_mapState, _mapConfig, _mapConfig.LocalPlayerId);
 
             var ownedCount = 0;
             var rawBonusPercent = 0.0;
@@ -34,6 +35,7 @@ namespace AIWarsIdle.PvP.Services
                 var sector = sectors[i];
                 if (sector == null) continue;
                 if (sector.OwnerPlayerId != _mapConfig.LocalPlayerId) continue;
+                if (connectedOwnedSectors.Count > 0 && !connectedOwnedSectors.Contains(sector.SectorId)) continue;
 
                 ownedCount++;
                 if (_bonusBySectorId.TryGetValue(sector.SectorId, out var b))
@@ -107,4 +109,3 @@ namespace AIWarsIdle.PvP.Services
         }
     }
 }
-

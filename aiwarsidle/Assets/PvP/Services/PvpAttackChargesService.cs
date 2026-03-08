@@ -55,6 +55,8 @@ namespace AIWarsIdle.PvP.Services
                 return;
             }
 
+            NormalizeScheduledRegen(nowUnixSeconds);
+
             if (_state.NextPvpAttackRegenAtUnixSeconds <= 0)
             {
                 var last = _state.LastPvpAttackRegenUnixSeconds;
@@ -101,8 +103,10 @@ namespace AIWarsIdle.PvP.Services
             _state.PvpAttacksRemaining--;
             if (_state.PvpAttacksRemaining < 0) _state.PvpAttacksRemaining = 0;
 
-            if (_state.PvpAttacksRemaining < MaxAttacks && _state.NextPvpAttackRegenAtUnixSeconds <= 0)
+            if (_state.PvpAttacksRemaining < MaxAttacks &&
+                (_state.NextPvpAttackRegenAtUnixSeconds <= 0 || _state.NextPvpAttackRegenAtUnixSeconds <= nowUnixSeconds))
             {
+                _state.LastPvpAttackRegenUnixSeconds = nowUnixSeconds;
                 _state.NextPvpAttackRegenAtUnixSeconds = nowUnixSeconds + _config.RegenSeconds;
             }
 
@@ -134,6 +138,7 @@ namespace AIWarsIdle.PvP.Services
             }
             else if (_state.NextPvpAttackRegenAtUnixSeconds <= 0)
             {
+                _state.LastPvpAttackRegenUnixSeconds = nowUnixSeconds;
                 _state.NextPvpAttackRegenAtUnixSeconds = nowUnixSeconds + _config.RegenSeconds;
             }
 
@@ -198,6 +203,31 @@ namespace AIWarsIdle.PvP.Services
             if (value < 0) return 0;
             if (value > MaxAttacks) return MaxAttacks;
             return value;
+        }
+
+        private void NormalizeScheduledRegen(long nowUnixSeconds)
+        {
+            if (_state.PvpAttacksRemaining >= MaxAttacks) return;
+            if (_state.NextPvpAttackRegenAtUnixSeconds <= 0) return;
+
+            var last = _state.LastPvpAttackRegenUnixSeconds;
+            if (last < 0) last = 0;
+
+            if (last > 0)
+            {
+                var expectedNext = last + _config.RegenSeconds;
+                if (_state.NextPvpAttackRegenAtUnixSeconds != expectedNext)
+                {
+                    _state.NextPvpAttackRegenAtUnixSeconds = expectedNext;
+                }
+                return;
+            }
+
+            var maxReasonableNext = nowUnixSeconds + _config.RegenSeconds;
+            if (_state.NextPvpAttackRegenAtUnixSeconds > maxReasonableNext)
+            {
+                _state.NextPvpAttackRegenAtUnixSeconds = maxReasonableNext;
+            }
         }
     }
 }

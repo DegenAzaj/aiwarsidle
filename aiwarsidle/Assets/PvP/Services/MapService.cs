@@ -71,6 +71,22 @@ namespace AIWarsIdle.PvP.Services
             return false;
         }
 
+        public bool HasHomeConnectedOwnedNeighbor(int sectorId, int ownerPlayerId)
+        {
+            if (ownerPlayerId <= 0) return false;
+            if (_neighborsBySectorId == null) return false;
+
+            var connectedOwnedSectors = MapConnectivityService.BuildHomeConnectedSectorSet(_state, _config, ownerPlayerId);
+            if (connectedOwnedSectors.Count == 0) return false;
+
+            foreach (var ownedSectorId in connectedOwnedSectors)
+            {
+                if (IsAdjacent(ownedSectorId, sectorId)) return true;
+            }
+
+            return false;
+        }
+
         public bool IsInitialized => GetSector(_config.HomeSectorId)?.OwnerPlayerId == _config.LocalPlayerId;
 
         public bool NeedsSeasonReset(long nowUnixSeconds)

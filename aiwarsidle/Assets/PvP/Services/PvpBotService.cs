@@ -87,7 +87,7 @@ namespace AIWarsIdle.PvP.Services
                 if (sector == null) continue;
                 if (sector.OwnerPlayerId == playerId) continue;
                 if (_map.IsHomeSector(sector.SectorId)) continue;
-                if (!_map.HasOwnedNeighbor(sector.SectorId, playerId)) continue;
+                if (!_map.HasHomeConnectedOwnedNeighbor(sector.SectorId, playerId)) continue;
 
                 if (_mapConfig.SectorAttackCooldownSeconds > 0 && sector.LastCombatUnixSeconds > 0)
                 {

@@ -46,7 +46,7 @@ namespace AIWarsIdle.PvP.Services
 
         public PvpSnapshot BuildSnapshot()
         {
-            var effectiveSectorCount = CountOwnedSectors(_state.MapState, _localPlayerId);
+            var effectiveSectorCount = CountOwnedSectors(_state.MapState, _localPlayerId, _mapConfig);
 
             var core =
                 1.0 +
@@ -92,6 +92,7 @@ namespace AIWarsIdle.PvP.Services
         {
             var sectors = _state.MapState?.Sectors;
             if (sectors == null || sectors.Length == 0) return;
+            var connectedOwnedSectors = MapConnectivityService.BuildHomeConnectedSectorSet(_state.MapState, _mapConfig, _localPlayerId);
 
             var flat = 0.0;
             var percent = 0.0;
@@ -101,6 +102,7 @@ namespace AIWarsIdle.PvP.Services
                 var sector = sectors[i];
                 if (sector == null) continue;
                 if (sector.OwnerPlayerId != _localPlayerId) continue;
+                if (connectedOwnedSectors.Count > 0 && !connectedOwnedSectors.Contains(sector.SectorId)) continue;
                 if (!_sectorDefById.TryGetValue(sector.SectorId, out var def) || def == null) continue;
 
                 flat += def.PvpPowerBonusFlat;
@@ -125,6 +127,27 @@ namespace AIWarsIdle.PvP.Services
                 var sector = mapState.Sectors[i];
                 if (sector == null) continue;
                 if (sector.OwnerPlayerId == localPlayerId) count++;
+            }
+
+            return count;
+        }
+
+        private int CountOwnedSectors(MapState mapState, int localPlayerId, MapConfig mapConfig)
+        {
+            if (mapState?.Sectors == null || mapState.Sectors.Length == 0) return 0;
+            if (mapConfig == null) return CountOwnedSectors(mapState, localPlayerId);
+
+            var connectedOwnedSectors = MapConnectivityService.BuildHomeConnectedSectorSet(mapState, mapConfig, localPlayerId);
+            if (connectedOwnedSectors.Count == 0) return 0;
+
+            var count = 0;
+            for (var i = 0; i < mapState.Sectors.Length; i++)
+            {
+                var sector = mapState.Sectors[i];
+                if (sector == null) continue;
+                if (sector.OwnerPlayerId != localPlayerId) continue;
+                if (!connectedOwnedSectors.Contains(sector.SectorId)) continue;
+                count++;
             }
 
             return count;

@@ -18,6 +18,8 @@ namespace AIWarsIdle.UI.Pvp
         private const string GeneratedToastName = "__hex_grid_toast";
         private const string GeneratedDismissLayerName = "__hex_grid_dismiss";
         private const string GeneratedFrontierName = "__hex_grid_frontier";
+        private const string GeneratedFrontierGlowName = "__hex_grid_frontier_glow";
+        private const string GeneratedNetworkName = "__hex_grid_network";
 
         [Header("Context")]
         [SerializeField] private PvpScreenContext _context;
@@ -32,9 +34,17 @@ namespace AIWarsIdle.UI.Pvp
         [SerializeField] private bool _showCoordinates = true;
         [SerializeField] private bool _showHomeBadge = true;
         [SerializeField, Range(0.1f, 1f)] private float _ownedHexAlpha = 0.72f;
+        [SerializeField] private bool _showOwnershipNetwork = true;
+        [SerializeField, Range(0.05f, 1f)] private float _ownershipNetworkAlpha = 0.35f;
         [SerializeField] private bool _showFrontlines = true;
         [SerializeField] private Color _frontlineColor = new(0.72f, 0.96f, 0.78f, 1f);
         [SerializeField, Min(1f)] private float _frontlineThickness = 4f;
+        [SerializeField] private bool _showConnectivityMarkers = true;
+        [SerializeField] private bool _showLocalFrontlineGlow = true;
+        [SerializeField, Range(0.05f, 1f)] private float _localFrontlineGlowAlpha = 0.3f;
+        [SerializeField, Min(1f)] private float _localFrontlineGlowThickness = 10f;
+        [SerializeField, Range(0f, 2f)] private float _localFrontlineGlowPulseSpeed = 0.35f;
+        [SerializeField, Range(0f, 1f)] private float _localFrontlineGlowPulseDepth = 0.3f;
 
         [Header("Refresh")]
         [SerializeField] private float _refreshIntervalSeconds = 0.25f;
@@ -48,8 +58,8 @@ namespace AIWarsIdle.UI.Pvp
         private SectorDetailPanelView _detailPanel;
         private PvpHudView _hud;
         private PvpToastView _toast;
-        private TMP_Text _externalAttacksText;
-        private TMP_Text _externalRegenText;
+        private readonly List<TMP_Text> _externalAttacksTexts = new();
+        private readonly List<TMP_Text> _externalRegenTexts = new();
         private HexCellView _selected;
         private float _refreshCarry;
         private int _lastLayoutHash;
@@ -89,6 +99,8 @@ namespace AIWarsIdle.UI.Pvp
             _detailPanel = null;
             _hud = null;
             _toast = null;
+            _externalAttacksTexts.Clear();
+            _externalRegenTexts.Clear();
             _selected = null;
             _lastLayoutHash = 0;
             _lastViewportSize = Vector2.zero;
@@ -115,7 +127,12 @@ namespace AIWarsIdle.UI.Pvp
             _hexRadius = Mathf.Max(8f, _hexRadius);
             _cellFill = Mathf.Clamp(_cellFill, 0.5f, 1f);
             _ownedHexAlpha = Mathf.Clamp(_ownedHexAlpha, 0.1f, 1f);
+            _ownershipNetworkAlpha = Mathf.Clamp(_ownershipNetworkAlpha, 0.05f, 1f);
             _frontlineThickness = Mathf.Max(1f, _frontlineThickness);
+            _localFrontlineGlowAlpha = Mathf.Clamp01(_localFrontlineGlowAlpha);
+            _localFrontlineGlowThickness = Mathf.Max(1f, _localFrontlineGlowThickness);
+            _localFrontlineGlowPulseSpeed = Mathf.Clamp(_localFrontlineGlowPulseSpeed, 0f, 2f);
+            _localFrontlineGlowPulseDepth = Mathf.Clamp01(_localFrontlineGlowPulseDepth);
             _refreshIntervalSeconds = Mathf.Max(0f, _refreshIntervalSeconds);
 
             if (!isActiveAndEnabled) return;
@@ -256,6 +273,8 @@ namespace AIWarsIdle.UI.Pvp
                 sectors.Add(sector);
             }
 
+            ApplyConnectivityMarkers(config, sectors);
+
             return new GridSnapshot(resolvedRadius, coords.Count, sectors);
         }
 
@@ -291,6 +310,7 @@ namespace AIWarsIdle.UI.Pvp
                 CreateCell(root, snapshot.Sectors[i]);
             }
 
+            UpdateOwnershipNetwork(root, snapshot);
             UpdateFrontlines(root, snapshot);
 
             FitGridToViewport(root);
@@ -313,7 +333,7 @@ namespace AIWarsIdle.UI.Pvp
                     return;
                 }
 
-                cell.Apply(sector, _showCoordinates, _showHomeBadge, _ownedHexAlpha);
+                cell.Apply(sector, _showCoordinates, _showHomeBadge, _ownedHexAlpha, _showConnectivityMarkers);
             }
 
             if (_selected != null)
@@ -328,6 +348,7 @@ namespace AIWarsIdle.UI.Pvp
                 }
             }
 
+            UpdateOwnershipNetwork(_generatedRoot, snapshot);
             UpdateFrontlines(_generatedRoot, snapshot);
             UpdateHud(snapshot);
         }
@@ -605,8 +626,9 @@ namespace AIWarsIdle.UI.Pvp
                 button,
                 CreateLabel(rect),
                 CreateInfoLabel(rect),
-                CreateHomeBadge(rect));
-            cell.Apply(sector, _showCoordinates, _showHomeBadge, _ownedHexAlpha);
+                CreateHomeBadge(rect),
+                CreateMarkerLabel(rect));
+            cell.Apply(sector, _showCoordinates, _showHomeBadge, _ownedHexAlpha, _showConnectivityMarkers);
 
             button.onClick.AddListener(() => SelectCell(cell));
             _cells.Add(cell);
@@ -683,18 +705,52 @@ namespace AIWarsIdle.UI.Pvp
             if (root == null) return;
 
             var graphic = GetOrCreateFrontlineGraphic(root);
+            var glowGraphic = GetOrCreateFrontlineGlowGraphic(root);
             if (graphic == null) return;
 
             if (!_showFrontlines)
             {
                 graphic.SetSegments(Array.Empty<HexFrontierGraphic.LineSegment>(), _frontlineThickness);
                 graphic.gameObject.SetActive(false);
+                if (glowGraphic != null)
+                {
+                    glowGraphic.SetSegments(Array.Empty<HexFrontierGraphic.LineSegment>(), _localFrontlineGlowThickness);
+                    glowGraphic.gameObject.SetActive(false);
+                }
                 return;
             }
 
             var segments = BuildFrontlineSegments(snapshot);
             graphic.gameObject.SetActive(segments.Count > 0);
             graphic.SetSegments(segments, _frontlineThickness);
+
+            if (glowGraphic != null)
+            {
+                var glowSegments = _showLocalFrontlineGlow
+                    ? BuildLocalFrontlineGlowSegments(snapshot)
+                    : new List<HexFrontierGraphic.LineSegment>();
+                glowGraphic.gameObject.SetActive(glowSegments.Count > 0);
+                glowGraphic.SetSegments(glowSegments, _localFrontlineGlowThickness);
+            }
+        }
+
+        private void UpdateOwnershipNetwork(RectTransform root, GridSnapshot snapshot)
+        {
+            if (root == null) return;
+
+            var graphic = GetOrCreateNetworkGraphic(root);
+            if (graphic == null) return;
+
+            if (!_showOwnershipNetwork)
+            {
+                graphic.SetSegments(Array.Empty<HexFrontierGraphic.LineSegment>(), Mathf.Max(1f, _frontlineThickness * 0.8f));
+                graphic.gameObject.SetActive(false);
+                return;
+            }
+
+            var segments = BuildOwnershipNetworkSegments(snapshot);
+            graphic.gameObject.SetActive(segments.Count > 0);
+            graphic.SetSegments(segments, Mathf.Max(1f, _frontlineThickness * 0.8f));
         }
 
         private HexFrontierGraphic GetOrCreateFrontlineGraphic(RectTransform parent)
@@ -706,6 +762,56 @@ namespace AIWarsIdle.UI.Pvp
             }
 
             var go = new GameObject(GeneratedFrontierName, typeof(RectTransform), typeof(CanvasRenderer), typeof(HexFrontierGraphic));
+            go.transform.SetParent(parent, worldPositionStays: false);
+            go.transform.SetSiblingIndex(Math.Min(1, parent.childCount - 1));
+            HideEditorObject(go);
+
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            rect.localScale = Vector3.one;
+
+            var graphic = go.GetComponent<HexFrontierGraphic>();
+            graphic.raycastTarget = false;
+            return graphic;
+        }
+
+        private HexFrontierGraphic GetOrCreateFrontlineGlowGraphic(RectTransform parent)
+        {
+            var existing = parent.Find(GeneratedFrontierGlowName);
+            if (existing != null)
+            {
+                return existing.GetComponent<HexFrontierGraphic>();
+            }
+
+            var go = new GameObject(GeneratedFrontierGlowName, typeof(RectTransform), typeof(CanvasRenderer), typeof(HexFrontierGraphic));
+            go.transform.SetParent(parent, worldPositionStays: false);
+            go.transform.SetSiblingIndex(Math.Min(1, parent.childCount - 1));
+            HideEditorObject(go);
+
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            rect.localScale = Vector3.one;
+
+            var graphic = go.GetComponent<HexFrontierGraphic>();
+            graphic.raycastTarget = false;
+            return graphic;
+        }
+
+        private HexFrontierGraphic GetOrCreateNetworkGraphic(RectTransform parent)
+        {
+            var existing = parent.Find(GeneratedNetworkName);
+            if (existing != null)
+            {
+                return existing.GetComponent<HexFrontierGraphic>();
+            }
+
+            var go = new GameObject(GeneratedNetworkName, typeof(RectTransform), typeof(CanvasRenderer), typeof(HexFrontierGraphic));
             go.transform.SetParent(parent, worldPositionStays: false);
             go.transform.SetSiblingIndex(Math.Min(1, parent.childCount - 1));
             HideEditorObject(go);
@@ -780,6 +886,306 @@ namespace AIWarsIdle.UI.Pvp
             }
 
             return segments;
+        }
+
+        private List<HexFrontierGraphic.LineSegment> BuildOwnershipNetworkSegments(GridSnapshot snapshot)
+        {
+            var segments = new List<HexFrontierGraphic.LineSegment>();
+            if (snapshot.Sectors == null || snapshot.Sectors.Count == 0) return segments;
+
+            var config = GetActiveMapConfig();
+            if (config == null) return segments;
+
+            var byCoord = new Dictionary<HexCoord, DisplaySector>(snapshot.Sectors.Count);
+            var byId = new Dictionary<int, DisplaySector>(snapshot.Sectors.Count);
+            var processedEdges = new HashSet<long>();
+            for (var i = 0; i < snapshot.Sectors.Count; i++)
+            {
+                byCoord[snapshot.Sectors[i].Coord] = snapshot.Sectors[i];
+                byId[snapshot.Sectors[i].SectorId] = snapshot.Sectors[i];
+            }
+
+            var connectedToHome = BuildHomeConnectedSectorSet(snapshot, byCoord, byId, config);
+
+            for (var i = 0; i < snapshot.Sectors.Count; i++)
+            {
+                var sector = snapshot.Sectors[i];
+                if (sector.OwnerPlayerId <= 0) continue;
+                if (!connectedToHome.Contains(sector.SectorId)) continue;
+
+                for (var neighborIndex = 0; neighborIndex < HexGridMath.NeighborDirections.Length; neighborIndex++)
+                {
+                    var neighborCoord = new HexCoord(
+                        sector.Coord.Q + HexGridMath.NeighborDirections[neighborIndex].Q,
+                        sector.Coord.R + HexGridMath.NeighborDirections[neighborIndex].R);
+                    if (!byCoord.TryGetValue(neighborCoord, out var neighbor)) continue;
+                    if (neighbor.OwnerPlayerId != sector.OwnerPlayerId) continue;
+                    if (!connectedToHome.Contains(neighbor.SectorId)) continue;
+
+                    var edgeKey = GetEdgeKey(sector.SectorId, neighbor.SectorId);
+                    if (!processedEdges.Add(edgeKey)) continue;
+
+                    var start = HexGridMath.AxialToLocalPosition(sector.Coord, _hexRadius);
+                    var end = HexGridMath.AxialToLocalPosition(neighbor.Coord, _hexRadius);
+                    segments.Add(new HexFrontierGraphic.LineSegment(
+                        start,
+                        end,
+                        HexGridPalette.GetNetworkColor(sector.OwnerPlayerId, _ownershipNetworkAlpha)));
+                }
+            }
+
+            return segments;
+        }
+
+        private List<HexFrontierGraphic.LineSegment> BuildLocalFrontlineGlowSegments(GridSnapshot snapshot)
+        {
+            var segments = new List<HexFrontierGraphic.LineSegment>();
+            if (snapshot.Sectors == null || snapshot.Sectors.Count == 0) return segments;
+
+            var config = GetActiveMapConfig();
+            var localPlayerId = config != null ? config.LocalPlayerId : 1;
+            var glowAlpha = GetPulsedGlowAlpha();
+
+            var byCoord = new Dictionary<HexCoord, DisplaySector>(snapshot.Sectors.Count);
+            var processedEdges = new HashSet<long>();
+            for (var i = 0; i < snapshot.Sectors.Count; i++)
+            {
+                byCoord[snapshot.Sectors[i].Coord] = snapshot.Sectors[i];
+            }
+
+            for (var i = 0; i < snapshot.Sectors.Count; i++)
+            {
+                var sector = snapshot.Sectors[i];
+                if (sector.OwnerPlayerId <= 0) continue;
+
+                for (var neighborIndex = 0; neighborIndex < HexGridMath.NeighborDirections.Length; neighborIndex++)
+                {
+                    var neighborCoord = new HexCoord(
+                        sector.Coord.Q + HexGridMath.NeighborDirections[neighborIndex].Q,
+                        sector.Coord.R + HexGridMath.NeighborDirections[neighborIndex].R);
+
+                    if (!byCoord.TryGetValue(neighborCoord, out var neighbor)) continue;
+                    if (neighbor.OwnerPlayerId == sector.OwnerPlayerId) continue;
+
+                    var edgeKey = GetEdgeKey(sector.SectorId, neighbor.SectorId);
+                    if (!processedEdges.Add(edgeKey)) continue;
+
+                    var a = HexGridMath.AxialToLocalPosition(sector.Coord, _hexRadius);
+                    var b = HexGridMath.AxialToLocalPosition(neighbor.Coord, _hexRadius);
+                    var edge = HexGridMath.GetSharedEdge(a, b, _hexRadius);
+                    var centerDirection = (b - a).normalized;
+                    var glowColor = HexGridPalette.GetGlowColor(localPlayerId, glowAlpha);
+
+                    if (sector.OwnerPlayerId == localPlayerId && neighbor.OwnerPlayerId > 0)
+                    {
+                        var splitOffset = centerDirection * (_frontlineThickness * 0.65f);
+                        segments.Add(new HexFrontierGraphic.LineSegment(
+                            edge.start - splitOffset,
+                            edge.end - splitOffset,
+                            glowColor));
+                    }
+                    else if (neighbor.OwnerPlayerId == localPlayerId && sector.OwnerPlayerId > 0)
+                    {
+                        var splitOffset = centerDirection * (_frontlineThickness * 0.65f);
+                        segments.Add(new HexFrontierGraphic.LineSegment(
+                            edge.start + splitOffset,
+                            edge.end + splitOffset,
+                            glowColor));
+                    }
+                    else if (sector.OwnerPlayerId == localPlayerId || neighbor.OwnerPlayerId == localPlayerId)
+                    {
+                        segments.Add(new HexFrontierGraphic.LineSegment(
+                            edge.start,
+                            edge.end,
+                            glowColor));
+                    }
+                }
+            }
+
+            return segments;
+        }
+
+        private float GetPulsedGlowAlpha()
+        {
+            var baseAlpha = Mathf.Clamp01(_localFrontlineGlowAlpha);
+            if (_localFrontlineGlowPulseSpeed <= 0f || _localFrontlineGlowPulseDepth <= 0f)
+            {
+                return baseAlpha;
+            }
+
+            var time = Application.isPlaying ? Time.unscaledTime : 0f;
+            var wave = (Mathf.Sin(time * Mathf.PI * 2f * _localFrontlineGlowPulseSpeed) + 1f) * 0.5f;
+            var minFactor = Mathf.Clamp01(1f - _localFrontlineGlowPulseDepth);
+            var factor = Mathf.Lerp(minFactor, 1f, wave);
+            return Mathf.Clamp01(baseAlpha * factor);
+        }
+
+        private void ApplyConnectivityMarkers(MapConfig config, List<DisplaySector> sectors)
+        {
+            if (sectors == null || sectors.Count == 0) return;
+
+            var sectorsById = new Dictionary<int, DisplaySector>(sectors.Count);
+            for (var i = 0; i < sectors.Count; i++)
+            {
+                var sector = sectors[i];
+                sector.IsAttackFrontier = false;
+                sector.IsDisconnectedOwned = false;
+                sectorsById[sector.SectorId] = sector;
+                sectors[i] = sector;
+            }
+
+            if (config == null) return;
+
+            var neighborsBySectorId = BuildNeighborMap(config);
+            if (neighborsBySectorId.Count == 0) return;
+
+            var localPlayerId = config.LocalPlayerId;
+            var connectedOwnedSectorIds = BuildConnectedOwnedSectorSet(sectorsById, neighborsBySectorId, config, localPlayerId);
+            if (connectedOwnedSectorIds.Count == 0) return;
+
+            var attackableTargetIds = new HashSet<int>();
+            foreach (var ownedSectorId in connectedOwnedSectorIds)
+            {
+                if (!neighborsBySectorId.TryGetValue(ownedSectorId, out var neighbors) || neighbors == null) continue;
+                foreach (var neighborId in neighbors)
+                {
+                    if (!sectorsById.TryGetValue(neighborId, out var neighbor)) continue;
+                    if (neighbor.OwnerPlayerId == localPlayerId) continue;
+                    if (neighbor.IsHome) continue;
+                    attackableTargetIds.Add(neighborId);
+                }
+            }
+
+            for (var i = 0; i < sectors.Count; i++)
+            {
+                var sector = sectors[i];
+                sector.IsAttackFrontier = attackableTargetIds.Contains(sector.SectorId);
+                sector.IsDisconnectedOwned = sector.OwnerPlayerId == localPlayerId &&
+                    !sector.IsHome &&
+                    !connectedOwnedSectorIds.Contains(sector.SectorId);
+                sectors[i] = sector;
+            }
+        }
+
+        private static Dictionary<int, HashSet<int>> BuildNeighborMap(MapConfig config)
+        {
+            var map = new Dictionary<int, HashSet<int>>();
+            if (config?.SectorDefinitions != null)
+            {
+                for (var i = 0; i < config.SectorDefinitions.Length; i++)
+                {
+                    var def = config.SectorDefinitions[i];
+                    if (def == null) continue;
+                    if (!map.ContainsKey(def.SectorId))
+                    {
+                        map.Add(def.SectorId, new HashSet<int>());
+                    }
+                }
+            }
+
+            if (config?.Adjacency == null) return map;
+            for (var i = 0; i < config.Adjacency.Length; i++)
+            {
+                var edge = config.Adjacency[i];
+                if (!map.TryGetValue(edge.A, out var aSet))
+                {
+                    aSet = new HashSet<int>();
+                    map.Add(edge.A, aSet);
+                }
+
+                if (!map.TryGetValue(edge.B, out var bSet))
+                {
+                    bSet = new HashSet<int>();
+                    map.Add(edge.B, bSet);
+                }
+
+                aSet.Add(edge.B);
+                bSet.Add(edge.A);
+            }
+
+            return map;
+        }
+
+        private static HashSet<int> BuildConnectedOwnedSectorSet(
+            Dictionary<int, DisplaySector> sectorsById,
+            Dictionary<int, HashSet<int>> neighborsBySectorId,
+            MapConfig config,
+            int ownerPlayerId)
+        {
+            var connected = new HashSet<int>();
+            if (ownerPlayerId <= 0 || config == null) return connected;
+
+            var queue = new Queue<int>();
+            var homeSectorIds = config.GetEffectiveHomeSectorIds();
+            for (var i = 0; i < homeSectorIds.Length; i++)
+            {
+                var homeSectorId = homeSectorIds[i];
+                if (config.GetHomeOwnerPlayerId(homeSectorId) != ownerPlayerId) continue;
+                if (!sectorsById.TryGetValue(homeSectorId, out var homeSector)) continue;
+                if (homeSector.OwnerPlayerId != ownerPlayerId) continue;
+                if (!connected.Add(homeSectorId)) continue;
+                queue.Enqueue(homeSectorId);
+            }
+
+            while (queue.Count > 0)
+            {
+                var sectorId = queue.Dequeue();
+                if (!neighborsBySectorId.TryGetValue(sectorId, out var neighbors) || neighbors == null) continue;
+                foreach (var neighborId in neighbors)
+                {
+                    if (connected.Contains(neighborId)) continue;
+                    if (!sectorsById.TryGetValue(neighborId, out var neighbor)) continue;
+                    if (neighbor.OwnerPlayerId != ownerPlayerId) continue;
+                    connected.Add(neighborId);
+                    queue.Enqueue(neighborId);
+                }
+            }
+
+            return connected;
+        }
+
+        private HashSet<int> BuildHomeConnectedSectorSet(
+            GridSnapshot snapshot,
+            Dictionary<HexCoord, DisplaySector> byCoord,
+            Dictionary<int, DisplaySector> byId,
+            MapConfig config)
+        {
+            var result = new HashSet<int>();
+            var queue = new Queue<DisplaySector>();
+
+            var homeSectorIds = config.GetEffectiveHomeSectorIds();
+            for (var i = 0; i < homeSectorIds.Length; i++)
+            {
+                if (!byId.TryGetValue(homeSectorIds[i], out var home)) continue;
+                if (home.OwnerPlayerId <= 0) continue;
+                if (!result.Add(home.SectorId)) continue;
+                queue.Enqueue(home);
+            }
+
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+                for (var i = 0; i < HexGridMath.NeighborDirections.Length; i++)
+                {
+                    var neighborCoord = new HexCoord(
+                        current.Coord.Q + HexGridMath.NeighborDirections[i].Q,
+                        current.Coord.R + HexGridMath.NeighborDirections[i].R);
+                    if (!byCoord.TryGetValue(neighborCoord, out var neighbor)) continue;
+                    if (neighbor.OwnerPlayerId != current.OwnerPlayerId) continue;
+                    if (!result.Add(neighbor.SectorId)) continue;
+                    queue.Enqueue(neighbor);
+                }
+            }
+
+            return result;
+        }
+
+        private MapConfig GetActiveMapConfig()
+        {
+            var loop = _context?.Loop;
+            if (loop?.MapConfig != null) return loop.MapConfig;
+            if (_context?.Bootstrapper?.MapConfig != null) return _context.Bootstrapper.MapConfig;
+            return null;
         }
 
         private static long GetEdgeKey(int a, int b)
@@ -1026,6 +1432,31 @@ namespace AIWarsIdle.UI.Pvp
             return text;
         }
 
+        private TMP_Text CreateMarkerLabel(RectTransform parent)
+        {
+            var go = new GameObject("marker", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+            go.transform.SetParent(parent, worldPositionStays: false);
+            HideEditorObject(go);
+
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 1f);
+            rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.sizeDelta = new Vector2(72f, 18f);
+            rect.anchoredPosition = new Vector2(0f, -8f);
+
+            var text = go.GetComponent<TextMeshProUGUI>();
+            text.font = TMP_Settings.defaultFontAsset;
+            text.fontSize = 10f;
+            text.alignment = TextAlignmentOptions.Center;
+            text.fontStyle = FontStyles.Bold;
+            text.color = new Color32(241, 246, 240, 245);
+            text.raycastTarget = false;
+            text.text = string.Empty;
+            go.SetActive(false);
+            return text;
+        }
+
         private TMP_Text CreateHomeBadge(RectTransform parent)
         {
             var go = new GameObject("home_badge", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
@@ -1105,9 +1536,9 @@ namespace AIWarsIdle.UI.Pvp
             var snapshotService = loop.Snapshot;
 
             var now = loop.NowUnixSeconds;
-            var remaining = attacks != null ? attacks.GetRemaining(now) : 0;
+            var remaining = attacks != null ? Mathf.Clamp(loop.State.PvpAttacksRemaining, 0, attacks.MaxAttacks) : 0;
             var max = attacks != null ? attacks.MaxAttacks : 0;
-            var nextRegenAt = attacks != null ? attacks.GetNextRegenAt(now) : 0;
+            var nextRegenAt = attacks != null ? loop.State.NextPvpAttackRegenAtUnixSeconds : 0;
             var attackCountText = $"{remaining}/{Mathf.Max(max, remaining)}";
             var regenTimerText = max > 0 && remaining < max && nextRegenAt > now
                 ? FormatClockDuration(nextRegenAt - now)
@@ -1129,7 +1560,7 @@ namespace AIWarsIdle.UI.Pvp
                 : "Tap PvpPower for breakdown";
 
             UpdateExternalAttackHud(attackCountText, regenTimerText);
-            hud.ShowState(_externalAttacksText != null ? string.Empty : $"Attacks: {attackCountText}",
+            hud.ShowState(_externalAttacksTexts.Count > 0 ? string.Empty : $"Attacks: {attackCountText}",
                 leagueText,
                 mapResetText,
                 powerText,
@@ -1141,34 +1572,46 @@ namespace AIWarsIdle.UI.Pvp
         {
             EnsureExternalHudRefs();
 
-            if (_externalAttacksText != null)
+            for (var i = 0; i < _externalAttacksTexts.Count; i++)
             {
-                _externalAttacksText.text = countText;
+                if (_externalAttacksTexts[i] != null)
+                {
+                    _externalAttacksTexts[i].text = countText;
+                }
             }
 
-            if (_externalRegenText != null)
+            for (var i = 0; i < _externalRegenTexts.Count; i++)
             {
-                _externalRegenText.text = string.IsNullOrEmpty(regenText) ? string.Empty : regenText;
+                if (_externalRegenTexts[i] != null)
+                {
+                    _externalRegenTexts[i].text = string.IsNullOrEmpty(regenText) ? string.Empty : regenText;
+                }
             }
         }
 
         private void EnsureExternalHudRefs()
         {
-            if (_externalAttacksText != null && _externalRegenText != null) return;
+            if (_externalAttacksTexts.Count > 0 && _externalRegenTexts.Count > 0) return;
             if (!CanQuerySceneHierarchy()) return;
 
             var attacksBarRoot = FindNamedChildInScene("res_bar");
-            if (_externalAttacksText == null && attacksBarRoot != null)
+            if (_externalAttacksTexts.Count == 0 && attacksBarRoot != null)
             {
                 var energyBar = FindNamedChildRecursive(attacksBarRoot, "ResourceBar_Energy");
-                _externalAttacksText = FindNamedChildRecursive(energyBar, "Text_Energy")?.GetComponent<TMP_Text>()
-                    ?? FindNamedChildRecursive(energyBar, "Text (TMP)")?.GetComponent<TMP_Text>();
+                CollectTextComponents(
+                    energyBar,
+                    _externalAttacksTexts,
+                    text => text.name == "Text_Energy" || text.name == "Text (TMP)");
             }
 
             var timerRoot = FindNamedChildInScene("res_bar_2");
-            if (_externalRegenText == null && timerRoot != null)
+            if (_externalRegenTexts.Count == 0 && timerRoot != null)
             {
-                _externalRegenText = timerRoot.Find("energy_regen/Text (TMP)")?.GetComponent<TMP_Text>();
+                var regenRoot = FindNamedChildRecursive(timerRoot, "energy_regen");
+                CollectTextComponents(
+                    regenRoot,
+                    _externalRegenTexts,
+                    text => text.name == "Text (TMP)");
             }
         }
 
@@ -1203,6 +1646,48 @@ namespace AIWarsIdle.UI.Pvp
             }
 
             return null;
+        }
+
+        private static void CollectTextComponents(Transform root, List<TMP_Text> target, Predicate<TMP_Text> predicate)
+        {
+            if (root == null || target == null) return;
+
+            var matches = new List<TMP_Text>();
+            CollectTextComponentsRecursive(root, matches, predicate);
+            if (matches.Count == 0) return;
+
+            var hasActiveMatch = false;
+            for (var i = 0; i < matches.Count; i++)
+            {
+                if (matches[i] != null && matches[i].gameObject.activeInHierarchy)
+                {
+                    hasActiveMatch = true;
+                    break;
+                }
+            }
+
+            for (var i = 0; i < matches.Count; i++)
+            {
+                var text = matches[i];
+                if (text == null) continue;
+                if (hasActiveMatch && !text.gameObject.activeInHierarchy) continue;
+                target.Add(text);
+            }
+        }
+
+        private static void CollectTextComponentsRecursive(Transform root, List<TMP_Text> target, Predicate<TMP_Text> predicate)
+        {
+            if (root == null) return;
+
+            if (root.TryGetComponent<TMP_Text>(out var text) && (predicate == null || predicate(text)))
+            {
+                target.Add(text);
+            }
+
+            for (var i = 0; i < root.childCount; i++)
+            {
+                CollectTextComponentsRecursive(root.GetChild(i), target, predicate);
+            }
         }
 
         private SectorDetailState BuildDetailState(DisplaySector sector)
@@ -1428,6 +1913,8 @@ namespace AIWarsIdle.UI.Pvp
             public int OwnerPlayerId;
             public float Stability;
             public float ProductionBonusPercent;
+            public bool IsAttackFrontier;
+            public bool IsDisconnectedOwned;
         }
 
         internal struct SectorDetailState
@@ -1592,6 +2079,25 @@ namespace AIWarsIdle.UI.Pvp
             color.a = 1f;
             return color;
         }
+
+        public static Color GetNetworkColor(int ownerPlayerId, float alpha)
+        {
+            if (ownerPlayerId <= 0)
+            {
+                return new Color(1f, 1f, 1f, Mathf.Clamp01(alpha));
+            }
+
+            var color = OwnerColors[(ownerPlayerId - 1) % OwnerColors.Length];
+            color.a = Mathf.Clamp01(alpha);
+            return color;
+        }
+
+        public static Color GetGlowColor(int ownerPlayerId, float alpha)
+        {
+            var color = GetFrontlineColor(ownerPlayerId, Color.white);
+            color.a = Mathf.Clamp01(alpha);
+            return color;
+        }
     }
 
     internal sealed class HexCellView : MonoBehaviour
@@ -1601,6 +2107,7 @@ namespace AIWarsIdle.UI.Pvp
         private TMP_Text _label;
         private TMP_Text _info;
         private TMP_Text _homeBadge;
+        private TMP_Text _marker;
         private Color _baseColor;
         private bool _selected;
 
@@ -1612,16 +2119,18 @@ namespace AIWarsIdle.UI.Pvp
             Button button,
             TMP_Text label,
             TMP_Text info,
-            TMP_Text homeBadge)
+            TMP_Text homeBadge,
+            TMP_Text marker)
         {
             _graphic = graphic;
             _button = button;
             _label = label;
             _info = info;
             _homeBadge = homeBadge;
+            _marker = marker;
         }
 
-        public void Apply(HexGridRenderer.DisplaySector sector, bool showCoordinates, bool showHomeBadge, float ownedHexAlpha)
+        public void Apply(HexGridRenderer.DisplaySector sector, bool showCoordinates, bool showHomeBadge, float ownedHexAlpha, bool showConnectivityMarkers)
         {
             CurrentSector = sector;
             SectorId = sector.SectorId;
@@ -1660,6 +2169,26 @@ namespace AIWarsIdle.UI.Pvp
             if (_homeBadge != null)
             {
                 _homeBadge.gameObject.SetActive(showHomeBadge && sector.IsHome);
+            }
+
+            if (_marker != null)
+            {
+                if (!showConnectivityMarkers || sector.IsHome)
+                {
+                    _marker.text = string.Empty;
+                    _marker.gameObject.SetActive(false);
+                }
+                else if (sector.IsDisconnectedOwned)
+                {
+                    _marker.text = "ISLAND";
+                    _marker.color = new Color(1f, 0.86f, 0.47f, 0.96f);
+                    _marker.gameObject.SetActive(true);
+                }
+                else
+                {
+                    _marker.text = string.Empty;
+                    _marker.gameObject.SetActive(false);
+                }
             }
 
         }

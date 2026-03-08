@@ -127,6 +127,85 @@ namespace AIWarsIdle.Tests.EditMode
         }
 
         [Test]
+        public void Regen_Schedule_Recomputes_When_Config_RegenSeconds_Changes()
+        {
+            var state = new GameState
+            {
+                PvpAttacksRemaining = 4,
+                NextPvpAttackRegenAtUnixSeconds = 1_000 + 7_200
+            };
+            var cfg = CreateConfig(maxAttacks: 5, regenSeconds: 10);
+            var svc = new PvpAttackChargesService(state, cfg);
+
+            svc.Tick(nowUnixSeconds: 1_000);
+            Assert.AreEqual(1_010, state.NextPvpAttackRegenAtUnixSeconds);
+
+            svc.Tick(nowUnixSeconds: 1_009);
+            Assert.AreEqual(4, state.PvpAttacksRemaining);
+
+            svc.Tick(nowUnixSeconds: 1_010);
+            Assert.AreEqual(5, state.PvpAttacksRemaining);
+        }
+
+        [Test]
+        public void SpendOne_StartsCountdown_And_DoesNotResetIt_OnEveryTick()
+        {
+            var state = new GameState { PvpAttacksRemaining = 5 };
+            var svc = new PvpAttackChargesService(state, CreateConfig(maxAttacks: 5, regenSeconds: 10));
+
+            Assert.IsTrue(svc.TrySpendOne(nowUnixSeconds: 1_000));
+            Assert.AreEqual(4, state.PvpAttacksRemaining);
+            Assert.AreEqual(1_010, state.NextPvpAttackRegenAtUnixSeconds);
+
+            svc.Tick(nowUnixSeconds: 1_005);
+            Assert.AreEqual(4, state.PvpAttacksRemaining);
+            Assert.AreEqual(1_010, state.NextPvpAttackRegenAtUnixSeconds);
+
+            svc.Tick(nowUnixSeconds: 1_010);
+            Assert.AreEqual(5, state.PvpAttacksRemaining);
+        }
+
+        [Test]
+        public void SpendOne_Replaces_StalePastSchedule_Instead_Of_InstantlyRegenerating()
+        {
+            var state = new GameState
+            {
+                PvpAttacksRemaining = 5,
+                NextPvpAttackRegenAtUnixSeconds = 900
+            };
+            var svc = new PvpAttackChargesService(state, CreateConfig(maxAttacks: 5, regenSeconds: 10));
+
+            Assert.IsTrue(svc.TrySpendOne(nowUnixSeconds: 1_000));
+            Assert.AreEqual(4, state.PvpAttacksRemaining);
+            Assert.AreEqual(1_010, state.NextPvpAttackRegenAtUnixSeconds);
+
+            Assert.AreEqual(4, svc.GetRemaining(nowUnixSeconds: 1_000));
+            Assert.AreEqual(1_010, state.NextPvpAttackRegenAtUnixSeconds);
+        }
+
+        [Test]
+        public void SpendOne_With_StaleLastRegen_DoesNotRefillBackToFourOnRepeatedSameTimestamp()
+        {
+            var state = new GameState
+            {
+                PvpAttacksRemaining = 5,
+                LastPvpAttackRegenUnixSeconds = 120,
+                NextPvpAttackRegenAtUnixSeconds = 180
+            };
+            var svc = new PvpAttackChargesService(state, CreateConfig(maxAttacks: 5, regenSeconds: 60));
+
+            Assert.IsTrue(svc.TrySpendOne(nowUnixSeconds: 1_000));
+            Assert.AreEqual(4, state.PvpAttacksRemaining);
+            Assert.AreEqual(1_000, state.LastPvpAttackRegenUnixSeconds);
+            Assert.AreEqual(1_060, state.NextPvpAttackRegenAtUnixSeconds);
+
+            Assert.IsTrue(svc.TrySpendOne(nowUnixSeconds: 1_000));
+            Assert.AreEqual(3, state.PvpAttacksRemaining);
+            Assert.AreEqual(1_000, state.LastPvpAttackRegenUnixSeconds);
+            Assert.AreEqual(1_060, state.NextPvpAttackRegenAtUnixSeconds);
+        }
+
+        [Test]
         public void DailyAdClaim_UsesUtcDayBoundary()
         {
             var state = new GameState { PvpAttacksRemaining = 0, LastPvpAdAttackClaimUnixSeconds = 0 };

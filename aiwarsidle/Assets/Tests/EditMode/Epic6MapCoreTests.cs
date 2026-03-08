@@ -267,6 +267,84 @@ namespace AIWarsIdle.Tests.EditMode
         }
 
         [Test]
+        public void AttackSector_Fails_When_Adjacent_Only_To_Island_And_DoesNotSpendAttack()
+        {
+            var state = new GameState { PvpAttacksRemaining = 1 };
+            var mapCfg = ScriptableObject.CreateInstance<MapConfig>();
+            mapCfg.MapSeasonLengthDays = 7;
+            mapCfg.MapSeasonAnchorUnixSecondsUtc = 0;
+            mapCfg.LocalPlayerId = 1;
+            mapCfg.HomeSectorId = 0;
+            mapCfg.HomeSectorIds = new[] { 0 };
+            mapCfg.HomeSectorOwnerPlayerIds = new[] { 1 };
+            mapCfg.HomeSectorStability = 100f;
+            mapCfg.EnforceSectorCountRange = false;
+            mapCfg.RequireConnectedGraph = false;
+            mapCfg.SectorDefinitions = new[]
+            {
+                new MapConfig.SectorDefinition { SectorId = 0, Name = "Home" },
+                new MapConfig.SectorDefinition { SectorId = 1, Name = "Bridge" },
+                new MapConfig.SectorDefinition { SectorId = 2, Name = "Island" },
+                new MapConfig.SectorDefinition { SectorId = 3, Name = "IslandFrontier" },
+            };
+            mapCfg.Adjacency = new[]
+            {
+                new MapConfig.SectorEdge { A = 0, B = 1 },
+                new MapConfig.SectorEdge { A = 1, B = 2 },
+                new MapConfig.SectorEdge { A = 2, B = 3 },
+            };
+            mapCfg.StabilityGrowthPerSecond = 0f;
+            mapCfg.FreshCaptureWindowSeconds = 60;
+            mapCfg.StabilityStartNeutral = 0f;
+            mapCfg.StabilityStartOnCapture = 10f;
+            mapCfg.StabilityGainOnDefenseWin = 5f;
+            mapCfg.CaptureStabilityMultiplierAggressive = 0.8f;
+            mapCfg.CaptureStabilityMultiplierStable = 1.0f;
+            mapCfg.CaptureStabilityMultiplierRisky = 0.6f;
+            mapCfg.SectorAttackCooldownSeconds = 0;
+            mapCfg.BotPowerMinMultiplier = 1f;
+            mapCfg.BotPowerMaxMultiplier = 1f;
+            mapCfg.WinSeasonPoints = 10;
+            mapCfg.LoseSeasonPoints = -2;
+            mapCfg.WinSoftReward = 50;
+            mapCfg.LoseSoftReward = 10;
+            mapCfg.ValidateOrThrow();
+
+            state.MapState.Sectors = new[]
+            {
+                new SectorState { SectorId = 0, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 1, OwnerPlayerId = 0, Stability = 0f },
+                new SectorState { SectorId = 2, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 3, OwnerPlayerId = 0, Stability = 0f },
+            };
+
+            var map = new MapService(state.MapState, mapCfg);
+            map.AdvanceTime(nowUnixSeconds: 1000);
+
+            var economy = CreateEconomyWithState(state);
+            var balance = CreateValidBalanceConfig();
+            var production = new ProductionService(state, balance, economy);
+            var pvp = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 99);
+            state.PrestigeCount = 1;
+
+            var snapshot = new SnapshotService(state, pvp, production, mapConfig: mapCfg);
+            var league = new LeagueService(state, CreateValidLeagueConfig());
+            var sim = new BattleSimService(pvp);
+            var matchmaking = new MatchmakingService(mapCfg);
+            var attacks = new PvpAttackChargesService(state, CreateDefaultPvpAttacksConfig());
+            var combat = new PvpMapCombatService(state, map, mapCfg, attacks, snapshot, matchmaking, sim, economy, league);
+
+            var evaluation = combat.EvaluateAttack(3, 1001);
+            Assert.IsFalse(evaluation.CanAttack);
+            Assert.AreEqual(PvpAttackBlockReason.NoAdjacentOwnedSector, evaluation.BlockReason);
+
+            var result = combat.AttackSector(sectorId: 3, strategy: AttackStrategy.Stable, nowUnixSeconds: 1001, seed: 123);
+            Assert.IsFalse(result.Win);
+            Assert.AreEqual(1, state.PvpAttacksRemaining);
+            Assert.AreEqual(0, map.GetSector(3).OwnerPlayerId);
+        }
+
+        [Test]
         public void AttackSector_Fails_When_NoAttacksRemaining_AndDoesNotMutateSector()
         {
             var state = new GameState { PvpAttacksRemaining = 0 };
@@ -475,6 +553,107 @@ namespace AIWarsIdle.Tests.EditMode
             // Maintenance: free=1, extra=2, penalty=20% => maintenance multiplier 0.8.
             // Total multiplier: 1.15 * 0.8 = 0.92. Base PPS is 100.
             Assert.AreEqual(92.0, pps, 1e-9);
+        }
+
+        [Test]
+        public void ProductionService_Ignores_Island_Sectors_NotConnected_To_Home()
+        {
+            var state = new GameState();
+            var mapCfg = ScriptableObject.CreateInstance<MapConfig>();
+            mapCfg.MapSeasonLengthDays = 7;
+            mapCfg.MapSeasonAnchorUnixSecondsUtc = 0;
+            mapCfg.LocalPlayerId = 1;
+            mapCfg.HomeSectorId = 0;
+            mapCfg.HomeSectorIds = new[] { 0 };
+            mapCfg.HomeSectorOwnerPlayerIds = new[] { 1 };
+            mapCfg.HomeSectorStability = 100f;
+            mapCfg.EnforceSectorCountRange = false;
+            mapCfg.RequireConnectedGraph = false;
+            mapCfg.SectorDefinitions = new[]
+            {
+                new MapConfig.SectorDefinition { SectorId = 0, Name = "Home", ProductionBonusPercent = 5f },
+                new MapConfig.SectorDefinition { SectorId = 1, Name = "Front", ProductionBonusPercent = 5f },
+                new MapConfig.SectorDefinition { SectorId = 2, Name = "Bridge", ProductionBonusPercent = 5f },
+                new MapConfig.SectorDefinition { SectorId = 3, Name = "Island", ProductionBonusPercent = 5f },
+            };
+            mapCfg.Adjacency = new[]
+            {
+                new MapConfig.SectorEdge { A = 0, B = 1 },
+                new MapConfig.SectorEdge { A = 1, B = 2 },
+                new MapConfig.SectorEdge { A = 2, B = 3 },
+            };
+            mapCfg.MaintenanceFreeSectors = 1;
+            mapCfg.MaintenancePenaltyPercentPerExtraSector = 10f;
+            mapCfg.SectorBonusCapPercent = 0f;
+            mapCfg.ValidateOrThrow();
+
+            state.MapState.Sectors = new[]
+            {
+                new SectorState { SectorId = 0, OwnerPlayerId = 1 },
+                new SectorState { SectorId = 1, OwnerPlayerId = 0 },
+                new SectorState { SectorId = 2, OwnerPlayerId = 0 },
+                new SectorState { SectorId = 3, OwnerPlayerId = 1 },
+            };
+
+            var provider = new MapProductionBonusProvider(state.MapState, mapCfg);
+            var economy = new EconomyService(state);
+            var balance = CreateValidBalanceConfig();
+            var production = new ProductionService(state, balance, economy, permanentMultiplierProvider: provider);
+
+            state.GeneratorLevels[0] = 1;
+            var pps = production.CalculateProductionPerSecond();
+
+            Assert.AreEqual(105.0, pps, 1e-9);
+        }
+
+        [Test]
+        public void Snapshot_Ignores_Island_Sectors_NotConnected_To_Home()
+        {
+            var state = new GameState();
+            var balance = CreateValidBalanceConfig();
+            var economy = new EconomyService(state);
+            var production = new ProductionService(state, balance, economy);
+            var pvp = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 0.0);
+            pvp.PermanentPvpPowerPerLevel = 0.0;
+            pvp.SectorPvpPowerPerSector = 10.0;
+            pvp.ProdToPvpMaxBonus = 0.0;
+            pvp.ProdToPvpHalfCapPps = 1.0;
+            pvp.ValidateOrThrow();
+
+            var mapCfg = ScriptableObject.CreateInstance<MapConfig>();
+            mapCfg.MapSeasonLengthDays = 7;
+            mapCfg.MapSeasonAnchorUnixSecondsUtc = 0;
+            mapCfg.LocalPlayerId = 1;
+            mapCfg.HomeSectorId = 0;
+            mapCfg.HomeSectorIds = new[] { 0 };
+            mapCfg.HomeSectorOwnerPlayerIds = new[] { 1 };
+            mapCfg.HomeSectorStability = 100f;
+            mapCfg.EnforceSectorCountRange = false;
+            mapCfg.RequireConnectedGraph = false;
+            mapCfg.SectorDefinitions = new[]
+            {
+                new MapConfig.SectorDefinition { SectorId = 0, Name = "Home", PvpPowerBonusFlat = 2.0, PvpPowerBonusPercent = 0f },
+                new MapConfig.SectorDefinition { SectorId = 1, Name = "Bridge", PvpPowerBonusFlat = 3.0, PvpPowerBonusPercent = 0f },
+                new MapConfig.SectorDefinition { SectorId = 2, Name = "Island", PvpPowerBonusFlat = 100.0, PvpPowerBonusPercent = 0f },
+            };
+            mapCfg.Adjacency = new[]
+            {
+                new MapConfig.SectorEdge { A = 0, B = 1 },
+                new MapConfig.SectorEdge { A = 1, B = 2 },
+            };
+            mapCfg.ValidateOrThrow();
+
+            state.MapState.Sectors = new[]
+            {
+                new SectorState { SectorId = 0, OwnerPlayerId = 1 },
+                new SectorState { SectorId = 1, OwnerPlayerId = 0 },
+                new SectorState { SectorId = 2, OwnerPlayerId = 1 },
+            };
+
+            var snapshot = new SnapshotService(state, pvp, production, mapConfig: mapCfg);
+            var result = snapshot.BuildSnapshot();
+
+            Assert.AreEqual(13.0, result.PvpPower, 1e-9);
         }
 
         [Test]

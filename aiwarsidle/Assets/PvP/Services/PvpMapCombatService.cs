@@ -229,7 +229,7 @@ namespace AIWarsIdle.PvP.Services
                 };
             }
 
-            if (!_map.HasOwnedNeighbor(sector.SectorId, _mapConfig.LocalPlayerId))
+            if (!_map.HasHomeConnectedOwnedNeighbor(sector.SectorId, _mapConfig.LocalPlayerId))
             {
                 return new PvpAttackEvaluation
                 {
