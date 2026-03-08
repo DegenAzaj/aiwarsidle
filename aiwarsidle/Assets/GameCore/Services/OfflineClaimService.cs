@@ -102,5 +102,27 @@ namespace AIWarsIdle.GameCore.Services
             _state.LastBankedOfflineRawSeconds = 0;
             _state.LastBankedOfflineEffectiveSeconds = 0;
         }
+
+        public long GetDisplayedOfflineSeconds()
+        {
+            var pendingGain = _state.PendingOfflineGain;
+            if (pendingGain <= 0)
+            {
+                return Math.Max(_state.LastBankedOfflineRawSeconds, _state.LastBankedOfflineEffectiveSeconds);
+            }
+
+            var offlineGainPerSecond = _production.CalculateOfflineGain(1d);
+            if (offlineGainPerSecond <= 0)
+            {
+                return Math.Max(_state.LastBankedOfflineRawSeconds, _state.LastBankedOfflineEffectiveSeconds);
+            }
+
+            var estimatedPendingSeconds = (long)Math.Round(pendingGain / offlineGainPerSecond);
+            if (estimatedPendingSeconds < 0) estimatedPendingSeconds = 0;
+
+            return Math.Max(
+                estimatedPendingSeconds,
+                Math.Max(_state.LastBankedOfflineRawSeconds, _state.LastBankedOfflineEffectiveSeconds));
+        }
     }
 }

@@ -284,17 +284,7 @@ namespace AIWarsIdle.UI.Generators
 
         private static long ResolveDisplayedOfflineSeconds(GameLoop loop)
         {
-            var rawSeconds = loop.OfflineClaim.LastBankedOfflineRawSeconds;
-            if (rawSeconds > 0) return rawSeconds;
-
-            var effectiveSeconds = loop.OfflineClaim.LastBankedOfflineEffectiveSeconds;
-            if (effectiveSeconds > 0) return effectiveSeconds;
-
-            var pps = loop.Production.CalculateProductionPerSecond(loop.NowUnixSeconds);
-            if (pps <= 0) return 0;
-
-            var estimatedSeconds = (long)Math.Round(loop.OfflineClaim.PendingOfflineGain / pps);
-            return estimatedSeconds < 0 ? 0 : estimatedSeconds;
+            return Math.Max(0, loop.OfflineClaim.GetDisplayedOfflineSeconds());
         }
 
         private void SetVisible(bool visible)

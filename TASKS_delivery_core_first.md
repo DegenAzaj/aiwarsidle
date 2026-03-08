@@ -456,18 +456,18 @@ Zasada: UI jest cienką warstwą, tylko prezentacja + input → wywołania serwi
 
 ## STORY 11.2b — Offline claim modal (pending gain)
 
-* [ ] Na wejściu do Hub (po starcie/resume przez Splash): jeśli `PendingOfflineGain > 0` → modal:
+* [x] Na wejściu do Hub (po starcie/resume przez Splash): jeśli `PendingOfflineGain > 0` → modal:
   * pokazuje kwotę + wyjaśnienie skąd (czas offline, cap 12h)
   * `Claim x1` → `OfflineClaimService.Claim(1)`
   * `Claim x2` (rewarded) → pokazuje rewarded (`offline_x2`) i po sukcesie `OfflineClaimService.Claim(2)`
   * “Not now” → zamyka modal bez claim (pending zostaje, crash-safe)
-* [ ] Po claim: HUD odświeżony (waluta + lifetime), modal znika
+* [x] Po claim: HUD odświeżony (waluta + lifetime), modal znika
 
 **TESTS**
-* [ ] PlayMode: PendingOfflineGain>0 → modal się pokazuje
-* [ ] PlayMode: Claim x1 czyści pending i dodaje poprawną walutę
-* [ ] PlayMode: rewarded success → Claim x2 czyści pending i dodaje ×2
-* [ ] PlayMode: “Not now” → brak zmian stanu, pending zostaje
+* [x] PlayMode: PendingOfflineGain>0 → modal się pokazuje
+* [x] PlayMode: Claim x1 czyści pending i dodaje poprawną walutę
+* [x] PlayMode: rewarded success → Claim x2 czyści pending i dodaje ×2
+* [x] PlayMode: “Not now” → brak zmian stanu, pending zostaje
 
 ## STORY 11.3 — Prestige modal
 
