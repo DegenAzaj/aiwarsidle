@@ -52,6 +52,11 @@ namespace AIWarsIdle.UI.Pvp
         [Header("Editor Preview")]
         [SerializeField] private bool _previewInEditMode = true;
 
+        [Header("Detail Panel")]
+        [SerializeField, Min(0f)] private float _detailPanelHorizontalOffset = 164f;
+        [SerializeField, Min(0f)] private float _detailPanelVerticalOffset = 104f;
+        [SerializeField, Min(0f)] private float _detailPanelEdgePadding = 12f;
+
         private readonly List<HexCellView> _cells = new();
         private readonly Dictionary<int, HexCellView> _cellsBySectorId = new();
         private RectTransform _generatedRoot;
@@ -134,6 +139,9 @@ namespace AIWarsIdle.UI.Pvp
             _localFrontlineGlowPulseSpeed = Mathf.Clamp(_localFrontlineGlowPulseSpeed, 0f, 2f);
             _localFrontlineGlowPulseDepth = Mathf.Clamp01(_localFrontlineGlowPulseDepth);
             _refreshIntervalSeconds = Mathf.Max(0f, _refreshIntervalSeconds);
+            _detailPanelHorizontalOffset = Mathf.Max(0f, _detailPanelHorizontalOffset);
+            _detailPanelVerticalOffset = Mathf.Max(0f, _detailPanelVerticalOffset);
+            _detailPanelEdgePadding = Mathf.Max(0f, _detailPanelEdgePadding);
 
             if (!isActiveAndEnabled) return;
             Rebuild();
@@ -318,7 +326,7 @@ namespace AIWarsIdle.UI.Pvp
             UpdateHud(snapshot);
             if (_detailPanel != null)
             {
-                _detailPanel.ShowEmpty();
+                _detailPanel.Hide();
             }
         }
 
@@ -340,7 +348,7 @@ namespace AIWarsIdle.UI.Pvp
             {
                 if (_cellsBySectorId.TryGetValue(_selected.SectorId, out var selectedCell))
                 {
-                    UpdateDetailPanel(selectedCell.CurrentSector);
+                    UpdateDetailPanel(selectedCell);
                 }
                 else
                 {
@@ -439,11 +447,11 @@ namespace AIWarsIdle.UI.Pvp
             HideEditorObject(panelGo);
 
             var rect = panelGo.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(1f, 0.5f);
-            rect.anchorMax = new Vector2(1f, 0.5f);
-            rect.pivot = new Vector2(1f, 0.5f);
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = new Vector2(280f, 420f);
-            rect.anchoredPosition = new Vector2(-12f, 0f);
+            rect.anchoredPosition = Vector2.zero;
 
             var bg = panelGo.GetComponent<Image>();
             bg.color = new Color32(26, 30, 43, 232);
@@ -464,6 +472,7 @@ namespace AIWarsIdle.UI.Pvp
                 OnCycleStrategy,
                 OnAttackSelectedSector);
             _detailPanel.ShowEmpty();
+            _detailPanel.Hide();
             return _detailPanel;
         }
 
@@ -1497,7 +1506,7 @@ namespace AIWarsIdle.UI.Pvp
 
             _selected = cell;
             _selected.SetSelected(true);
-            UpdateDetailPanel(cell.CurrentSector);
+            UpdateDetailPanel(cell);
         }
 
         private void ClearSelection()
@@ -1510,14 +1519,82 @@ namespace AIWarsIdle.UI.Pvp
             _selected = null;
             if (_detailPanel != null)
             {
-                _detailPanel.ShowEmpty();
+                _detailPanel.Hide();
             }
         }
 
-        private void UpdateDetailPanel(DisplaySector sector)
+        private void UpdateDetailPanel(HexCellView cell)
         {
             var panel = GetOrCreateDetailPanel();
-            panel.ShowSector(BuildDetailState(sector));
+            panel.ShowSector(BuildDetailState(cell.CurrentSector));
+            PositionDetailPanel(panel.GetComponent<RectTransform>(), cell);
+        }
+
+        private void PositionDetailPanel(RectTransform panelRect, HexCellView cell)
+        {
+            if (panelRect == null || cell == null) return;
+
+            var parentRect = transform as RectTransform;
+            var cellRect = cell.transform as RectTransform;
+            if (parentRect == null || cellRect == null) return;
+
+            var worldCenter = cellRect.TransformPoint(cellRect.rect.center);
+            var localCenter = (Vector2)parentRect.InverseTransformPoint(worldCenter);
+            var panelSize = panelRect.rect.size;
+            var parentBounds = parentRect.rect;
+            var halfWidth = panelSize.x * 0.5f;
+            var halfHeight = panelSize.y * 0.5f;
+            var rightBias = localCenter.x <= 0f;
+
+            var candidates = new[]
+            {
+                localCenter + new Vector2(rightBias ? _detailPanelHorizontalOffset : -_detailPanelHorizontalOffset, _detailPanelVerticalOffset),
+                localCenter + new Vector2(rightBias ? -_detailPanelHorizontalOffset : _detailPanelHorizontalOffset, _detailPanelVerticalOffset),
+                localCenter + new Vector2(rightBias ? _detailPanelHorizontalOffset : -_detailPanelHorizontalOffset, _detailPanelVerticalOffset * 0.35f),
+                localCenter + new Vector2(rightBias ? -_detailPanelHorizontalOffset : _detailPanelHorizontalOffset, _detailPanelVerticalOffset * 0.35f),
+                localCenter + new Vector2(rightBias ? _detailPanelHorizontalOffset : -_detailPanelHorizontalOffset, -_detailPanelVerticalOffset * 0.55f),
+                localCenter + new Vector2(rightBias ? -_detailPanelHorizontalOffset : _detailPanelHorizontalOffset, -_detailPanelVerticalOffset * 0.55f),
+                localCenter + new Vector2(0f, _detailPanelVerticalOffset),
+                localCenter + new Vector2(0f, -_detailPanelVerticalOffset * 0.7f),
+            };
+
+            var bestPosition = ClampDetailPanelPosition(candidates[0], parentBounds, halfWidth, halfHeight);
+            var bestScore = ScoreDetailPanelPosition(candidates[0], bestPosition, localCenter);
+
+            for (var i = 1; i < candidates.Length; i++)
+            {
+                var candidate = candidates[i];
+                var clamped = ClampDetailPanelPosition(candidate, parentBounds, halfWidth, halfHeight);
+                var score = ScoreDetailPanelPosition(candidate, clamped, localCenter);
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    bestPosition = clamped;
+                }
+            }
+
+            panelRect.anchoredPosition = bestPosition;
+        }
+
+        private Vector2 ClampDetailPanelPosition(Vector2 desired, Rect parentBounds, float halfWidth, float halfHeight)
+        {
+            return new Vector2(
+                Mathf.Clamp(
+                    desired.x,
+                    parentBounds.xMin + halfWidth + _detailPanelEdgePadding,
+                    parentBounds.xMax - halfWidth - _detailPanelEdgePadding),
+                Mathf.Clamp(
+                    desired.y,
+                    parentBounds.yMin + halfHeight + _detailPanelEdgePadding,
+                    parentBounds.yMax - halfHeight - _detailPanelEdgePadding));
+        }
+
+        private static float ScoreDetailPanelPosition(Vector2 desired, Vector2 clamped, Vector2 origin)
+        {
+            var clampPenalty = (desired - clamped).sqrMagnitude * 10f;
+            var distancePenalty = (clamped - desired).magnitude;
+            var directionPenalty = clamped.y < origin.y ? 60f : 0f;
+            return clampPenalty + distancePenalty + directionPenalty;
         }
 
         private void UpdateHud(GridSnapshot snapshot)
@@ -1759,7 +1836,7 @@ namespace AIWarsIdle.UI.Pvp
 
             if (_selected != null)
             {
-                UpdateDetailPanel(_selected.CurrentSector);
+                UpdateDetailPanel(_selected);
             }
         }
 
@@ -1775,7 +1852,7 @@ namespace AIWarsIdle.UI.Pvp
             if (!evaluation.CanAttack)
             {
                 GetOrCreateToast().Show(GetBlockReasonText(evaluation));
-                UpdateDetailPanel(_selected.CurrentSector);
+                UpdateDetailPanel(_selected);
                 return;
             }
 
@@ -2371,6 +2448,7 @@ namespace AIWarsIdle.UI.Pvp
 
         public void ShowEmpty()
         {
+            gameObject.SetActive(true);
             if (_title != null) _title.text = "Sector";
             if (_owner != null) _owner.text = "Owner: -";
             if (_bonus != null) _bonus.text = "Bonus: -";
@@ -2385,8 +2463,14 @@ namespace AIWarsIdle.UI.Pvp
             if (_buttonLabel != null) _buttonLabel.text = "Attack";
         }
 
+        public void Hide()
+        {
+            gameObject.SetActive(false);
+        }
+
         public void ShowSector(HexGridRenderer.SectorDetailState detailState)
         {
+            gameObject.SetActive(true);
             if (_title != null) _title.text = detailState.Sector.Label;
             if (_owner != null) _owner.text = detailState.OwnerText;
             if (_bonus != null) _bonus.text = detailState.BonusText;
