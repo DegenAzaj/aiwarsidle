@@ -30,6 +30,7 @@ namespace AIWarsIdle.Bootstrap
         private readonly MapConfig _mapConfig;
         private readonly PvpConfig _pvpConfig;
         private readonly SnapshotService _snapshot;
+        private readonly FactionSnapshotService _factionSnapshots;
         private readonly MatchmakingService _matchmaking;
         private readonly BattleSimService _battleSim;
         private readonly PvpMapCombatService _combat;
@@ -59,6 +60,7 @@ namespace AIWarsIdle.Bootstrap
         public PvpAttackChargesService PvpAttacks => _pvpAttacks;
         public LeagueService League => _league;
         public SnapshotService Snapshot => _snapshot;
+        public FactionSnapshotService FactionSnapshots => _factionSnapshots;
         public MatchmakingService Matchmaking => _matchmaking;
         public BattleSimService BattleSim => _battleSim;
         public PvpMapCombatService PvpCombat => _combat;
@@ -127,7 +129,8 @@ namespace AIWarsIdle.Bootstrap
             _pvpAttacks = pvpAttacksConfig == null ? null : new PvpAttackChargesService(State, pvpAttacksConfig);
             _league = leagueConfig == null ? null : new LeagueService(State, leagueConfig);
             _snapshot = pvpConfig == null ? null : new SnapshotService(State, pvpConfig, _production, _mapConfig.LocalPlayerId, _mapConfig);
-            _matchmaking = _mapConfig == null ? null : new MatchmakingService(_mapConfig);
+            _factionSnapshots = pvpConfig == null ? null : new FactionSnapshotService(State, _mapConfig, pvpConfig, _snapshot);
+            _matchmaking = _mapConfig == null ? null : new MatchmakingService(_mapConfig, _factionSnapshots);
             _battleSim = pvpConfig == null ? null : new BattleSimService(pvpConfig, _overclock);
             _combat =
                 _pvpAttacks != null &&
@@ -141,8 +144,9 @@ namespace AIWarsIdle.Bootstrap
                 _snapshot != null &&
                 _matchmaking != null &&
                 _battleSim != null &&
+                _factionSnapshots != null &&
                 pvpAttacksConfig != null
-                    ? new PvpBotService(State, _map, _mapConfig, _snapshot, _matchmaking, _battleSim, pvpAttacksConfig, _eventBus)
+                    ? new PvpBotService(State, _map, _mapConfig, _snapshot, _matchmaking, _battleSim, _factionSnapshots, pvpAttacksConfig, _eventBus)
                     : null;
             _rewardedAds = new RewardedAdsUseCaseService(new AdsService(), _offline, _pvpAttacks, _eventBus);
 

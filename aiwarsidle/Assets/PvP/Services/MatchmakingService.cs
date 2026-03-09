@@ -7,10 +7,12 @@ namespace AIWarsIdle.PvP.Services
     public sealed class MatchmakingService
     {
         private readonly MapConfig _mapConfig;
+        private readonly FactionSnapshotService _factionSnapshots;
 
-        public MatchmakingService(MapConfig mapConfig)
+        public MatchmakingService(MapConfig mapConfig, FactionSnapshotService factionSnapshots = null)
         {
             _mapConfig = mapConfig ?? throw new ArgumentNullException(nameof(mapConfig));
+            _factionSnapshots = factionSnapshots;
             _mapConfig.ValidateOrThrow();
         }
 
@@ -18,6 +20,11 @@ namespace AIWarsIdle.PvP.Services
         {
             if (attackerSnapshot == null) throw new ArgumentNullException(nameof(attackerSnapshot));
             if (defenderSector == null) throw new ArgumentNullException(nameof(defenderSector));
+
+            if (defenderSector.OwnerPlayerId != 0 && _factionSnapshots != null)
+            {
+                return _factionSnapshots.BuildCurrentSnapshot(defenderSector.OwnerPlayerId);
+            }
 
             var owner = defenderSector.OwnerSnapshot;
             if (defenderSector.OwnerPlayerId != 0 && owner != null && owner.PvpPower > 0)

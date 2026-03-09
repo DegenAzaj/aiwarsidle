@@ -292,3 +292,40 @@ Zmiany zrobione w ramach dopięcia offline claim z UI:
   - PlayMode:
     - `aiwarsidle/Assets/Tests/PlayMode/Epic11OfflineClaimModalPlayModeTests.cs`
     - pokryte: auto-show, claim x1, claim x2, `Not now`, reopen z HUD.
+
+---
+
+## PvP map combat model update
+
+Zmiany zrobione w ramach uporządkowania warstwy testowego PvE na mapie przed docelowym PvP z innymi graczami:
+
+- Obrona sektorów:
+  - sektor przestał bronić się historycznym `OwnerSnapshot` zapisanym w momencie przejęcia,
+  - `MatchmakingService` korzysta teraz z bieżącej mocy właściciela frakcji, a nie z zamrożonego snapshotu,
+  - dzięki temu wynik walki lepiej odpowiada aktualnej sile gracza / frakcji i jest czytelniejszy produktowo.
+
+- Niezależna moc botów:
+  - boty przestały skalować się bezpośrednio od aktualnego snapshotu lokalnego gracza,
+  - dodany został wspólny serwis `aiwarsidle/Assets/PvP/Services/FactionSnapshotService.cs`,
+  - moc frakcji botów jest teraz liczona z ich własnego stanu mapy:
+    - liczby home-connected sektorów,
+    - profilu frakcji,
+    - bonusów sektorowych PvP,
+    - skonfigurowanego zakresu `BotPowerMinMultiplier` / `BotPowerMaxMultiplier`,
+  - celem tej zmiany było przywrócenie realnego payoffu progresji idle i uniknięcie efektu „bot zawsze utrzymuje ten sam dystans power”.
+
+- Wiring runtime:
+  - `aiwarsidle/Assets/Bootstrap/GameLoop.cs` tworzy i wstrzykuje `FactionSnapshotService` do:
+    - `MatchmakingService`
+    - `PvpBotService`
+
+- Testy EditMode:
+  - `aiwarsidle/Assets/Tests/EditMode/Epic6MapCoreTests.cs`
+  - dopisane scenariusze pilnujące, że:
+    - matchmaking nie używa już zamrożonego `OwnerSnapshot` jako głównego źródła obrony,
+    - moc bota nie zależy od bieżącego snapshotu lokalnego gracza,
+    - poprawiony został też test resetu bucketów botów po `DebugResetMatch`, tak aby sprawdzał brak dodatkowego ataku w tym samym buckecie zamiast sztywnej liczby przejętych sektorów.
+
+- Build / weryfikacja:
+  - `dotnet build aiwarsidle/AIWarsIdle.Tests.EditMode.csproj -c Release -v minimal`
+  - build przechodzi po zmianach; `dotnet test` w tym repo nie wypisywał wiarygodnego podsumowania test runnera, więc podstawową weryfikacją był czysty build projektu testowego i nowe testy regresyjne.

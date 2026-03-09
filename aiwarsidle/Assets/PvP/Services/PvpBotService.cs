@@ -18,6 +18,7 @@ namespace AIWarsIdle.PvP.Services
         private readonly SnapshotService _snapshot;
         private readonly MatchmakingService _matchmaking;
         private readonly BattleSimService _battleSim;
+        private readonly FactionSnapshotService _factionSnapshots;
         private readonly PvpAttacksConfig _attacksConfig;
         private readonly IEventBus _eventBus;
         private readonly Dictionary<int, long> _lastDecisionBucketByPlayerId = new();
@@ -30,6 +31,7 @@ namespace AIWarsIdle.PvP.Services
             SnapshotService snapshot,
             MatchmakingService matchmaking,
             BattleSimService battleSim,
+            FactionSnapshotService factionSnapshots,
             PvpAttacksConfig attacksConfig,
             IEventBus eventBus = null)
         {
@@ -39,6 +41,7 @@ namespace AIWarsIdle.PvP.Services
             _snapshot = snapshot ?? throw new ArgumentNullException(nameof(snapshot));
             _matchmaking = matchmaking ?? throw new ArgumentNullException(nameof(matchmaking));
             _battleSim = battleSim ?? throw new ArgumentNullException(nameof(battleSim));
+            _factionSnapshots = factionSnapshots ?? throw new ArgumentNullException(nameof(factionSnapshots));
             _attacksConfig = attacksConfig ?? throw new ArgumentNullException(nameof(attacksConfig));
             _eventBus = eventBus;
         }
@@ -194,19 +197,7 @@ namespace AIWarsIdle.PvP.Services
 
         private PvpSnapshot BuildBotSnapshot(int playerId)
         {
-            var baseline = _snapshot.BuildSnapshot();
-            var ownedCount = CountOwnedSectors(playerId);
-            var ownerKey = Math.Max(0, playerId - _mapConfig.LocalPlayerId);
-            var multiplier = 0.82 + (ownerKey * 0.06) + (ownedCount * 0.015);
-            var power = baseline.PvpPower * multiplier;
-            if (double.IsNaN(power) || double.IsInfinity(power) || power < 0) power = 0;
-
-            return new PvpSnapshot
-            {
-                PvpPower = power,
-                League = 0,
-                SeasonPoints = 0
-            };
+            return _factionSnapshots.BuildCurrentSnapshot(playerId);
         }
 
         private int CountOwnedSectors(int playerId)
