@@ -135,7 +135,7 @@ namespace AIWarsIdle.PvP.Services
         private int CountOwnedSectors(MapState mapState, int localPlayerId, MapConfig mapConfig)
         {
             if (mapState?.Sectors == null || mapState.Sectors.Length == 0) return 0;
-            if (mapConfig == null) return CountOwnedSectors(mapState, localPlayerId);
+            if (ReferenceEquals(mapConfig, null)) return CountOwnedSectors(mapState, localPlayerId);
 
             var connectedOwnedSectors = MapConnectivityService.BuildHomeConnectedSectorSet(mapState, mapConfig, localPlayerId);
             if (connectedOwnedSectors.Count == 0) return 0;

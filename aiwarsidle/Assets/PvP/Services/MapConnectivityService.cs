@@ -12,7 +12,7 @@ namespace AIWarsIdle.PvP.Services
             var connected = new HashSet<int>();
             if (ownerPlayerId <= 0) return connected;
             if (mapState?.Sectors == null || mapState.Sectors.Length == 0) return connected;
-            if (mapConfig == null) return connected;
+            if (ReferenceEquals(mapConfig, null)) return connected;
 
             var sectorsById = BuildSectorMap(mapState);
             var neighborsBySectorId = BuildNeighborMap(mapConfig);

@@ -7,7 +7,7 @@ namespace AIWarsIdle.GameCore.Services
     {
         public static double CalculatePrestigeThreshold(BalanceConfig config, int prestigeCount)
         {
-            if (config == null) throw new ArgumentNullException(nameof(config));
+            if (ReferenceEquals(config, null)) throw new ArgumentNullException(nameof(config));
             if (prestigeCount < 0) throw new ArgumentOutOfRangeException(nameof(prestigeCount), "Prestige count must be >= 0.");
 
             return config.PrestigeThresholdBase * Math.Pow(config.PrestigeThresholdGrowthFactor, prestigeCount);
@@ -15,7 +15,7 @@ namespace AIWarsIdle.GameCore.Services
 
         public static double CalculateGlobalMultiplier(BalanceConfig config, int permanentUpgradeLevel)
         {
-            if (config == null) throw new ArgumentNullException(nameof(config));
+            if (ReferenceEquals(config, null)) throw new ArgumentNullException(nameof(config));
             if (permanentUpgradeLevel < 0) permanentUpgradeLevel = 0;
             if (permanentUpgradeLevel > config.PermanentUpgradeCap) permanentUpgradeLevel = config.PermanentUpgradeCap;
 
@@ -23,4 +23,3 @@ namespace AIWarsIdle.GameCore.Services
         }
     }
 }
-
