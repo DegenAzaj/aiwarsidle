@@ -1698,7 +1698,7 @@ namespace AIWarsIdle.UI.Pvp
                 : "--:--:--";
 
             var power = snapshotService != null ? snapshotService.BuildSnapshot().PvpPower : 0;
-            var powerText = $"PvpPower {power:0.##}";
+            var powerText = $"{power:0.##}";
             var liveScoreTable = BuildLiveScoreTable(loop);
 
             UpdateExternalAttackHud(attackCountText, regenTimerText);

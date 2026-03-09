@@ -1,6 +1,7 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace AIWarsIdle.UI.Pvp
@@ -10,9 +11,11 @@ namespace AIWarsIdle.UI.Pvp
         [SerializeField] private TMP_Text _attacks;
         [SerializeField] private TMP_Text _matchEnds;
         [SerializeField] private TMP_Text _power;
+        [SerializeField] private TMP_Text _scenePowerText;
         [SerializeField] private TMP_Text _tableTitle;
         [SerializeField] private TMP_Text _liveScoreTable;
         [SerializeField] private Button _powerInfoButton;
+        [SerializeField] private Button _scenePowerInfoButton;
         [SerializeField] private TMP_Text _powerTooltip;
 
         private Action _togglePowerInfo;
@@ -40,11 +43,14 @@ namespace AIWarsIdle.UI.Pvp
 
         private void Awake()
         {
+            ResolveSceneOverrides();
             WireButton();
         }
 
         private void OnValidate()
         {
+            ResolveSceneOverrides();
+
             if (_powerTooltip != null)
             {
                 _powerTooltip.gameObject.SetActive(false);
@@ -54,6 +60,7 @@ namespace AIWarsIdle.UI.Pvp
         public void SetTogglePowerInfo(Action togglePowerInfo)
         {
             _togglePowerInfo = togglePowerInfo;
+            ResolveSceneOverrides();
             WireButton();
         }
 
@@ -70,9 +77,11 @@ namespace AIWarsIdle.UI.Pvp
 
         public void ShowState(string attacks, string matchEnds, string power, string tableTitle, string liveScoreTable, bool infoVisible)
         {
+            ResolveSceneOverrides();
             if (_attacks != null) _attacks.text = attacks;
             if (_matchEnds != null) _matchEnds.text = matchEnds;
             if (_power != null) _power.text = power;
+            if (_scenePowerText != null) _scenePowerText.text = power;
             if (_tableTitle != null) _tableTitle.text = tableTitle;
             if (_liveScoreTable != null) _liveScoreTable.text = ApplyTableHeaderColor(liveScoreTable);
             SetPowerInfoVisible(infoVisible);
@@ -85,10 +94,8 @@ namespace AIWarsIdle.UI.Pvp
 
         private void WireButton()
         {
-            if (_powerInfoButton == null) return;
-
-            _powerInfoButton.onClick.RemoveAllListeners();
-            _powerInfoButton.onClick.AddListener(() => _togglePowerInfo?.Invoke());
+            WireButton(_powerInfoButton);
+            WireButton(_scenePowerInfoButton);
         }
 
         private string ApplyTableHeaderColor(string liveScoreTable)
@@ -124,6 +131,103 @@ namespace AIWarsIdle.UI.Pvp
             var plainHeader = liveScoreTable.Substring(0, plainNewlineIndex);
             var plainRest = liveScoreTable.Substring(plainNewlineIndex + 1);
             return $"<color=#{colorTag}>{plainHeader}</color>\n{plainRest}";
+        }
+
+        private void ResolveSceneOverrides()
+        {
+            _scenePowerText ??= FindTextByName("pvp_power_text");
+
+            if (_scenePowerInfoButton == null)
+            {
+                var askIcon = FindChildByName("ask_ico");
+                if (askIcon != null)
+                {
+                    _scenePowerInfoButton = askIcon.GetComponent<Button>();
+                    _scenePowerInfoButton ??= askIcon.GetComponentInChildren<Button>(true);
+                }
+            }
+        }
+
+        private void WireButton(Button button)
+        {
+            if (button == null) return;
+
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() => _togglePowerInfo?.Invoke());
+        }
+
+        private TMP_Text FindTextByName(string targetName)
+        {
+            if (string.IsNullOrEmpty(targetName)) return null;
+
+            var texts = GetComponentsInChildren<TMP_Text>(true);
+            for (var i = 0; i < texts.Length; i++)
+            {
+                var text = texts[i];
+                if (text != null && string.Equals(text.name, targetName, StringComparison.Ordinal))
+                {
+                    return text;
+                }
+            }
+
+            var scene = gameObject.scene;
+            if (!scene.IsValid() || !scene.isLoaded)
+            {
+                scene = SceneManager.GetActiveScene();
+            }
+
+            var roots = scene.GetRootGameObjects();
+            for (var i = 0; i < roots.Length; i++)
+            {
+                var sceneTexts = roots[i].GetComponentsInChildren<TMP_Text>(true);
+                for (var j = 0; j < sceneTexts.Length; j++)
+                {
+                    var text = sceneTexts[j];
+                    if (text != null && string.Equals(text.name, targetName, StringComparison.Ordinal))
+                    {
+                        return text;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private Transform FindChildByName(string targetName)
+        {
+            if (string.IsNullOrEmpty(targetName)) return null;
+
+            var transforms = GetComponentsInChildren<Transform>(true);
+            for (var i = 0; i < transforms.Length; i++)
+            {
+                var child = transforms[i];
+                if (child != null && string.Equals(child.name, targetName, StringComparison.Ordinal))
+                {
+                    return child;
+                }
+            }
+
+            var scene = gameObject.scene;
+            if (!scene.IsValid() || !scene.isLoaded)
+            {
+                scene = SceneManager.GetActiveScene();
+            }
+
+            var roots = scene.GetRootGameObjects();
+            for (var i = 0; i < roots.Length; i++)
+            {
+                var sceneTransforms = roots[i].GetComponentsInChildren<Transform>(true);
+                for (var j = 0; j < sceneTransforms.Length; j++)
+                {
+                    var child = sceneTransforms[j];
+                    if (child != null && string.Equals(child.name, targetName, StringComparison.Ordinal))
+                    {
+                        return child;
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }

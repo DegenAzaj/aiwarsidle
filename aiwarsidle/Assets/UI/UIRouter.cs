@@ -77,6 +77,7 @@ namespace AIWarsIdle.UI
         private Coroutine _reapplyTabVisualsCoroutine;
         private readonly List<TMP_Text> _attackTexts = new();
         private readonly List<TMP_Text> _regenTexts = new();
+        private readonly List<TMP_Text> _pvpPowerTexts = new();
         private float _sharedHudCarry;
 
         public GameObject LobbyRoot { get => _lobbyRoot; set => _lobbyRoot = value; }
@@ -177,6 +178,7 @@ namespace AIWarsIdle.UI
 
             _attackTexts.Clear();
             _regenTexts.Clear();
+            _pvpPowerTexts.Clear();
         }
 
         private void Update()
@@ -287,7 +289,7 @@ namespace AIWarsIdle.UI
             var attacks = loop?.PvpAttacks;
             if (attacks == null)
             {
-                ApplySharedHud(string.Empty, string.Empty);
+                ApplySharedHud(string.Empty, string.Empty, string.Empty);
                 return;
             }
 
@@ -300,11 +302,13 @@ namespace AIWarsIdle.UI
             var regenText = max > 0 && remaining < max && nextRegenAt > now
                 ? FormatClockDuration(nextRegenAt - now)
                 : string.Empty;
+            var power = loop.Snapshot != null ? loop.Snapshot.BuildSnapshot().PvpPower : 0;
+            var powerText = $"{power:0.##}";
 
-            ApplySharedHud(countText, regenText);
+            ApplySharedHud(countText, regenText, powerText);
         }
 
-        private void ApplySharedHud(string countText, string regenText)
+        private void ApplySharedHud(string countText, string regenText, string powerText)
         {
             for (var i = 0; i < _attackTexts.Count; i++)
             {
@@ -315,11 +319,16 @@ namespace AIWarsIdle.UI
             {
                 if (_regenTexts[i] != null) _regenTexts[i].text = regenText;
             }
+
+            for (var i = 0; i < _pvpPowerTexts.Count; i++)
+            {
+                if (_pvpPowerTexts[i] != null) _pvpPowerTexts[i].text = powerText;
+            }
         }
 
         private void EnsureSharedHudRefs()
         {
-            if (_attackTexts.Count > 0 && _regenTexts.Count > 0) return;
+            if (_attackTexts.Count > 0 && _regenTexts.Count > 0 && _pvpPowerTexts.Count > 0) return;
 
             var attacksBarRoot = FindNamedChildInScene("res_bar");
             if (_attackTexts.Count == 0 && attacksBarRoot != null)
@@ -339,6 +348,15 @@ namespace AIWarsIdle.UI
                     regenRoot,
                     _regenTexts,
                     text => text.name == "Text (TMP)");
+            }
+
+            if (_pvpPowerTexts.Count == 0)
+            {
+                var powerRoot = FindNamedChildInScene("PvP_power");
+                CollectTextComponents(
+                    powerRoot,
+                    _pvpPowerTexts,
+                    text => text.name == "pvp_power_text");
             }
         }
 

@@ -1221,7 +1221,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 00,00
+  m_text: 43.2
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6f9d253c918824659b9426046aca78cc, type: 2}
   m_sharedMaterial: {fileID: -8394420552937558723, guid: 6f9d253c918824659b9426046aca78cc, type: 2}
@@ -2026,7 +2026,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 0:50:57
+  m_text: 0:27:42
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f211043b972fe4f98b5c94e67819fdf3, type: 2}
   m_sharedMaterial: {fileID: -3783615141150169689, guid: f211043b972fe4f98b5c94e67819fdf3, type: 2}
@@ -9941,6 +9941,7 @@ GameObject:
   - component: {fileID: 1453185405}
   - component: {fileID: 1453185404}
   - component: {fileID: 1453185403}
+  - component: {fileID: 1453185406}
   m_Layer: 5
   m_Name: ask_ico
   m_TagString: Untagged
@@ -10035,6 +10036,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1453185401}
   m_CullTransparentMesh: 1
+--- !u!114 &1453185406
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1453185401}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 1453185404}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &1486528807
 GameObject:
   m_ObjectHideFlags: 0
@@ -11006,6 +11051,22 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: 6d4d96e25f43c4c0fa72dd71850408d7, type: 3}
+    - target: {fileID: 1103, guid: 5b0fb4185db34a98b5dfd8f3cbdf19a1, type: 3}
+      propertyPath: m_Color.a
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1103, guid: 5b0fb4185db34a98b5dfd8f3cbdf19a1, type: 3}
+      propertyPath: m_Color.b
+      value: 0.3137255
+      objectReference: {fileID: 0}
+    - target: {fileID: 1103, guid: 5b0fb4185db34a98b5dfd8f3cbdf19a1, type: 3}
+      propertyPath: m_Color.g
+      value: 0.4627451
+      objectReference: {fileID: 0}
+    - target: {fileID: 1103, guid: 5b0fb4185db34a98b5dfd8f3cbdf19a1, type: 3}
+      propertyPath: m_Color.r
+      value: 0.32156864
+      objectReference: {fileID: 0}
     - target: {fileID: 1200, guid: 5b0fb4185db34a98b5dfd8f3cbdf19a1, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -11044,7 +11105,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1303, guid: 5b0fb4185db34a98b5dfd8f3cbdf19a1, type: 3}
       propertyPath: m_text
-      value: 31:53:59
+      value: 29:20:55
       objectReference: {fileID: 0}
     - target: {fileID: 1303, guid: 5b0fb4185db34a98b5dfd8f3cbdf19a1, type: 3}
       propertyPath: m_fontSize
@@ -11150,21 +11211,21 @@ PrefabInstance:
       propertyPath: m_text
       value: '<mspace=0.58em><color=#34FF1E>PLAYER           POWER SCORE</color>
 
-        <color=#66B857>Player
-        3          60.4     7</color>
-
-        <color=#E8594A>You               49.2    
-        6</color>
-
-        <color=#2E9EDE>Player 4          54.4     5</color>
-
         <color=#DB4FA1>Player
-        6          59.1     4</color>
+        6           141    25</color>
 
-        <color=#7D6EE0>Player 5          54.9    
+        <color=#2E9EDE>Player 4          64.7    
+        9</color>
+
+        <color=#7D6EE0>Player 5          69.6     8</color>
+
+        <color=#66B857>Player
+        3          39.8     4</color>
+
+        <color=#F2A83B>Player 2          36.6    
         4</color>
 
-        <color=#F2A83B>Player 2          46.2     4</color></mspace>'
+        <color=#E8594A>You               43.2     1</color></mspace>'
       objectReference: {fileID: 0}
     - target: {fileID: 1603, guid: 5b0fb4185db34a98b5dfd8f3cbdf19a1, type: 3}
       propertyPath: m_fontSize
@@ -17899,7 +17960,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 0/5
+  m_text: 2/5
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f211043b972fe4f98b5c94e67819fdf3, type: 2}
   m_sharedMaterial: {fileID: -3783615141150169689, guid: f211043b972fe4f98b5c94e67819fdf3, type: 2}
