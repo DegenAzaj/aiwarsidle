@@ -889,7 +889,7 @@ namespace AIWarsIdle.Tests.EditMode
         }
 
         [Test]
-        public void DebugResetMatch_RestoresPlayerAndBotAttackChargesToMax()
+        public void DebugResetMatch_RestoresPlayerAndBotAttackChargesToMax_WithoutAllowingImmediateSameBucketBotTurn()
         {
             var state = new GameState { PvpAttacksRemaining = 0, PrestigeCount = 1 };
             state.MapState.Sectors = new[]
@@ -967,7 +967,7 @@ namespace AIWarsIdle.Tests.EditMode
                 if (state.MapState.Sectors[i].OwnerPlayerId == 3) ownedByBotAfterSameBucket++;
             }
 
-            Assert.Greater(ownedByBotAfterSameBucket, 2);
+            Assert.AreEqual(2, ownedByBotAfterSameBucket);
         }
 
         [Test]

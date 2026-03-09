@@ -74,6 +74,12 @@ namespace AIWarsIdle.PvP.Services
                 state.Remaining = Math.Max(0, _attacksConfig.MaxAttacks);
                 state.LastRegenUnixSeconds = 0;
                 state.NextRegenAtUnixSeconds = 0;
+
+                var interval = GetDecisionIntervalSeconds(playerId);
+                if (interval > 0)
+                {
+                    _lastDecisionBucketByPlayerId[playerId] = nowUnixSeconds / interval;
+                }
             }
         }
 
