@@ -491,15 +491,15 @@ Zasada: UI jest cienką warstwą, tylko prezentacja + input → wywołania serwi
   * mały udział z produkcji (soft-cap)
   * subskrypcja: ×2 `ProductionPps`, **nie** zwiększa `PvpPower` bezpośrednio
 * [x] Powiadomienie o wyniku + zmiana koloru sektora
-* [ ] Boty wykonują akcje okresowo na tych samych zasadach co gracz
-* [ ] Boty mają profile zachowań: agresywny / ekspansywny / defensywny
+* [x] Boty wykonują akcje okresowo na tych samych zasadach co gracz
+* [x] Boty mają profile zachowań: agresywny / ekspansywny / defensywny
 
 **TESTS**
-* [ ] PlayMode: atak sektora zmienia ownera i aktualizuje UI
-* [ ] PlayMode: Overclock aktywny przed atakiem wpływa na wynik/preview (w granicach widełek)
-* [ ] PlayMode: klik info/tooltip pokazuje i chowa opis `PvpPower` (bez crasha)
-* [ ] PlayMode: `Home Sector` jest oznaczony i nie da się go zaatakować
-* [ ] PlayMode: bot wykonuje ruch po swoim ticku i mapa się odświeża
+* [x] PlayMode: atak sektora zmienia ownera i aktualizuje UI
+* [x] PlayMode: Overclock aktywny przed atakiem wpływa na wynik/preview (w granicach widełek)
+* [x] PlayMode: klik info/tooltip pokazuje i chowa opis `PvpPower` (bez crasha)
+* [x] PlayMode: `Home Sector` jest oznaczony i nie da się go zaatakować
+* [x] PlayMode: bot wykonuje ruch po swoim ticku i mapa się odświeża
 
 ## STORY 11.4b — PvP HUD + statusy (ataki/regen/season)
 
@@ -513,9 +513,9 @@ Zasada: UI jest cienką warstwą, tylko prezentacja + input → wywołania serwi
   * powód braku możliwości ataku (brak adjacency, home sector, sektor już jest Twój, brak ataków, cooldown, season reset)
 
 **TESTS**
-* [ ] PlayMode: po ataku zmienia się `PvPAttacksRemaining` i HUD się odświeża
-* [ ] PlayMode: regen ataków aktualizuje HUD po upływie czasu
-* [ ] PlayMode: cooldown sektora blokuje atak i UI pokazuje powód
+* [x] PlayMode: po ataku zmienia się `PvPAttacksRemaining` i HUD się odświeża
+* [x] PlayMode: regen ataków aktualizuje HUD po upływie czasu
+* [x] PlayMode: cooldown sektora blokuje atak i UI pokazuje powód
 
 ## STORY 11.5 — Sklep + Ads + Sub
 

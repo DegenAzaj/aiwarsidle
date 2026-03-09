@@ -12,6 +12,17 @@ namespace AIWarsIdle.UI.Pvp
     [ExecuteAlways]
     public sealed class HexGridRenderer : MonoBehaviour
     {
+        private const int ScoreboardPlayerColumnWidth = 14;
+        private const int ScoreboardPowerColumnWidth = 7;
+        private const int ScoreboardScoreColumnWidth = 5;
+
+        private enum HudSourceMode
+        {
+            Generated = 0,
+            Prefab = 1,
+            SceneInstance = 2
+        }
+
         private const string GeneratedRootName = "__hex_grid_generated";
         private const string GeneratedPanelName = "__hex_grid_panel";
         private const string GeneratedHudName = "__hex_grid_hud";
@@ -20,6 +31,7 @@ namespace AIWarsIdle.UI.Pvp
         private const string GeneratedFrontierName = "__hex_grid_frontier";
         private const string GeneratedFrontierGlowName = "__hex_grid_frontier_glow";
         private const string GeneratedNetworkName = "__hex_grid_network";
+        private const string SceneHudName = "PvpHexGridHud";
 
         [Header("Context")]
         [SerializeField] private PvpScreenContext _context;
@@ -52,6 +64,11 @@ namespace AIWarsIdle.UI.Pvp
         [Header("Editor Preview")]
         [SerializeField] private bool _previewInEditMode = true;
 
+        [Header("HUD")]
+        [SerializeField] private HudSourceMode _hudSourceMode = HudSourceMode.SceneInstance;
+        [SerializeField] private PvpHudTemplateView _hudPrefab;
+        [SerializeField] private PvpHudTemplateView _sceneHud;
+
         [Header("Detail Panel")]
         [SerializeField, Min(0f)] private float _detailPanelHorizontalOffset = 164f;
         [SerializeField, Min(0f)] private float _detailPanelVerticalOffset = 104f;
@@ -61,7 +78,8 @@ namespace AIWarsIdle.UI.Pvp
         private readonly Dictionary<int, HexCellView> _cellsBySectorId = new();
         private RectTransform _generatedRoot;
         private SectorDetailPanelView _detailPanel;
-        private PvpHudView _hud;
+        private PvpHudTemplateView _hud;
+        private bool _ownsHudInstance;
         private PvpToastView _toast;
         private readonly List<TMP_Text> _externalAttacksTexts = new();
         private readonly List<TMP_Text> _externalRegenTexts = new();
@@ -103,6 +121,7 @@ namespace AIWarsIdle.UI.Pvp
             _cellsBySectorId.Clear();
             _detailPanel = null;
             _hud = null;
+            _ownsHudInstance = false;
             _toast = null;
             _externalAttacksTexts.Clear();
             _externalRegenTexts.Clear();
@@ -476,15 +495,56 @@ namespace AIWarsIdle.UI.Pvp
             return _detailPanel;
         }
 
-        private PvpHudView GetOrCreateHud()
+        private PvpHudTemplateView GetOrCreateHud()
         {
             if (_hud != null) return _hud;
+
+            if (_hudSourceMode == HudSourceMode.SceneInstance)
+            {
+                if (_sceneHud == null)
+                {
+                    var sceneHud = transform.Find(SceneHudName);
+                    if (sceneHud != null)
+                    {
+                        _sceneHud = sceneHud.GetComponent<PvpHudTemplateView>();
+                    }
+                }
+
+                if (_sceneHud != null)
+                {
+                    var generatedHud = transform.Find(GeneratedHudName);
+                    if (generatedHud != null)
+                    {
+                        DestroyObject(generatedHud.gameObject);
+                    }
+
+                    _hud = _sceneHud;
+                    _hud.SetTogglePowerInfo(TogglePowerInfoTooltip);
+                    _ownsHudInstance = false;
+                    return _hud;
+                }
+            }
 
             var existing = transform.Find(GeneratedHudName);
             if (existing != null)
             {
-                _hud = existing.GetComponent<PvpHudView>();
-                if (_hud != null) return _hud;
+                _hud = existing.GetComponent<PvpHudTemplateView>();
+                if (_hud != null)
+                {
+                    _hud.SetTogglePowerInfo(TogglePowerInfoTooltip);
+                    _ownsHudInstance = true;
+                    return _hud;
+                }
+            }
+
+            if (_hudSourceMode == HudSourceMode.Prefab && _hudPrefab != null)
+            {
+                _hud = Instantiate(_hudPrefab, transform, false);
+                _hud.name = GeneratedHudName;
+                HideEditorObject(_hud.gameObject);
+                _hud.SetTogglePowerInfo(TogglePowerInfoTooltip);
+                _ownsHudInstance = true;
+                return _hud;
             }
 
             var hudGo = new GameObject(
@@ -492,7 +552,7 @@ namespace AIWarsIdle.UI.Pvp
                 typeof(RectTransform),
                 typeof(CanvasRenderer),
                 typeof(Image),
-                typeof(PvpHudView));
+                typeof(PvpHudTemplateView));
             hudGo.transform.SetParent(transform, worldPositionStays: false);
             HideEditorObject(hudGo);
 
@@ -500,22 +560,23 @@ namespace AIWarsIdle.UI.Pvp
             rect.anchorMin = new Vector2(0f, 1f);
             rect.anchorMax = new Vector2(0f, 1f);
             rect.pivot = new Vector2(0f, 1f);
-            rect.sizeDelta = new Vector2(320f, 190f);
+            rect.sizeDelta = new Vector2(360f, 270f);
             rect.anchoredPosition = new Vector2(12f, -12f);
 
             var bg = hudGo.GetComponent<Image>();
             bg.color = new Color32(18, 24, 34, 224);
 
-            _hud = hudGo.GetComponent<PvpHudView>();
+            _hud = hudGo.GetComponent<PvpHudTemplateView>();
             _hud.Initialize(
                 CreateHudText(rect, "attacks", new Vector2(16f, -18f), 22f),
-                CreateHudText(rect, "league", new Vector2(16f, -52f), 18f),
-                CreateHudText(rect, "map_reset", new Vector2(16f, -82f), 18f),
-                CreateHudText(rect, "power", new Vector2(16f, -112f), 18f),
-                CreateHudText(rect, "hint", new Vector2(16f, -142f), 14f),
-                CreatePanelSecondaryButton(rect, "power_info_button", new Vector2(240f, 138f), "PvpPower ?"),
+                CreateHudText(rect, "match_ends", new Vector2(16f, -50f), 18f),
+                CreateHudText(rect, "power", new Vector2(16f, -80f), 18f),
+                CreateHudText(rect, "table_title", new Vector2(16f, -112f), 14f),
+                CreateHudTable(rect, "live_score_table", new Vector2(16f, -138f), 118f),
+                CreatePanelSecondaryButton(rect, "power_info_button", new Vector2(240f, 220f), "PvpPower ?"),
                 CreateHudTooltip(rect),
                 TogglePowerInfoTooltip);
+            _ownsHudInstance = true;
             return _hud;
         }
 
@@ -577,7 +638,7 @@ namespace AIWarsIdle.UI.Pvp
             }
 
             var hud = transform.Find(GeneratedHudName);
-            if (hud != null)
+            if (hud != null && _ownsHudInstance)
             {
                 DestroyObject(hud.gameObject);
             }
@@ -1356,6 +1417,18 @@ namespace AIWarsIdle.UI.Pvp
             return text;
         }
 
+        private TMP_Text CreateHudTable(RectTransform parent, string name, Vector2 anchoredPosition, float height)
+        {
+            var text = CreateHudText(parent, name, anchoredPosition, 13f);
+            var rect = text.rectTransform;
+            rect.sizeDelta = new Vector2(-32f, height);
+            text.alignment = TextAlignmentOptions.TopLeft;
+            text.textWrappingMode = TextWrappingModes.NoWrap;
+            text.overflowMode = TextOverflowModes.Overflow;
+            text.lineSpacing = 2f;
+            return text;
+        }
+
         private TMP_Text CreateHudTooltip(RectTransform parent)
         {
             var go = CreatePanelTextObject(parent, "power_tooltip");
@@ -1609,7 +1682,6 @@ namespace AIWarsIdle.UI.Pvp
             }
 
             var attacks = loop.PvpAttacks;
-            var league = loop.League;
             var snapshotService = loop.Snapshot;
 
             var now = loop.NowUnixSeconds;
@@ -1621,27 +1693,20 @@ namespace AIWarsIdle.UI.Pvp
                 ? FormatClockDuration(nextRegenAt - now)
                 : string.Empty;
 
-            var leagueText = league != null
-                ? $"League {loop.State.League}  |  Season points {loop.State.SeasonPoints}"
-                : "League: unavailable";
-
-            var mapResetText = loop.Map != null
-                ? $"Map resets in {FormatDuration(Math.Max(0, loop.Map.GetCurrentSeasonEndsAtUnixSeconds(now) - now))}"
-                : "Map reset: unavailable";
+            var matchEndsText = loop.Map != null
+                ? FormatClockDuration(Math.Max(0, loop.Map.GetCurrentSeasonEndsAtUnixSeconds(now) - now))
+                : "--:--:--";
 
             var power = snapshotService != null ? snapshotService.BuildSnapshot().PvpPower : 0;
             var powerText = $"PvpPower {power:0.##}";
-
-            var hint = league != null
-                ? $"League season ends in {FormatDuration(Math.Max(0, league.GetCurrentSeasonEndsAtUnixSeconds(now) - now))}"
-                : "Tap PvpPower for breakdown";
+            var liveScoreTable = BuildLiveScoreTable(loop);
 
             UpdateExternalAttackHud(attackCountText, regenTimerText);
             hud.ShowState(_externalAttacksTexts.Count > 0 ? string.Empty : $"Attacks: {attackCountText}",
-                leagueText,
-                mapResetText,
+                matchEndsText,
                 powerText,
-                hint,
+                "Live score",
+                liveScoreTable,
                 _powerInfoVisible);
         }
 
@@ -1964,6 +2029,148 @@ namespace AIWarsIdle.UI.Pvp
             return false;
         }
 
+        private static string BuildLiveScoreTable(Bootstrap.GameLoop loop)
+        {
+            var entries = BuildLiveScoreEntries(loop);
+            if (entries.Count == 0)
+            {
+                return "<mspace=0.58em>PLAYER       POWER SCORE\nNo active factions</mspace>";
+            }
+
+            var lines = new string[entries.Count + 1];
+            lines[0] = FormatLiveScoreHeaderRow();
+            for (var i = 0; i < entries.Count; i++)
+            {
+                var entry = entries[i];
+                lines[i + 1] = FormatLiveScoreRow(
+                    entry.PlayerId,
+                    entry.Name,
+                    TrimCell(FormatPowerCell(entry.PvpPower), 6),
+                    entry.Score.ToString());
+            }
+
+            return $"<mspace=0.58em>{string.Join("\n", lines)}</mspace>";
+        }
+
+        private static List<LiveScoreEntry> BuildLiveScoreEntries(Bootstrap.GameLoop loop)
+        {
+            if (loop == null) return new List<LiveScoreEntry>();
+            return BuildLiveScoreEntries(loop.MapConfig, loop.State?.MapState, loop.FactionSnapshots);
+        }
+
+        private static List<LiveScoreEntry> BuildLiveScoreEntries(MapConfig mapConfig, MapState mapState, FactionSnapshotService factionSnapshots)
+        {
+            var entries = new List<LiveScoreEntry>();
+            if (mapConfig == null || mapState == null || factionSnapshots == null) return entries;
+
+            var playerIds = CollectTrackedPlayerIds(mapConfig, mapState);
+            for (var i = 0; i < playerIds.Count; i++)
+            {
+                var playerId = playerIds[i];
+                if (playerId <= 0) continue;
+
+                var snapshot = factionSnapshots.BuildCurrentSnapshot(playerId);
+                entries.Add(new LiveScoreEntry(
+                    playerId,
+                    GetPlayerDisplayName(mapConfig, playerId),
+                    snapshot?.PvpPower ?? 0,
+                    CountOwnedSectors(mapState, playerId)));
+            }
+
+            entries.Sort((a, b) =>
+            {
+                var scoreCompare = b.Score.CompareTo(a.Score);
+                if (scoreCompare != 0) return scoreCompare;
+
+                var powerCompare = b.PvpPower.CompareTo(a.PvpPower);
+                if (powerCompare != 0) return powerCompare;
+
+                return a.PlayerId.CompareTo(b.PlayerId);
+            });
+
+            return entries;
+        }
+
+        private static List<int> CollectTrackedPlayerIds(MapConfig mapConfig, MapState mapState)
+        {
+            var playerIds = new List<int>();
+            if (mapConfig == null) return playerIds;
+
+            var homeSectorIds = mapConfig.GetEffectiveHomeSectorIds();
+            for (var i = 0; i < homeSectorIds.Length; i++)
+            {
+                var playerId = mapConfig.GetHomeOwnerPlayerId(homeSectorIds[i]);
+                if (playerId > 0 && !playerIds.Contains(playerId))
+                {
+                    playerIds.Add(playerId);
+                }
+            }
+
+            var sectors = mapState?.Sectors ?? Array.Empty<SectorState>();
+            for (var i = 0; i < sectors.Length; i++)
+            {
+                var sector = sectors[i];
+                if (sector == null) continue;
+                if (sector.OwnerPlayerId <= 0) continue;
+                if (!playerIds.Contains(sector.OwnerPlayerId))
+                {
+                    playerIds.Add(sector.OwnerPlayerId);
+                }
+            }
+
+            return playerIds;
+        }
+
+        private static int CountOwnedSectors(MapState mapState, int playerId)
+        {
+            if (mapState?.Sectors == null || playerId <= 0) return 0;
+
+            var owned = 0;
+            for (var i = 0; i < mapState.Sectors.Length; i++)
+            {
+                var sector = mapState.Sectors[i];
+                if (sector == null) continue;
+                if (sector.OwnerPlayerId == playerId) owned++;
+            }
+
+            return owned;
+        }
+
+        private static string GetPlayerDisplayName(MapConfig mapConfig, int playerId)
+        {
+            if (mapConfig != null && playerId == mapConfig.LocalPlayerId) return "You";
+            return $"Player {playerId}";
+        }
+
+        private static string FormatLiveScoreRow(string player, string power, string score)
+        {
+            return $"{player} {TrimCell(power, ScoreboardPowerColumnWidth).PadLeft(ScoreboardPowerColumnWidth)} {TrimCell(score, ScoreboardScoreColumnWidth).PadLeft(ScoreboardScoreColumnWidth)}";
+        }
+
+        private static string FormatLiveScoreRow(int playerId, string playerName, string power, string score)
+        {
+            var row = $"{TrimCell(playerName, ScoreboardPlayerColumnWidth).PadRight(ScoreboardPlayerColumnWidth)} {TrimCell(power, ScoreboardPowerColumnWidth).PadLeft(ScoreboardPowerColumnWidth)} {TrimCell(score, ScoreboardScoreColumnWidth).PadLeft(ScoreboardScoreColumnWidth)}";
+            var color = HexGridPalette.GetFrontlineColor(playerId, Color.white);
+            return $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{row}</color>";
+        }
+
+        private static string FormatLiveScoreHeaderRow()
+        {
+            return $"{TrimCell("PLAYER", ScoreboardPlayerColumnWidth).PadRight(ScoreboardPlayerColumnWidth)} {TrimCell("POWER", ScoreboardPowerColumnWidth).PadLeft(ScoreboardPowerColumnWidth)} {TrimCell("SCORE", ScoreboardScoreColumnWidth).PadLeft(ScoreboardScoreColumnWidth)}";
+        }
+
+        private static string FormatPowerCell(double power)
+        {
+            if (double.IsNaN(power) || double.IsInfinity(power)) return "0";
+            return power >= 100 ? power.ToString("0") : power.ToString("0.0");
+        }
+
+        private static string TrimCell(string value, int maxChars)
+        {
+            if (string.IsNullOrEmpty(value) || maxChars <= 0) return string.Empty;
+            return value.Length <= maxChars ? value : value.Substring(0, maxChars);
+        }
+
         private readonly struct GridSnapshot
         {
             public readonly int Radius;
@@ -2021,6 +2228,22 @@ namespace AIWarsIdle.UI.Pvp
             public string ActionLabel;
             public string StrategyLabel;
             public bool CanAttack;
+        }
+
+        private readonly struct LiveScoreEntry
+        {
+            public readonly int PlayerId;
+            public readonly string Name;
+            public readonly double PvpPower;
+            public readonly int Score;
+
+            public LiveScoreEntry(int playerId, string name, double pvpPower, int score)
+            {
+                PlayerId = playerId;
+                Name = name ?? string.Empty;
+                PvpPower = pvpPower;
+                Score = score;
+            }
         }
     }
 
@@ -2497,70 +2720,6 @@ namespace AIWarsIdle.UI.Pvp
             if (_strategyButtonLabel != null) _strategyButtonLabel.text = detailState.StrategyLabel;
             if (_actionButton != null) _actionButton.interactable = detailState.CanAttack;
             if (_buttonLabel != null) _buttonLabel.text = detailState.ActionLabel;
-        }
-    }
-
-    internal sealed class PvpHudView : MonoBehaviour
-    {
-        private TMP_Text _attacks;
-        private TMP_Text _league;
-        private TMP_Text _mapReset;
-        private TMP_Text _power;
-        private TMP_Text _hint;
-        private Button _powerInfoButton;
-        private TMP_Text _powerTooltip;
-        private Action _togglePowerInfo;
-
-        public void Initialize(
-            TMP_Text attacks,
-            TMP_Text league,
-            TMP_Text mapReset,
-            TMP_Text power,
-            TMP_Text hint,
-            Button powerInfoButton,
-            TMP_Text powerTooltip,
-            Action togglePowerInfo)
-        {
-            _attacks = attacks;
-            _league = league;
-            _mapReset = mapReset;
-            _power = power;
-            _hint = hint;
-            _powerInfoButton = powerInfoButton;
-            _powerTooltip = powerTooltip;
-            _togglePowerInfo = togglePowerInfo;
-
-            if (_powerInfoButton != null)
-            {
-                _powerInfoButton.onClick.RemoveAllListeners();
-                _powerInfoButton.onClick.AddListener(() => _togglePowerInfo?.Invoke());
-            }
-        }
-
-        public void ShowPreview(int count, int radius, bool infoVisible)
-        {
-            ShowState(
-                $"Preview map: {count} hexes",
-                $"Radius: {radius}",
-                "Runtime PvP HUD appears in play mode.",
-                "PvpPower preview unavailable.",
-                "Tap PvpPower for breakdown",
-                infoVisible);
-        }
-
-        public void ShowState(string attacks, string league, string mapReset, string power, string hint, bool infoVisible)
-        {
-            if (_attacks != null) _attacks.text = attacks;
-            if (_league != null) _league.text = league;
-            if (_mapReset != null) _mapReset.text = mapReset;
-            if (_power != null) _power.text = power;
-            if (_hint != null) _hint.text = hint;
-            SetPowerInfoVisible(infoVisible);
-        }
-
-        public void SetPowerInfoVisible(bool visible)
-        {
-            if (_powerTooltip != null) _powerTooltip.gameObject.SetActive(visible);
         }
     }
 
