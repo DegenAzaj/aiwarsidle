@@ -133,6 +133,14 @@ namespace AIWarsIdle.PvP.Config
         [Min(0.01f)]
         public float NeutralPowerMaxMultiplier = 0.65f;
 
+        [Range(0f, 1f)]
+        [Tooltip("Power factor applied to neutral sectors adjacent to the attacker's own home. 1 disables distance-based easing.")]
+        public float NeutralPowerHomeDistanceMinFactor = 0.6f;
+
+        [Range(0f, 1f)]
+        [Tooltip("Additional factor gained per extra graph step away from the attacker's own home, capped at 1.")]
+        public float NeutralPowerHomeDistanceStepFactor = 0.2f;
+
         [Header("Rewards (MVP)")]
         [Min(0)]
         public double WinSoftReward = 50;
@@ -225,6 +233,14 @@ namespace AIWarsIdle.PvP.Config
             if (NeutralPowerMinMultiplier > NeutralPowerMaxMultiplier)
             {
                 throw new InvalidOperationException($"{nameof(NeutralPowerMinMultiplier)} must be <= {nameof(NeutralPowerMaxMultiplier)}.");
+            }
+            if (float.IsNaN(NeutralPowerHomeDistanceMinFactor) || float.IsInfinity(NeutralPowerHomeDistanceMinFactor) || NeutralPowerHomeDistanceMinFactor < 0f || NeutralPowerHomeDistanceMinFactor > 1f)
+            {
+                throw new InvalidOperationException($"{nameof(NeutralPowerHomeDistanceMinFactor)} must be finite and in range 0..1.");
+            }
+            if (float.IsNaN(NeutralPowerHomeDistanceStepFactor) || float.IsInfinity(NeutralPowerHomeDistanceStepFactor) || NeutralPowerHomeDistanceStepFactor < 0f || NeutralPowerHomeDistanceStepFactor > 1f)
+            {
+                throw new InvalidOperationException($"{nameof(NeutralPowerHomeDistanceStepFactor)} must be finite and in range 0..1.");
             }
 
             ValidateFiniteNonNegativeOrThrow(WinSoftReward, nameof(WinSoftReward));

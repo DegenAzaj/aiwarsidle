@@ -17,6 +17,8 @@ MonoBehaviour:
   LocalPlayerId: 1
   HomeSectorId: 0
   HomeSectorStability: 100
+  HomeSectorIds: 
+  HomeSectorOwnerPlayerIds: 
   SectorDefinitions: []
   EnforceSectorCountRange: 1
   MinSectorCount: 20
@@ -34,8 +36,10 @@ MonoBehaviour:
   SectorAttackCooldownSeconds: 0
   BotPowerMinMultiplier: 0.8
   BotPowerMaxMultiplier: 1.2
-  NeutralPowerMinMultiplier: 0.45
-  NeutralPowerMaxMultiplier: 0.65
+  NeutralPowerMinMultiplier: 0.3
+  NeutralPowerMaxMultiplier: 0.5
+  NeutralPowerHomeDistanceMinFactor: 0.6
+  NeutralPowerHomeDistanceStepFactor: 0.2
   WinSoftReward: 50
   LoseSoftReward: 10
   WinSeasonPoints: 10

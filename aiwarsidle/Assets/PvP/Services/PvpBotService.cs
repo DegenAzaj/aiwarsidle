@@ -154,7 +154,7 @@ namespace AIWarsIdle.PvP.Services
             if (sector == null) return;
 
             var attacker = BuildBotSnapshot(playerId);
-            var defender = _matchmaking.GetDefenderSnapshot(attacker, sector, MixSeed(seed, 101));
+            var defender = _matchmaking.GetDefenderSnapshot(attacker, sector, MixSeed(seed, 101), attackerPlayerId: playerId);
             var modifiers = BuildCombatModifiers(playerId, sector.OwnerPlayerId, sectorId);
             var battle = _battleSim.Simulate(
                 attacker.PvpPower,

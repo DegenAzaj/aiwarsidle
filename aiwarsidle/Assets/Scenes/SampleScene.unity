@@ -1767,7 +1767,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 1:54:22
+  m_text: 0:42:40
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f211043b972fe4f98b5c94e67819fdf3, type: 2}
   m_sharedMaterial: {fileID: -3783615141150169689, guid: f211043b972fe4f98b5c94e67819fdf3, type: 2}
@@ -3526,11 +3526,14 @@ MonoBehaviour:
   _showConnectivityMarkers: 1
   _showLocalFrontlineGlow: 1
   _localFrontlineGlowAlpha: 0.3
-  _localFrontlineGlowThickness: 10
+  _localFrontlineGlowThickness: 15
   _localFrontlineGlowPulseSpeed: 0.35
-  _localFrontlineGlowPulseDepth: 0.3
+  _localFrontlineGlowPulseDepth: 0.8
   _refreshIntervalSeconds: 0.25
   _previewInEditMode: 1
+  _detailPanelHorizontalOffset: 164
+  _detailPanelVerticalOffset: 104
+  _detailPanelEdgePadding: 12
 --- !u!114 &567681726
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16082,6 +16085,8 @@ MonoBehaviour:
     InactiveAlpha: 0.1
   _defaultRoute: 1
   _autoEnterOnEnable: 1
+  _bootstrapper: {fileID: 0}
+  _sharedHudRefreshIntervalSeconds: 0.25
 --- !u!1 &3185111611880551026
 GameObject:
   m_ObjectHideFlags: 0
@@ -16626,7 +16631,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 0/5
+  m_text: 1/5
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f211043b972fe4f98b5c94e67819fdf3, type: 2}
   m_sharedMaterial: {fileID: -3783615141150169689, guid: f211043b972fe4f98b5c94e67819fdf3, type: 2}

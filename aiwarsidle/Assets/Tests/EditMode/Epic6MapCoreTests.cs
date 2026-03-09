@@ -798,6 +798,8 @@ namespace AIWarsIdle.Tests.EditMode
             var mapCfg = CreateSmallMapConfig(botMult: 1.0f);
             mapCfg.NeutralPowerMinMultiplier = 0.5f;
             mapCfg.NeutralPowerMaxMultiplier = 0.5f;
+            mapCfg.NeutralPowerHomeDistanceMinFactor = 0.6f;
+            mapCfg.NeutralPowerHomeDistanceStepFactor = 0.2f;
             mapCfg.ValidateOrThrow();
 
             var state = new GameState();
@@ -819,11 +821,35 @@ namespace AIWarsIdle.Tests.EditMode
             var neutralSector = new SectorState { SectorId = 1, OwnerPlayerId = 0, Stability = 0f };
             var botSector = new SectorState { SectorId = 2, OwnerPlayerId = 2, Stability = 0f };
 
-            var neutral = matchmaking.GetDefenderSnapshot(attacker, neutralSector, seed: 1);
+            var neutral = matchmaking.GetDefenderSnapshot(attacker, neutralSector, seed: 1, attackerPlayerId: 1);
             var bot = matchmaking.GetDefenderSnapshot(attacker, botSector, seed: 1);
 
-            Assert.AreEqual(50d, neutral.PvpPower, 1e-9);
+            Assert.AreEqual(30d, neutral.PvpPower, 1e-9);
             Assert.Greater(bot.PvpPower, neutral.PvpPower);
+        }
+
+        [Test]
+        public void NeutralSector_CloserToPlayersHome_Uses_Lower_DefenderPower()
+        {
+            var mapCfg = CreateSmallMapConfig(botMult: 1.0f);
+            mapCfg.NeutralPowerMinMultiplier = 0.5f;
+            mapCfg.NeutralPowerMaxMultiplier = 0.5f;
+            mapCfg.NeutralPowerHomeDistanceMinFactor = 0.6f;
+            mapCfg.NeutralPowerHomeDistanceStepFactor = 0.2f;
+            mapCfg.ValidateOrThrow();
+
+            var matchmaking = new MatchmakingService(mapCfg);
+            var attacker = new PvpSnapshot { PvpPower = 100 };
+
+            var nearNeutral = new SectorState { SectorId = 1, OwnerPlayerId = 0, Stability = 0f };
+            var farNeutral = new SectorState { SectorId = 2, OwnerPlayerId = 0, Stability = 0f };
+
+            var near = matchmaking.GetDefenderSnapshot(attacker, nearNeutral, seed: 1, attackerPlayerId: 1);
+            var far = matchmaking.GetDefenderSnapshot(attacker, farNeutral, seed: 1, attackerPlayerId: 1);
+
+            Assert.AreEqual(30d, near.PvpPower, 1e-9);
+            Assert.AreEqual(40d, far.PvpPower, 1e-9);
+            Assert.Less(near.PvpPower, far.PvpPower);
         }
 
         [Test]

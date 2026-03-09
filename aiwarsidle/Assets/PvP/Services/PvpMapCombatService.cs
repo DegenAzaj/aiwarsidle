@@ -63,7 +63,7 @@ namespace AIWarsIdle.PvP.Services
             if (sector == null) return new AttackPreview { SectorId = sectorId, Strategy = strategy, WinChanceMin = 0f, WinChanceMax = 0f };
 
             var attacker = _snapshotService.BuildSnapshot();
-            var defender = _matchmakingService.GetDefenderSnapshot(attacker, sector, seed: MixSeed(seedBase, 991));
+            var defender = _matchmakingService.GetDefenderSnapshot(attacker, sector, seed: MixSeed(seedBase, 991), attackerPlayerId: _mapConfig.LocalPlayerId);
             var modifiers = BuildCombatModifiers(attackerPlayerId: _mapConfig.LocalPlayerId, defenderPlayerId: sector.OwnerPlayerId, targetSectorId: sector.SectorId);
             var previewBattle = _battleSim.Simulate(
                 attacker.PvpPower,
@@ -111,7 +111,7 @@ namespace AIWarsIdle.PvP.Services
             _eventBus?.Publish(new SectorAttackEvent(sectorId, strategy));
 
             var attacker = _snapshotService.BuildSnapshot();
-            var defender = _matchmakingService.GetDefenderSnapshot(attacker, sector, seed: MixSeed(seed, 12345));
+            var defender = _matchmakingService.GetDefenderSnapshot(attacker, sector, seed: MixSeed(seed, 12345), attackerPlayerId: _mapConfig.LocalPlayerId);
             var modifiers = BuildCombatModifiers(attackerPlayerId: _mapConfig.LocalPlayerId, defenderPlayerId: sector.OwnerPlayerId, targetSectorId: sector.SectorId);
             var battle = _battleSim.Simulate(
                 attacker.PvpPower,

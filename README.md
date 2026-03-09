@@ -100,6 +100,13 @@ Aktualne założenie dokumentacyjne MVP: mapa PvP ma być docelowo rozgrywana ja
 - Matchmaking obrońcy (MVP):
   - bot snapshot w widełkach (config) lub użycie `OwnerSnapshot` jeśli sektor ma ownera
   w `aiwarsidle/Assets/PvP/Services/MatchmakingService.cs`.
+  - neutral sectors mają teraz dodatkowy easing early-game zależny od dystansu po grafie od **home atakującej frakcji**:
+    - dla neutrali liczone jest BFS-em, ile kroków w `Adjacency` dzieli cel od home danego atakującego
+    - im bliżej własnego home, tym niższy efektywny `NeutralPowerMinMultiplier` / `NeutralPowerMaxMultiplier`
+    - easing nie liczy dystansu od „dowolnego home”, tylko od home przypisanego do konkretnego gracza/bota wykonującego atak
+    - tuning przez `MapConfig.NeutralPowerHomeDistanceMinFactor` i `MapConfig.NeutralPowerHomeDistanceStepFactor`
+  - efekt produktowy: pierwszy ring neutralnych sektorów wokół home jest łatwiejszy do zajęcia, co przyspiesza opening bez spłaszczania środka mapy
+  w `aiwarsidle/Assets/PvP/Services/MatchmakingService.cs` i `aiwarsidle/Assets/PvP/Config/MapConfig.cs`.
 
 Uwaga: dokumentacja produktowa została zaktualizowana do docelowego układu hex-grid / 6 stron / ~72h; kod runtime nie został jeszcze w tym commicie przepięty do tych nowych założeń.
 - PvP na mapie:
