@@ -11,14 +11,16 @@ namespace AIWarsIdle.PvP.Services
         private readonly MapState _state;
         private readonly MapConfig _config;
         private readonly OverclockService _overclock;
+        private readonly SnapshotService _localSnapshotService;
         private readonly Dictionary<int, HashSet<int>> _neighborsBySectorId;
         private long _lastTickUnixSeconds;
 
-        public MapService(MapState state, MapConfig config, OverclockService overclock = null)
+        public MapService(MapState state, MapConfig config, OverclockService overclock = null, SnapshotService localSnapshotService = null)
         {
             _state = state ?? throw new ArgumentNullException(nameof(state));
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _overclock = overclock;
+            _localSnapshotService = localSnapshotService;
 
             _config.ValidateOrThrow();
             _state.Sectors ??= Array.Empty<SectorState>();
@@ -216,6 +218,8 @@ namespace AIWarsIdle.PvP.Services
 
         private void ResetAllSectorsToSeasonStart(long nowUnixSeconds)
         {
+            CaptureMatchStartLocalPower();
+
             for (var i = 0; i < _state.Sectors.Length; i++)
             {
                 var sector = _state.Sectors[i] ??= new SectorState();
@@ -235,6 +239,20 @@ namespace AIWarsIdle.PvP.Services
                 sector.LastCombatUnixSeconds = 0;
                 sector.CapturedUnixSeconds = 0;
             }
+        }
+
+        private void CaptureMatchStartLocalPower()
+        {
+            if (_localSnapshotService == null)
+            {
+                _state.MatchStartLocalPvpPower = 0;
+                return;
+            }
+
+            var snapshot = _localSnapshotService.BuildSnapshot();
+            var power = snapshot?.PvpPower ?? 0;
+            if (double.IsNaN(power) || double.IsInfinity(power) || power < 0) power = 0;
+            _state.MatchStartLocalPvpPower = power;
         }
 
         private void EnsureHomeSectorInvariants(long nowUnixSeconds)

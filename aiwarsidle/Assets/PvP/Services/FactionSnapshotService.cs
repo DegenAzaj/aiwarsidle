@@ -46,15 +46,21 @@ namespace AIWarsIdle.PvP.Services
             var connectedOwned = MapConnectivityService.BuildHomeConnectedSectorSet(_state.MapState, _mapConfig, playerId);
             var connectedOwnedCount = connectedOwned.Count;
             var ownerKey = Math.Max(0, playerId - _mapConfig.LocalPlayerId);
+            var openingLocalPower = ResolveOpeningLocalPower();
+            var openingMultiplier = GetOpeningPowerMultiplier(playerId, ownerKey);
+            var expansionCount = Math.Max(0, connectedOwnedCount - 1);
+            var perExpansionPower = Math.Max(1.5, openingLocalPower * 0.06);
 
             // Independent bot power model:
-            // - starts from a faction baseline,
-            // - grows with home-connected territory,
+            // - anchors to the local player's match-start power,
+            // - grows gradually with additional home-connected territory,
             // - varies by bot profile,
             // - can still be tuned through existing bot min/max multipliers,
             // - does not mirror the current local player snapshot.
-            var basePower = 55.0 + (ownerKey * 6.0) + (connectedOwnedCount * 18.0);
-            basePower += connectedOwnedCount * _pvpConfig.SectorPvpPowerPerSector;
+            // Keep the opening state near local-player power so first attacks are not heavily skewed.
+            var basePower = openingLocalPower * openingMultiplier;
+            basePower += expansionCount * perExpansionPower;
+            basePower += expansionCount * _pvpConfig.SectorPvpPowerPerSector;
 
             ApplyOwnedSectorBonuses(playerId, connectedOwned, ref basePower);
 
@@ -103,10 +109,38 @@ namespace AIWarsIdle.PvP.Services
         {
             return (Math.Abs(playerId) % 3) switch
             {
-                0 => 1.08,
-                1 => 0.96,
-                _ => 1.02
+                0 => 1.02,
+                1 => 0.98,
+                _ => 1.00
             };
+        }
+
+        private double ResolveOpeningLocalPower()
+        {
+            var stored = _state.MapState?.MatchStartLocalPvpPower ?? 0;
+            if (!double.IsNaN(stored) && !double.IsInfinity(stored) && stored > 0)
+            {
+                return stored;
+            }
+
+            if (_localSnapshotService != null)
+            {
+                var snapshot = _localSnapshotService.BuildSnapshot();
+                var current = snapshot?.PvpPower ?? 0;
+                if (!double.IsNaN(current) && !double.IsInfinity(current) && current > 0)
+                {
+                    return current;
+                }
+            }
+
+            return 30.0;
+        }
+
+        private static double GetOpeningPowerMultiplier(int playerId, int ownerKey)
+        {
+            var baseMultiplier = 0.90 + (ownerKey * 0.015);
+            if (playerId <= 0) return 0.9;
+            return Math.Min(1.0, Math.Max(0.85, baseMultiplier));
         }
 
         private double GetBotConfigMultiplier(int playerId)

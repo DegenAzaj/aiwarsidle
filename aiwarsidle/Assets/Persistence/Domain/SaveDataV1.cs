@@ -25,6 +25,7 @@ namespace AIWarsIdle.Persistence.Domain
         public long LastPvpAdAttackClaimUnixSeconds;
 
         public int MapSeasonId;
+        public double MatchStartLocalPvpPower;
         public SectorSaveData[] Sectors = Array.Empty<SectorSaveData>();
 
         public OverclockSaveData Overclock = new();
@@ -92,6 +93,10 @@ namespace AIWarsIdle.Persistence.Domain
             if (LastPvpAttackRegenUnixSeconds < 0) LastPvpAttackRegenUnixSeconds = 0;
             if (NextPvpAttackRegenAtUnixSeconds < 0) NextPvpAttackRegenAtUnixSeconds = 0;
             if (LastPvpAdAttackClaimUnixSeconds < 0) LastPvpAdAttackClaimUnixSeconds = 0;
+            if (double.IsNaN(MatchStartLocalPvpPower) || double.IsInfinity(MatchStartLocalPvpPower) || MatchStartLocalPvpPower < 0)
+            {
+                MatchStartLocalPvpPower = 0;
+            }
             if (LastLoginUnixSeconds < 0) LastLoginUnixSeconds = 0;
             if (PendingOfflineGain < 0) PendingOfflineGain = 0;
             if (LastBankedOfflineRawSeconds < 0) LastBankedOfflineRawSeconds = 0;

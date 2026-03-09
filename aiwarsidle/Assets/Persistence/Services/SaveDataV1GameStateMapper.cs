@@ -57,6 +57,7 @@ namespace AIWarsIdle.Persistence.Services
 
             state.MapState ??= new MapState();
             state.MapState.MapSeasonId = save.MapSeasonId;
+            state.MapState.MatchStartLocalPvpPower = save.MatchStartLocalPvpPower;
 
             var sectors = save.Sectors ?? Array.Empty<SectorSaveData>();
             var mappedSectors = new SectorState[sectors.Length];
@@ -142,6 +143,7 @@ namespace AIWarsIdle.Persistence.Services
             save.LastBankedOfflineEffectiveSeconds = state.LastBankedOfflineEffectiveSeconds;
 
             save.MapSeasonId = state.MapState?.MapSeasonId ?? 0;
+            save.MatchStartLocalPvpPower = state.MapState?.MatchStartLocalPvpPower ?? 0;
 
             var sectors = state.MapState?.Sectors ?? Array.Empty<SectorState>();
             save.Sectors = new SectorSaveData[sectors.Length];

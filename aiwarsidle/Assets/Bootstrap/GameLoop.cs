@@ -124,11 +124,10 @@ namespace AIWarsIdle.Bootstrap
             _offline = new OfflineClaimService(State, balanceConfig, _production, _economy, _eventBus);
             _prestige = new PrestigeService(State, balanceConfig, _eventBus, _offline);
 
-            _map = new MapService(State.MapState, _mapConfig, _overclock);
-
             _pvpAttacks = pvpAttacksConfig == null ? null : new PvpAttackChargesService(State, pvpAttacksConfig);
             _league = leagueConfig == null ? null : new LeagueService(State, leagueConfig);
             _snapshot = pvpConfig == null ? null : new SnapshotService(State, pvpConfig, _production, _mapConfig.LocalPlayerId, _mapConfig);
+            _map = new MapService(State.MapState, _mapConfig, _overclock, _snapshot);
             _factionSnapshots = pvpConfig == null ? null : new FactionSnapshotService(State, _mapConfig, pvpConfig, _snapshot);
             _matchmaking = _mapConfig == null ? null : new MatchmakingService(_mapConfig, _factionSnapshots);
             _battleSim = pvpConfig == null ? null : new BattleSimService(pvpConfig, _overclock);

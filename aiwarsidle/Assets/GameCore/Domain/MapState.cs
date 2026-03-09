@@ -5,6 +5,7 @@ namespace AIWarsIdle.GameCore.Domain
     public sealed class MapState
     {
         public int MapSeasonId;
+        public double MatchStartLocalPvpPower;
         public SectorState[] Sectors;
 
         public MapState()
@@ -13,4 +14,3 @@ namespace AIWarsIdle.GameCore.Domain
         }
     }
 }
-

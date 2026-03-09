@@ -1239,6 +1239,63 @@ namespace AIWarsIdle.Tests.EditMode
         }
 
         [Test]
+        public void FactionSnapshotService_BotOpeningPower_StaysCloseToLocalPlayer()
+        {
+            var cfg = CreateSmallMapConfig(botMult: 1.0f);
+            cfg.HomeSectorIds = new[] { 0, 2 };
+            cfg.HomeSectorOwnerPlayerIds = new[] { 1, 6 };
+            cfg.ValidateOrThrow();
+
+            var state = new GameState { PrestigeCount = 1 };
+            state.MapState.Sectors = new[]
+            {
+                new SectorState { SectorId = 0, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 1, OwnerPlayerId = 0, Stability = 0f },
+                new SectorState { SectorId = 2, OwnerPlayerId = 6, Stability = 100f },
+            };
+
+            var economy = new EconomyService(state);
+            var balance = CreateValidBalanceConfig();
+            var production = new ProductionService(state, balance, economy);
+            var pvp = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 43);
+            var factions = CreateFactionSnapshots(state, cfg, pvp, production);
+
+            var local = factions.BuildCurrentSnapshot(1).PvpPower;
+            var bot = factions.BuildCurrentSnapshot(6).PvpPower;
+
+            Assert.AreEqual(43d, local, 1e-9);
+            Assert.LessOrEqual(bot, local * 1.15d);
+        }
+
+        [Test]
+        public void MapService_Reset_Captures_LocalPower_As_MatchStartBaseline()
+        {
+            var state = new GameState { PrestigeCount = 1 };
+            state.MapState.Sectors = new[]
+            {
+                new SectorState { SectorId = 0, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 1, OwnerPlayerId = 0, Stability = 0f },
+                new SectorState { SectorId = 2, OwnerPlayerId = 2, Stability = 100f },
+            };
+
+            var mapCfg = CreateSmallMapConfig(botMult: 1.0f);
+            mapCfg.HomeSectorIds = new[] { 0, 2 };
+            mapCfg.HomeSectorOwnerPlayerIds = new[] { 1, 2 };
+            mapCfg.ValidateOrThrow();
+
+            var economy = new EconomyService(state);
+            var balance = CreateValidBalanceConfig();
+            var production = new ProductionService(state, balance, economy);
+            var pvp = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 48);
+            var localSnapshot = new SnapshotService(state, pvp, production, mapConfig: mapCfg);
+            var map = new MapService(state.MapState, mapCfg, localSnapshotService: localSnapshot);
+
+            map.DebugResetCurrentMatch(nowUnixSeconds: 1000);
+
+            Assert.AreEqual(48d, state.MapState.MatchStartLocalPvpPower, 1e-9);
+        }
+
+        [Test]
         public void BattleSim_StrategyMultiplier_AffectsOutcome_Deterministically()
         {
             var pvp = ScriptableObject.CreateInstance<PvpConfig>();
