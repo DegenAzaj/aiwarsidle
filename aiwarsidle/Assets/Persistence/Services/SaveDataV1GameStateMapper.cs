@@ -58,6 +58,7 @@ namespace AIWarsIdle.Persistence.Services
             state.MapState ??= new MapState();
             state.MapState.MapSeasonId = save.MapSeasonId;
             state.MapState.MatchStartUnixSeconds = save.MatchStartUnixSeconds;
+            state.MapState.BotAttackStatesMatchStartUnixSeconds = save.BotAttackStatesMatchStartUnixSeconds;
             state.MapState.MatchStartLocalPvpPower = save.MatchStartLocalPvpPower;
             state.MapState.MatchStartLocalBasePps = save.MatchStartLocalBasePps;
             state.MapState.MatchStartLocalSoftCurrency = save.MatchStartLocalSoftCurrency;
@@ -70,6 +71,23 @@ namespace AIWarsIdle.Persistence.Services
             if (save.MatchStartLocalGeneratorLevels != null)
             {
                 Array.Copy(save.MatchStartLocalGeneratorLevels, state.MapState.MatchStartLocalGeneratorLevels, Math.Min(save.MatchStartLocalGeneratorLevels.Length, state.MapState.MatchStartLocalGeneratorLevels.Length));
+            }
+
+            var botAttackStates = save.BotAttackStates ?? Array.Empty<BotAttackStateSaveData>();
+            state.MapState.BotAttackStates = new BotAttackState[botAttackStates.Length];
+            for (var i = 0; i < botAttackStates.Length; i++)
+            {
+                var src = botAttackStates[i] ?? new BotAttackStateSaveData();
+                src.Normalize();
+                state.MapState.BotAttackStates[i] = new BotAttackState
+                {
+                    PlayerId = src.PlayerId,
+                    Remaining = src.Remaining,
+                    LastRegenUnixSeconds = src.LastRegenUnixSeconds,
+                    NextRegenAtUnixSeconds = src.NextRegenAtUnixSeconds,
+                    HasLastDecisionBucket = src.HasLastDecisionBucket,
+                    LastDecisionBucket = src.LastDecisionBucket
+                };
             }
 
             var sectors = save.Sectors ?? Array.Empty<SectorSaveData>();
@@ -157,6 +175,7 @@ namespace AIWarsIdle.Persistence.Services
 
             save.MapSeasonId = state.MapState?.MapSeasonId ?? 0;
             save.MatchStartUnixSeconds = state.MapState?.MatchStartUnixSeconds ?? 0;
+            save.BotAttackStatesMatchStartUnixSeconds = state.MapState?.BotAttackStatesMatchStartUnixSeconds ?? 0;
             save.MatchStartLocalPvpPower = state.MapState?.MatchStartLocalPvpPower ?? 0;
             save.MatchStartLocalBasePps = state.MapState?.MatchStartLocalBasePps ?? 0;
             save.MatchStartLocalSoftCurrency = state.MapState?.MatchStartLocalSoftCurrency ?? 0;
@@ -176,6 +195,22 @@ namespace AIWarsIdle.Persistence.Services
             else
             {
                 Array.Clear(save.MatchStartLocalGeneratorLevels, 0, save.MatchStartLocalGeneratorLevels.Length);
+            }
+
+            var botAttackStates = state.MapState?.BotAttackStates ?? Array.Empty<BotAttackState>();
+            save.BotAttackStates = new BotAttackStateSaveData[botAttackStates.Length];
+            for (var i = 0; i < botAttackStates.Length; i++)
+            {
+                var src = botAttackStates[i] ?? new BotAttackState();
+                save.BotAttackStates[i] = new BotAttackStateSaveData
+                {
+                    PlayerId = src.PlayerId,
+                    Remaining = src.Remaining,
+                    LastRegenUnixSeconds = src.LastRegenUnixSeconds,
+                    NextRegenAtUnixSeconds = src.NextRegenAtUnixSeconds,
+                    HasLastDecisionBucket = src.HasLastDecisionBucket,
+                    LastDecisionBucket = src.LastDecisionBucket
+                };
             }
 
             var sectors = state.MapState?.Sectors ?? Array.Empty<SectorState>();

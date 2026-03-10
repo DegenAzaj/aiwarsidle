@@ -2,6 +2,7 @@ using System;
 using AIWarsIdle.GameCore.Config;
 using AIWarsIdle.GameCore.Domain;
 using AIWarsIdle.GameCore.Services;
+using AIWarsIdle.Persistence.Services;
 using AIWarsIdle.PvP.Config;
 using AIWarsIdle.PvP.Services;
 using NUnit.Framework;
@@ -1027,6 +1028,100 @@ namespace AIWarsIdle.Tests.EditMode
         }
 
         [Test]
+        public void BotService_Preserves_AttackCharges_Across_SaveLoad_ColdStart()
+        {
+            var state = new GameState { PrestigeCount = 1 };
+            state.MapState.Sectors = new[]
+            {
+                new SectorState { SectorId = 0, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 1, OwnerPlayerId = 0, Stability = 0f },
+                new SectorState { SectorId = 2, OwnerPlayerId = 3, Stability = 100f },
+                new SectorState { SectorId = 3, OwnerPlayerId = 0, Stability = 0f },
+            };
+
+            var mapCfg = ScriptableObject.CreateInstance<MapConfig>();
+            mapCfg.MapSeasonLengthDays = 7;
+            mapCfg.MapSeasonAnchorUnixSecondsUtc = 0;
+            mapCfg.LocalPlayerId = 1;
+            mapCfg.HomeSectorId = 0;
+            mapCfg.HomeSectorIds = new[] { 0, 2 };
+            mapCfg.HomeSectorOwnerPlayerIds = new[] { 1, 3 };
+            mapCfg.HomeSectorStability = 100f;
+            mapCfg.EnforceSectorCountRange = false;
+            mapCfg.RequireConnectedGraph = true;
+            mapCfg.SectorDefinitions = new[]
+            {
+                new MapConfig.SectorDefinition { SectorId = 0, Name = "PlayerHome" },
+                new MapConfig.SectorDefinition { SectorId = 1, Name = "N1" },
+                new MapConfig.SectorDefinition { SectorId = 2, Name = "BotHome" },
+                new MapConfig.SectorDefinition { SectorId = 3, Name = "N2" },
+            };
+            mapCfg.Adjacency = new[]
+            {
+                new MapConfig.SectorEdge { A = 2, B = 1 },
+                new MapConfig.SectorEdge { A = 2, B = 3 },
+                new MapConfig.SectorEdge { A = 0, B = 1 },
+            };
+            mapCfg.StabilityGrowthPerSecond = 0f;
+            mapCfg.FreshCaptureWindowSeconds = 60;
+            mapCfg.StabilityStartNeutral = 0f;
+            mapCfg.StabilityStartOnCapture = 10f;
+            mapCfg.StabilityGainOnDefenseWin = 5f;
+            mapCfg.CaptureStabilityMultiplierAggressive = 1f;
+            mapCfg.CaptureStabilityMultiplierStable = 1f;
+            mapCfg.CaptureStabilityMultiplierRisky = 1f;
+            mapCfg.BotPowerMinMultiplier = 0.5f;
+            mapCfg.BotPowerMaxMultiplier = 0.5f;
+            mapCfg.NeutralPowerMinMultiplier = 0.5f;
+            mapCfg.NeutralPowerMaxMultiplier = 0.5f;
+            mapCfg.ValidateOrThrow();
+
+            var economy = new EconomyService(state);
+            var balance = CreateValidBalanceConfig();
+            var production = new ProductionService(state, balance, economy);
+            var pvp = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 99);
+            var snapshot = new SnapshotService(state, pvp, production, mapConfig: mapCfg);
+            var factions = new FactionSnapshotService(state, mapCfg, pvp, snapshot, CreateValidBalanceConfig());
+            var matchmaking = new MatchmakingService(mapCfg, factions);
+            var sim = new BattleSimService(pvp);
+            var attacksCfg = CreateDefaultPvpAttacksConfig(maxAttacks: 1, regenSeconds: 10_000);
+
+            var map = new MapService(state.MapState, mapCfg);
+            map.AdvanceTime(1_000);
+
+            var bots = new PvpBotService(state, map, mapCfg, snapshot, matchmaking, sim, factions, attacksCfg);
+            bots.Tick(300);
+
+            var ownedAfterFirst = 0;
+            for (var i = 0; i < state.MapState.Sectors.Length; i++)
+            {
+                if (state.MapState.Sectors[i].OwnerPlayerId == 3) ownedAfterFirst++;
+            }
+
+            var saved = SaveDataV1GameStateMapper.ToSaveDataV1(state);
+            var loadedState = SaveDataV1GameStateMapper.ToGameState(saved);
+
+            var loadedEconomy = new EconomyService(loadedState);
+            var loadedProduction = new ProductionService(loadedState, balance, loadedEconomy);
+            var loadedSnapshot = new SnapshotService(loadedState, pvp, loadedProduction, mapConfig: mapCfg);
+            var loadedFactions = new FactionSnapshotService(loadedState, mapCfg, pvp, loadedSnapshot, CreateValidBalanceConfig());
+            var loadedMatchmaking = new MatchmakingService(mapCfg, loadedFactions);
+            var loadedMap = new MapService(loadedState.MapState, mapCfg);
+
+            var loadedBots = new PvpBotService(loadedState, loadedMap, mapCfg, loadedSnapshot, loadedMatchmaking, sim, loadedFactions, attacksCfg);
+            loadedBots.Tick(600);
+
+            var ownedAfterReload = 0;
+            for (var i = 0; i < loadedState.MapState.Sectors.Length; i++)
+            {
+                if (loadedState.MapState.Sectors[i].OwnerPlayerId == 3) ownedAfterReload++;
+            }
+
+            Assert.AreEqual(2, ownedAfterFirst);
+            Assert.AreEqual(ownedAfterFirst, ownedAfterReload);
+        }
+
+        [Test]
         public void ProductionService_Applies_SectorBonus_And_Maintenance_Via_MapProductionBonusProvider()
         {
             var state = new GameState();
@@ -1348,6 +1443,50 @@ namespace AIWarsIdle.Tests.EditMode
             Assert.AreEqual(150d, state.MapState.MatchStartLocalLifetimeEarnedSoftCurrencyAtLastPrestige, 1e-9);
             Assert.AreEqual(3, state.MapState.MatchStartLocalGeneratorLevels[0]);
             Assert.Greater(state.MapState.MatchStartLocalBasePps, 0d);
+        }
+
+        [Test]
+        public void DebugResetMatch_Reanchors_BotPower_RelativeToCurrentLocalPower()
+        {
+            var state = new GameState { PrestigeCount = 1 };
+            state.GeneratorLevels[0] = 3;
+            state.MapState.Sectors = new[]
+            {
+                new SectorState { SectorId = 0, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 1, OwnerPlayerId = 0, Stability = 0f },
+                new SectorState { SectorId = 2, OwnerPlayerId = 2, Stability = 100f },
+            };
+
+            var mapCfg = CreateSmallMapConfig(botMult: 1.0f);
+            mapCfg.HomeSectorIds = new[] { 0, 2 };
+            mapCfg.HomeSectorOwnerPlayerIds = new[] { 1, 2 };
+            mapCfg.ValidateOrThrow();
+
+            var economy = new EconomyService(state);
+            var balance = CreateValidBalanceConfig();
+            var production = new ProductionService(state, balance, economy);
+            var pvp = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 48);
+            var localSnapshot = new SnapshotService(state, pvp, production, mapConfig: mapCfg);
+            var map = new MapService(state.MapState, mapCfg, localSnapshotService: localSnapshot);
+            var factions = new FactionSnapshotService(state, mapCfg, pvp, localSnapshot, balance);
+
+            map.DebugResetCurrentMatch(nowUnixSeconds: 1000);
+            state.MapState.CurrentUnixSeconds = 1000;
+
+            var firstAnchor = state.MapState.MatchStartLocalPvpPower;
+            var firstBotPower = factions.BuildCurrentSnapshot(2).PvpPower;
+
+            state.PrestigeCount = 10;
+            state.GeneratorLevels[0] = 50;
+
+            map.DebugResetCurrentMatch(nowUnixSeconds: 2000);
+            state.MapState.CurrentUnixSeconds = 2000;
+
+            var secondAnchor = state.MapState.MatchStartLocalPvpPower;
+            var secondBotPower = factions.BuildCurrentSnapshot(2).PvpPower;
+
+            Assert.Greater(secondAnchor, firstAnchor);
+            Assert.Greater(secondBotPower, firstBotPower);
         }
 
         [Test]

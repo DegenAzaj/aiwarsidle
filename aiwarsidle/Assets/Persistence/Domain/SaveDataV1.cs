@@ -34,6 +34,8 @@ namespace AIWarsIdle.Persistence.Domain
         public int MatchStartLocalPrestigeCount;
         public int MatchStartLocalPermanentUpgradeLevel;
         public int[] MatchStartLocalGeneratorLevels = new int[GameState.GeneratorCount];
+        public long BotAttackStatesMatchStartUnixSeconds;
+        public BotAttackStateSaveData[] BotAttackStates = Array.Empty<BotAttackStateSaveData>();
         public SectorSaveData[] Sectors = Array.Empty<SectorSaveData>();
 
         public OverclockSaveData Overclock = new();
@@ -83,6 +85,11 @@ namespace AIWarsIdle.Persistence.Domain
                 Sectors = Array.Empty<SectorSaveData>();
             }
 
+            if (BotAttackStates == null)
+            {
+                BotAttackStates = Array.Empty<BotAttackStateSaveData>();
+            }
+
             if (MatchStartLocalGeneratorLevels == null)
             {
                 MatchStartLocalGeneratorLevels = new int[GameState.GeneratorCount];
@@ -100,6 +107,12 @@ namespace AIWarsIdle.Persistence.Domain
                 Sectors[i].Normalize();
             }
 
+            for (var i = 0; i < BotAttackStates.Length; i++)
+            {
+                BotAttackStates[i] ??= new BotAttackStateSaveData();
+                BotAttackStates[i].Normalize();
+            }
+
             Overclock ??= new OverclockSaveData();
             Overclock.Normalize();
 
@@ -113,6 +126,7 @@ namespace AIWarsIdle.Persistence.Domain
             if (NextPvpAttackRegenAtUnixSeconds < 0) NextPvpAttackRegenAtUnixSeconds = 0;
             if (LastPvpAdAttackClaimUnixSeconds < 0) LastPvpAdAttackClaimUnixSeconds = 0;
             if (MatchStartUnixSeconds < 0) MatchStartUnixSeconds = 0;
+            if (BotAttackStatesMatchStartUnixSeconds < 0) BotAttackStatesMatchStartUnixSeconds = 0;
             if (double.IsNaN(MatchStartLocalPvpPower) || double.IsInfinity(MatchStartLocalPvpPower) || MatchStartLocalPvpPower < 0)
             {
                 MatchStartLocalPvpPower = 0;
@@ -170,6 +184,25 @@ namespace AIWarsIdle.Persistence.Domain
 
             if (LastCombatUnixSeconds < 0) LastCombatUnixSeconds = 0;
             if (CapturedUnixSeconds < 0) CapturedUnixSeconds = 0;
+        }
+    }
+
+    public sealed class BotAttackStateSaveData
+    {
+        public int PlayerId;
+        public int Remaining;
+        public long LastRegenUnixSeconds;
+        public long NextRegenAtUnixSeconds;
+        public bool HasLastDecisionBucket;
+        public long LastDecisionBucket;
+
+        public void Normalize()
+        {
+            if (PlayerId < 0) PlayerId = 0;
+            if (Remaining < 0) Remaining = 0;
+            if (LastRegenUnixSeconds < 0) LastRegenUnixSeconds = 0;
+            if (NextRegenAtUnixSeconds < 0) NextRegenAtUnixSeconds = 0;
+            if (!HasLastDecisionBucket) LastDecisionBucket = 0;
         }
     }
 

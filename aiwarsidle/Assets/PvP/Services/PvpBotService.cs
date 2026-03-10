@@ -21,8 +21,7 @@ namespace AIWarsIdle.PvP.Services
         private readonly FactionSnapshotService _factionSnapshots;
         private readonly PvpAttacksConfig _attacksConfig;
         private readonly IEventBus _eventBus;
-        private readonly Dictionary<int, long> _lastDecisionBucketByPlayerId = new();
-        private readonly Dictionary<int, BotAttackChargesState> _attackStateByPlayerId = new();
+        private readonly Dictionary<int, BotAttackState> _attackStateByPlayerId = new();
 
         public PvpBotService(
             GameState state,
@@ -44,6 +43,8 @@ namespace AIWarsIdle.PvP.Services
             _factionSnapshots = factionSnapshots ?? throw new ArgumentNullException(nameof(factionSnapshots));
             _attacksConfig = attacksConfig ?? throw new ArgumentNullException(nameof(attacksConfig));
             _eventBus = eventBus;
+
+            InitializeAttackStateCache();
         }
 
         public void Tick(long nowUnixSeconds)
@@ -65,8 +66,6 @@ namespace AIWarsIdle.PvP.Services
         {
             if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds));
 
-            _lastDecisionBucketByPlayerId.Clear();
-
             var homeIds = _mapConfig.GetEffectiveHomeSectorIds();
             for (var i = 0; i < homeIds.Length; i++)
             {
@@ -77,13 +76,18 @@ namespace AIWarsIdle.PvP.Services
                 state.Remaining = Math.Max(0, _attacksConfig.MaxAttacks);
                 state.LastRegenUnixSeconds = 0;
                 state.NextRegenAtUnixSeconds = 0;
+                state.HasLastDecisionBucket = false;
+                state.LastDecisionBucket = 0;
 
                 var interval = GetDecisionIntervalSeconds(playerId);
                 if (interval > 0)
                 {
-                    _lastDecisionBucketByPlayerId[playerId] = nowUnixSeconds / interval;
+                    state.HasLastDecisionBucket = true;
+                    state.LastDecisionBucket = nowUnixSeconds / interval;
                 }
             }
+
+            PersistAttackStateCache();
         }
 
         private void TryRunBotTurn(int playerId, long nowUnixSeconds)
@@ -94,12 +98,15 @@ namespace AIWarsIdle.PvP.Services
             if (!CanSpendAttack(playerId)) return;
 
             var bucket = nowUnixSeconds / interval;
-            if (_lastDecisionBucketByPlayerId.TryGetValue(playerId, out var lastBucket) && lastBucket == bucket)
+            var attackState = GetOrCreateAttackState(playerId);
+            if (attackState.HasLastDecisionBucket && attackState.LastDecisionBucket == bucket)
             {
                 return;
             }
 
-            _lastDecisionBucketByPlayerId[playerId] = bucket;
+            attackState.HasLastDecisionBucket = true;
+            attackState.LastDecisionBucket = bucket;
+            PersistAttackStateCache();
 
             var candidate = ChooseAttack(playerId, nowUnixSeconds, seed: MixSeed(playerId, (int)bucket));
             if (candidate == null) return;
@@ -365,6 +372,8 @@ namespace AIWarsIdle.PvP.Services
 
                 state.NextRegenAtUnixSeconds += _attacksConfig.RegenSeconds;
             }
+
+            PersistAttackStateCache();
         }
 
         private bool CanSpendAttack(int playerId)
@@ -387,31 +396,63 @@ namespace AIWarsIdle.PvP.Services
                 state.NextRegenAtUnixSeconds = nowUnixSeconds + _attacksConfig.RegenSeconds;
             }
 
+            PersistAttackStateCache();
             return true;
         }
 
-        private BotAttackChargesState GetOrCreateAttackState(int playerId)
+        private BotAttackState GetOrCreateAttackState(int playerId)
         {
             if (_attackStateByPlayerId.TryGetValue(playerId, out var existing))
             {
                 return existing;
             }
 
-            var created = new BotAttackChargesState
+            var created = new BotAttackState
             {
+                PlayerId = playerId,
                 Remaining = Math.Max(0, _attacksConfig.MaxAttacks),
                 LastRegenUnixSeconds = 0,
-                NextRegenAtUnixSeconds = 0
+                NextRegenAtUnixSeconds = 0,
+                HasLastDecisionBucket = false,
+                LastDecisionBucket = 0
             };
             _attackStateByPlayerId.Add(playerId, created);
+            PersistAttackStateCache();
             return created;
         }
 
-        private sealed class BotAttackChargesState
+        private void InitializeAttackStateCache()
         {
-            public int Remaining;
-            public long LastRegenUnixSeconds;
-            public long NextRegenAtUnixSeconds;
+            _state.MapState ??= new MapState();
+
+            if (_state.MapState.BotAttackStatesMatchStartUnixSeconds != _state.MapState.MatchStartUnixSeconds)
+            {
+                _state.MapState.BotAttackStates = Array.Empty<BotAttackState>();
+                _state.MapState.BotAttackStatesMatchStartUnixSeconds = _state.MapState.MatchStartUnixSeconds;
+            }
+
+            var savedStates = _state.MapState.BotAttackStates ?? Array.Empty<BotAttackState>();
+            for (var i = 0; i < savedStates.Length; i++)
+            {
+                var state = savedStates[i];
+                if (state == null || state.PlayerId <= 0) continue;
+                _attackStateByPlayerId[state.PlayerId] = state;
+            }
+        }
+
+        private void PersistAttackStateCache()
+        {
+            _state.MapState ??= new MapState();
+            _state.MapState.BotAttackStatesMatchStartUnixSeconds = _state.MapState.MatchStartUnixSeconds;
+
+            var values = new BotAttackState[_attackStateByPlayerId.Count];
+            var index = 0;
+            foreach (var pair in _attackStateByPlayerId)
+            {
+                values[index++] = pair.Value;
+            }
+
+            _state.MapState.BotAttackStates = values;
         }
 
         private readonly struct CombatModifiers
