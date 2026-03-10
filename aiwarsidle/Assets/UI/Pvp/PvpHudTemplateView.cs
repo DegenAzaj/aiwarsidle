@@ -86,6 +86,12 @@ namespace AIWarsIdle.UI.Pvp
             WireButton();
         }
 
+        public void SetPowerTooltipContent(string title, string body)
+        {
+            _powerTooltipTitle = title ?? string.Empty;
+            _powerTooltipBody = body ?? string.Empty;
+        }
+
         public void ShowPreview(int count, int radius, bool infoVisible)
         {
             ShowState(

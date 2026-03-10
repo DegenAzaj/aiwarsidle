@@ -1699,9 +1699,13 @@ namespace AIWarsIdle.UI.Pvp
 
             var power = snapshotService != null ? snapshotService.BuildSnapshot().PvpPower : 0;
             var powerText = $"{power:0.##}";
+            var powerTooltipBody = snapshotService != null
+                ? BuildPowerTooltipBody(snapshotService.BuildPowerBreakdown())
+                : string.Empty;
             var liveScoreTable = BuildLiveScoreTable(loop);
 
             UpdateExternalAttackHud(attackCountText, regenTimerText);
+            hud.SetPowerTooltipContent("PvP Power", powerTooltipBody);
             hud.ShowState(_externalAttacksTexts.Count > 0 ? string.Empty : $"Attacks: {attackCountText}",
                 matchEndsText,
                 powerText,
@@ -1988,6 +1992,16 @@ namespace AIWarsIdle.UI.Pvp
             }
 
             return $"{min:P0} - {max:P0}";
+        }
+
+        private static string BuildPowerTooltipBody(SnapshotService.PowerBreakdown breakdown)
+        {
+            return
+                $"+ {breakdown.PrestigePower:0.##} (Prestige)\n" +
+                $"+ {breakdown.PermanentUpgradePower:0.##} (Permanent Upgrades)\n" +
+                $"+ {breakdown.SectorPower:0.##} (Sectors)\n" +
+                $"+ {breakdown.ProductionBonusPower:0.##} (Production Bonus)\n\n" +
+                "Subscription boosts production, but does not directly raise PvP Power.";
         }
 
         private void HideEditorObject(GameObject go)

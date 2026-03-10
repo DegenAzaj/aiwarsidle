@@ -8,6 +8,29 @@ namespace AIWarsIdle.PvP.Services
 {
     public sealed class SnapshotService
     {
+        public readonly struct PowerBreakdown
+        {
+            public readonly double PrestigePower;
+            public readonly double PermanentUpgradePower;
+            public readonly double SectorPower;
+            public readonly double ProductionBonusPower;
+            public readonly double TotalPower;
+
+            public PowerBreakdown(
+                double prestigePower,
+                double permanentUpgradePower,
+                double sectorPower,
+                double productionBonusPower,
+                double totalPower)
+            {
+                PrestigePower = prestigePower;
+                PermanentUpgradePower = permanentUpgradePower;
+                SectorPower = sectorPower;
+                ProductionBonusPower = productionBonusPower;
+                TotalPower = totalPower;
+            }
+        }
+
         private const int DefaultLocalPlayerId = 1;
 
         private readonly GameState _state;
@@ -46,20 +69,34 @@ namespace AIWarsIdle.PvP.Services
 
         public PvpSnapshot BuildSnapshot()
         {
+            var breakdown = BuildPowerBreakdown();
+
+            return new PvpSnapshot
+            {
+                PvpPower = breakdown.TotalPower,
+                League = _state.League,
+                SeasonPoints = _state.SeasonPoints
+            };
+        }
+
+        public PowerBreakdown BuildPowerBreakdown()
+        {
+            const double basePower = 1.0;
+
             var effectiveSectorCount = CountOwnedSectors(_state.MapState, _localPlayerId, _mapConfig);
+            var prestigePower = _state.PrestigeCount * _config.PrestigePvpPowerPerPrestige;
+            var permanentUpgradePower = _state.PermanentUpgradeLevel * _config.PermanentPvpPowerPerLevel;
+            var rawSectorPower = effectiveSectorCount * _config.SectorPvpPowerPerSector;
 
-            var core =
-                1.0 +
-                (_state.PrestigeCount * _config.PrestigePvpPowerPerPrestige) +
-                (_state.PermanentUpgradeLevel * _config.PermanentPvpPowerPerLevel) +
-                (effectiveSectorCount * _config.SectorPvpPowerPerSector);
-
+            var core = basePower + prestigePower + permanentUpgradePower + rawSectorPower;
             if (core < 0) core = 0;
 
             if (_mapConfig != null && _sectorDefById != null && _sectorDefById.Count > 0)
             {
                 ApplySectorPvpBonuses(ref core);
             }
+
+            var sectorPower = Math.Max(0, core - basePower - prestigePower - permanentUpgradePower);
 
             var basePpsForPvp = _production.CalculateBaseProductionPerSecondWithoutSubscription();
             if (double.IsNaN(basePpsForPvp) || double.IsInfinity(basePpsForPvp) || basePpsForPvp < 0)
@@ -74,18 +111,20 @@ namespace AIWarsIdle.PvP.Services
                 prodBonus = _config.ProdToPvpMaxBonus * t;
             }
 
-            var power = core * (1.0 + prodBonus);
-            if (double.IsNaN(power) || double.IsInfinity(power) || power < 0)
+            var totalPower = core * (1.0 + prodBonus);
+            if (double.IsNaN(totalPower) || double.IsInfinity(totalPower) || totalPower < 0)
             {
-                power = 0;
+                totalPower = 0;
             }
 
-            return new PvpSnapshot
-            {
-                PvpPower = power,
-                League = _state.League,
-                SeasonPoints = _state.SeasonPoints
-            };
+            var productionBonusPower = Math.Max(0, totalPower - core);
+
+            return new PowerBreakdown(
+                prestigePower,
+                permanentUpgradePower,
+                sectorPower,
+                productionBonusPower,
+                totalPower);
         }
 
         private void ApplySectorPvpBonuses(ref double core)
