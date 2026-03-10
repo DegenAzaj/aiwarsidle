@@ -1,5 +1,6 @@
 using System;
 using TMPro;
+using AIWarsIdle.UI.Common;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -16,9 +17,15 @@ namespace AIWarsIdle.UI.Pvp
         [SerializeField] private TMP_Text _liveScoreTable;
         [SerializeField] private Button _powerInfoButton;
         [SerializeField] private Button _scenePowerInfoButton;
+        [SerializeField] private GenericTooltipView _powerTooltipPrefab;
         [SerializeField] private TMP_Text _powerTooltip;
+        [SerializeField] private string _powerTooltipTitle = "PvP Power";
+        [TextArea(2, 4)]
+        [SerializeField] private string _powerTooltipBody = "PvpPower = prestige + permanent upgrades + sectors + small production bonus.\nSubscription boosts production, but does not directly raise PvpPower.";
 
-        private Action _togglePowerInfo;
+        private Action _showPowerInfo;
+        private Action _hidePowerInfo;
+        private GenericTooltipView _powerTooltipInstance;
 
         public void Initialize(
             TMP_Text attacks,
@@ -37,7 +44,8 @@ namespace AIWarsIdle.UI.Pvp
             _liveScoreTable = liveScoreTable;
             _powerInfoButton = powerInfoButton;
             _powerTooltip = powerTooltip;
-            _togglePowerInfo = togglePowerInfo;
+            _showPowerInfo = togglePowerInfo;
+            _hidePowerInfo = () => SetPowerInfoVisible(false);
             WireButton();
         }
 
@@ -57,9 +65,23 @@ namespace AIWarsIdle.UI.Pvp
             }
         }
 
+        private void OnDisable()
+        {
+            if (_powerTooltipInstance != null)
+            {
+                _powerTooltipInstance.Hide();
+            }
+        }
+
         public void SetTogglePowerInfo(Action togglePowerInfo)
         {
-            _togglePowerInfo = togglePowerInfo;
+            SetPowerInfoActions(togglePowerInfo, () => SetPowerInfoVisible(false));
+        }
+
+        public void SetPowerInfoActions(Action showPowerInfo, Action hidePowerInfo)
+        {
+            _showPowerInfo = showPowerInfo;
+            _hidePowerInfo = hidePowerInfo;
             ResolveSceneOverrides();
             WireButton();
         }
@@ -89,7 +111,29 @@ namespace AIWarsIdle.UI.Pvp
 
         public void SetPowerInfoVisible(bool visible)
         {
-            if (_powerTooltip != null) _powerTooltip.gameObject.SetActive(visible);
+            if (visible)
+            {
+                if (EnsurePowerTooltipInstance())
+                {
+                    _powerTooltipInstance.Show(_powerTooltipTitle, _powerTooltipBody);
+                }
+                else if (_powerTooltip != null)
+                {
+                    _powerTooltip.gameObject.SetActive(true);
+                }
+
+                return;
+            }
+
+            if (_powerTooltipInstance != null)
+            {
+                _powerTooltipInstance.Hide();
+            }
+
+            if (_powerTooltip != null)
+            {
+                _powerTooltip.gameObject.SetActive(false);
+            }
         }
 
         private void WireButton()
@@ -148,12 +192,52 @@ namespace AIWarsIdle.UI.Pvp
             }
         }
 
+        private bool EnsurePowerTooltipInstance()
+        {
+            if (_powerTooltipInstance != null) return true;
+
+            var prefab = _powerTooltipPrefab;
+            if (prefab == null)
+            {
+                prefab = Resources.Load<GenericTooltipView>("UI/GenericTooltip");
+            }
+
+            if (prefab == null) return false;
+
+            var canvas = ResolveTooltipCanvas();
+            if (canvas == null) return false;
+
+            _powerTooltipInstance = Instantiate(prefab, canvas.transform, worldPositionStays: false);
+            _powerTooltipInstance.name = prefab.name;
+            _powerTooltipInstance.Hide();
+            return true;
+        }
+
+        private Canvas ResolveTooltipCanvas()
+        {
+            var source = _scenePowerInfoButton != null
+                ? _scenePowerInfoButton.transform
+                : _powerInfoButton != null
+                    ? _powerInfoButton.transform
+                    : transform;
+
+            return source.GetComponentInParent<Canvas>();
+        }
+
         private void WireButton(Button button)
         {
             if (button == null) return;
 
             button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(() => _togglePowerInfo?.Invoke());
+            var holdTrigger = button.GetComponent<HoldTooltipTrigger>();
+            if (holdTrigger == null)
+            {
+                holdTrigger = button.gameObject.AddComponent<HoldTooltipTrigger>();
+            }
+
+            holdTrigger.Bind(
+                () => _showPowerInfo?.Invoke(),
+                () => _hidePowerInfo?.Invoke());
         }
 
         private TMP_Text FindTextByName(string targetName)
@@ -170,11 +254,7 @@ namespace AIWarsIdle.UI.Pvp
                 }
             }
 
-            var scene = gameObject.scene;
-            if (!scene.IsValid() || !scene.isLoaded)
-            {
-                scene = SceneManager.GetActiveScene();
-            }
+            if (!TryGetSearchScene(out var scene)) return null;
 
             var roots = scene.GetRootGameObjects();
             for (var i = 0; i < roots.Length; i++)
@@ -207,11 +287,7 @@ namespace AIWarsIdle.UI.Pvp
                 }
             }
 
-            var scene = gameObject.scene;
-            if (!scene.IsValid() || !scene.isLoaded)
-            {
-                scene = SceneManager.GetActiveScene();
-            }
+            if (!TryGetSearchScene(out var scene)) return null;
 
             var roots = scene.GetRootGameObjects();
             for (var i = 0; i < roots.Length; i++)
@@ -228,6 +304,23 @@ namespace AIWarsIdle.UI.Pvp
             }
 
             return null;
+        }
+
+        private bool TryGetSearchScene(out Scene scene)
+        {
+            scene = gameObject.scene;
+            if (scene.IsValid() && scene.isLoaded)
+            {
+                return true;
+            }
+
+            scene = SceneManager.GetActiveScene();
+            if (scene.IsValid() && scene.isLoaded)
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

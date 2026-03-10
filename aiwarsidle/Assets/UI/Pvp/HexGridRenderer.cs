@@ -519,7 +519,7 @@ namespace AIWarsIdle.UI.Pvp
                     }
 
                     _hud = _sceneHud;
-                    _hud.SetTogglePowerInfo(TogglePowerInfoTooltip);
+                    _hud.SetPowerInfoActions(ShowPowerInfoTooltip, HidePowerInfoTooltip);
                     _ownsHudInstance = false;
                     return _hud;
                 }
@@ -531,7 +531,7 @@ namespace AIWarsIdle.UI.Pvp
                 _hud = existing.GetComponent<PvpHudTemplateView>();
                 if (_hud != null)
                 {
-                    _hud.SetTogglePowerInfo(TogglePowerInfoTooltip);
+                    _hud.SetPowerInfoActions(ShowPowerInfoTooltip, HidePowerInfoTooltip);
                     _ownsHudInstance = true;
                     return _hud;
                 }
@@ -542,7 +542,7 @@ namespace AIWarsIdle.UI.Pvp
                 _hud = Instantiate(_hudPrefab, transform, false);
                 _hud.name = GeneratedHudName;
                 HideEditorObject(_hud.gameObject);
-                _hud.SetTogglePowerInfo(TogglePowerInfoTooltip);
+                _hud.SetPowerInfoActions(ShowPowerInfoTooltip, HidePowerInfoTooltip);
                 _ownsHudInstance = true;
                 return _hud;
             }
@@ -575,7 +575,7 @@ namespace AIWarsIdle.UI.Pvp
                 CreateHudTable(rect, "live_score_table", new Vector2(16f, -138f), 118f),
                 CreatePanelSecondaryButton(rect, "power_info_button", new Vector2(240f, 220f), "PvpPower ?"),
                 CreateHudTooltip(rect),
-                TogglePowerInfoTooltip);
+                ShowPowerInfoTooltip);
             _ownsHudInstance = true;
             return _hud;
         }
@@ -1929,9 +1929,15 @@ namespace AIWarsIdle.UI.Pvp
             RefreshFromSource(forceRebuild: false);
         }
 
-        private void TogglePowerInfoTooltip()
+        private void ShowPowerInfoTooltip()
         {
-            _powerInfoVisible = !_powerInfoVisible;
+            _powerInfoVisible = true;
+            GetOrCreateHud().SetPowerInfoVisible(true);
+        }
+
+        private void HidePowerInfoTooltip()
+        {
+            _powerInfoVisible = false;
             GetOrCreateHud().SetPowerInfoVisible(_powerInfoVisible);
         }
 
