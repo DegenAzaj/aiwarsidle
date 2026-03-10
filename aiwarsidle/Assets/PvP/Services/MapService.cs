@@ -116,6 +116,7 @@ namespace AIWarsIdle.PvP.Services
 
         public void AdvanceTime(long nowUnixSeconds)
         {
+            _state.CurrentUnixSeconds = nowUnixSeconds;
             ResetMapSeasonIfNeeded(nowUnixSeconds);
             TickStability(nowUnixSeconds);
         }
@@ -154,6 +155,7 @@ namespace AIWarsIdle.PvP.Services
             if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");
             if (_config.SectorDefinitions == null || _config.SectorDefinitions.Length == 0) return;
 
+            _state.CurrentUnixSeconds = nowUnixSeconds;
             EnsureSectorsMatchConfigIfPossible();
             ResetAllSectorsToSeasonStart(nowUnixSeconds);
             _lastTickUnixSeconds = 0;
@@ -218,7 +220,7 @@ namespace AIWarsIdle.PvP.Services
 
         private void ResetAllSectorsToSeasonStart(long nowUnixSeconds)
         {
-            CaptureMatchStartLocalPower();
+            CaptureMatchStartLocalAnchor(nowUnixSeconds);
 
             for (var i = 0; i < _state.Sectors.Length; i++)
             {
@@ -241,18 +243,33 @@ namespace AIWarsIdle.PvP.Services
             }
         }
 
-        private void CaptureMatchStartLocalPower()
+        private void CaptureMatchStartLocalAnchor(long nowUnixSeconds)
         {
+            _state.MatchStartUnixSeconds = nowUnixSeconds;
+
             if (_localSnapshotService == null)
             {
                 _state.MatchStartLocalPvpPower = 0;
+                _state.MatchStartLocalBasePps = 0;
+                _state.MatchStartLocalSoftCurrency = 0;
+                _state.MatchStartLocalLifetimeEarnedSoftCurrency = 0;
+                _state.MatchStartLocalLifetimeEarnedSoftCurrencyAtLastPrestige = 0;
+                _state.MatchStartLocalPrestigeCount = 0;
+                _state.MatchStartLocalPermanentUpgradeLevel = 0;
+                _state.MatchStartLocalGeneratorLevels = new int[GameState.GeneratorCount];
                 return;
             }
 
-            var snapshot = _localSnapshotService.BuildSnapshot();
-            var power = snapshot?.PvpPower ?? 0;
-            if (double.IsNaN(power) || double.IsInfinity(power) || power < 0) power = 0;
-            _state.MatchStartLocalPvpPower = power;
+            var anchor = _localSnapshotService.BuildMatchStartAnchor();
+            _state.MatchStartLocalPvpPower = anchor.PvpPower;
+            _state.MatchStartLocalBasePps = anchor.BasePps;
+            _state.MatchStartLocalSoftCurrency = anchor.SoftCurrency;
+            _state.MatchStartLocalLifetimeEarnedSoftCurrency = anchor.LifetimeEarnedSoftCurrency;
+            _state.MatchStartLocalLifetimeEarnedSoftCurrencyAtLastPrestige = anchor.LifetimeEarnedSoftCurrencyAtLastPrestige;
+            _state.MatchStartLocalPrestigeCount = anchor.PrestigeCount;
+            _state.MatchStartLocalPermanentUpgradeLevel = anchor.PermanentUpgradeLevel;
+            _state.MatchStartLocalGeneratorLevels = new int[GameState.GeneratorCount];
+            Array.Copy(anchor.GeneratorLevels, _state.MatchStartLocalGeneratorLevels, Math.Min(anchor.GeneratorLevels.Length, _state.MatchStartLocalGeneratorLevels.Length));
         }
 
         private void EnsureHomeSectorInvariants(long nowUnixSeconds)

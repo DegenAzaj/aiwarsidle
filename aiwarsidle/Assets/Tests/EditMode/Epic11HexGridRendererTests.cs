@@ -99,12 +99,18 @@ namespace AIWarsIdle.Tests.EditMode
             var entries = (System.Collections.IList)result;
 
             Assert.AreEqual(3, entries.Count);
-            Assert.AreEqual("Player 3", GetEntryField<string>(entries[0], "Name"));
             Assert.AreEqual(2, GetEntryField<int>(entries[0], "Score"));
-            Assert.AreEqual("You", GetEntryField<string>(entries[1], "Name"));
             Assert.AreEqual(2, GetEntryField<int>(entries[1], "Score"));
-            Assert.AreEqual("Player 2", GetEntryField<string>(entries[2], "Name"));
             Assert.AreEqual(1, GetEntryField<int>(entries[2], "Score"));
+            Assert.AreEqual("Player 2", GetEntryField<string>(entries[2], "Name"));
+
+            var firstPower = GetEntryField<double>(entries[0], "PvpPower");
+            var secondPower = GetEntryField<double>(entries[1], "PvpPower");
+            Assert.GreaterOrEqual(firstPower, secondPower);
+
+            var firstName = GetEntryField<string>(entries[0], "Name");
+            var secondName = GetEntryField<string>(entries[1], "Name");
+            CollectionAssert.AreEquivalent(new[] { "You", "Player 3" }, new[] { firstName, secondName });
 
             ScriptableObject.DestroyImmediate(mapConfig);
             ScriptableObject.DestroyImmediate(pvpConfig);

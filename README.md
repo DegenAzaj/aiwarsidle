@@ -336,3 +336,67 @@ Zmiany zrobione w ramach uporządkowania warstwy testowego PvE na mapie przed do
 - Build / weryfikacja:
   - `dotnet build aiwarsidle/AIWarsIdle.Tests.EditMode.csproj -c Release -v minimal`
   - build przechodzi po zmianach; `dotnet test` w tym repo nie wypisywał wiarygodnego podsumowania test runnera, więc podstawową weryfikacją był czysty build projektu testowego i nowe testy regresyjne.
+
+---
+
+## PvP bot progression model update
+
+Zmiana zrobiona po analizie snowballa botów na mapie: boty startujące blisko mocy gracza były OK, ale ich dalszy wzrost `PvpPower` był zbyt agresywnie pompowany przez sam fakt przejmowania sektorów.
+
+- Główny problem starego modelu:
+  - bot dostawał sztuczny liniowy bonus power za każdy kolejny sektor zależny od `openingLocalPower`,
+  - w praktyce dawało to dużo szybszy snowball niż u realnego gracza,
+  - przez to dominujący bot potrafił zbyt łatwo zrobić stan, w którym odbijanie sektora przy home spadało do bardzo niskiego `win chance`.
+
+- Nowy model:
+  - bot nadal startuje z anchorem bliskim lokalnemu graczowi z początku potyczki mapy,
+  - dalszy rozwój bota jest liczony przez wirtualną symulację idle zamiast przez sztuczny bonus „power za sektor”,
+  - bot ma teraz:
+    - `virtual PPS`,
+    - `virtual generator upgrades`,
+    - `virtual prestige`,
+    - `virtual permanent upgrades`,
+  - finalny `PvpPower` bota jest liczony tą samą logiką co u gracza:
+    - prestige,
+    - permanent upgrades,
+    - liczba home-connected sektorów,
+    - bonusy PvP z sektorów,
+    - produkcyjny bonus do `PvpPower`.
+
+- Anchory startu meczu:
+  - przy starcie / resecie potyczki mapa zapisuje lokalny stan potrzebny do realistycznej symulacji botów:
+    - `MatchStartLocalPvpPower`,
+    - `MatchStartLocalBasePps`,
+    - `MatchStartLocalSoftCurrency`,
+    - `MatchStartLocalLifetimeEarnedSoftCurrency`,
+    - `MatchStartLocalLifetimeEarnedSoftCurrencyAtLastPrestige`,
+    - `MatchStartLocalPrestigeCount`,
+    - `MatchStartLocalPermanentUpgradeLevel`,
+    - `MatchStartLocalGeneratorLevels`,
+    - `MatchStartUnixSeconds`.
+
+- Runtime / persistence:
+  - rozszerzony `MapState` w `aiwarsidle/Assets/GameCore/Domain/MapState.cs`,
+  - zapis / odczyt anchorów do save w:
+    - `aiwarsidle/Assets/Persistence/Domain/SaveDataV1.cs`
+    - `aiwarsidle/Assets/Persistence/Services/SaveDataV1GameStateMapper.cs`,
+  - reset mapy zapisuje pełny anchor przez:
+    - `aiwarsidle/Assets/PvP/Services/SnapshotService.cs`
+    - `aiwarsidle/Assets/PvP/Services/MapService.cs`.
+
+- Implementacja botów:
+  - nowy model siedzi w `aiwarsidle/Assets/PvP/Services/FactionSnapshotService.cs`,
+  - bot używa wirtualnej ekonomii opartej o:
+    - `ProductionService`,
+    - `UpgradeService`,
+    - `PrestigeService`,
+    - mapowy bonus produkcji liczony dla jego własnych sektorów,
+  - sektor dalej wzmacnia bota tak samo strukturalnie jak gracza, zamiast udawać dodatkowe pseudo-prestige power.
+
+- Testy:
+  - dopisane regresje w `aiwarsidle/Assets/Tests/EditMode/Epic6MapCoreTests.cs`,
+  - zaktualizowane testy schemy save w `aiwarsidle/Assets/Tests/EditMode/SaveDataV1SchemaTests.cs`.
+
+- Weryfikacja:
+  - `dotnet test aiwarsidle/AIWarsIdle.Tests.EditMode.csproj -c Release`
+  - testy kończą się poprawnie po zmianach.

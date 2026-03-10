@@ -89,7 +89,7 @@ internal sealed class SimulationBatchRunner
         var economy = new EconomyService(state);
         var production = new ProductionService(state, balanceConfig, economy);
         var snapshot = new SnapshotService(state, pvpConfig, production, mapConfig.LocalPlayerId, mapConfig);
-        var factions = new FactionSnapshotService(state, mapConfig, pvpConfig, snapshot);
+        var factions = new FactionSnapshotService(state, mapConfig, pvpConfig, snapshot, balanceConfig);
         var matchmaking = new MatchmakingService(mapConfig, factions);
         var battleSim = new BattleSimService(pvpConfig);
         var map = new MapService(state.MapState, mapConfig);

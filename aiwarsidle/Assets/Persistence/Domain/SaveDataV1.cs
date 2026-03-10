@@ -25,7 +25,15 @@ namespace AIWarsIdle.Persistence.Domain
         public long LastPvpAdAttackClaimUnixSeconds;
 
         public int MapSeasonId;
+        public long MatchStartUnixSeconds;
         public double MatchStartLocalPvpPower;
+        public double MatchStartLocalBasePps;
+        public double MatchStartLocalSoftCurrency;
+        public double MatchStartLocalLifetimeEarnedSoftCurrency;
+        public double MatchStartLocalLifetimeEarnedSoftCurrencyAtLastPrestige;
+        public int MatchStartLocalPrestigeCount;
+        public int MatchStartLocalPermanentUpgradeLevel;
+        public int[] MatchStartLocalGeneratorLevels = new int[GameState.GeneratorCount];
         public SectorSaveData[] Sectors = Array.Empty<SectorSaveData>();
 
         public OverclockSaveData Overclock = new();
@@ -75,6 +83,17 @@ namespace AIWarsIdle.Persistence.Domain
                 Sectors = Array.Empty<SectorSaveData>();
             }
 
+            if (MatchStartLocalGeneratorLevels == null)
+            {
+                MatchStartLocalGeneratorLevels = new int[GameState.GeneratorCount];
+            }
+            else if (MatchStartLocalGeneratorLevels.Length != GameState.GeneratorCount)
+            {
+                var fixedLevels = new int[GameState.GeneratorCount];
+                Array.Copy(MatchStartLocalGeneratorLevels, fixedLevels, Math.Min(MatchStartLocalGeneratorLevels.Length, fixedLevels.Length));
+                MatchStartLocalGeneratorLevels = fixedLevels;
+            }
+
             for (var i = 0; i < Sectors.Length; i++)
             {
                 Sectors[i] ??= new SectorSaveData();
@@ -93,10 +112,33 @@ namespace AIWarsIdle.Persistence.Domain
             if (LastPvpAttackRegenUnixSeconds < 0) LastPvpAttackRegenUnixSeconds = 0;
             if (NextPvpAttackRegenAtUnixSeconds < 0) NextPvpAttackRegenAtUnixSeconds = 0;
             if (LastPvpAdAttackClaimUnixSeconds < 0) LastPvpAdAttackClaimUnixSeconds = 0;
+            if (MatchStartUnixSeconds < 0) MatchStartUnixSeconds = 0;
             if (double.IsNaN(MatchStartLocalPvpPower) || double.IsInfinity(MatchStartLocalPvpPower) || MatchStartLocalPvpPower < 0)
             {
                 MatchStartLocalPvpPower = 0;
             }
+            if (double.IsNaN(MatchStartLocalBasePps) || double.IsInfinity(MatchStartLocalBasePps) || MatchStartLocalBasePps < 0)
+            {
+                MatchStartLocalBasePps = 0;
+            }
+            if (double.IsNaN(MatchStartLocalSoftCurrency) || double.IsInfinity(MatchStartLocalSoftCurrency) || MatchStartLocalSoftCurrency < 0)
+            {
+                MatchStartLocalSoftCurrency = 0;
+            }
+            if (double.IsNaN(MatchStartLocalLifetimeEarnedSoftCurrency) || double.IsInfinity(MatchStartLocalLifetimeEarnedSoftCurrency) || MatchStartLocalLifetimeEarnedSoftCurrency < 0)
+            {
+                MatchStartLocalLifetimeEarnedSoftCurrency = 0;
+            }
+            if (double.IsNaN(MatchStartLocalLifetimeEarnedSoftCurrencyAtLastPrestige) || double.IsInfinity(MatchStartLocalLifetimeEarnedSoftCurrencyAtLastPrestige) || MatchStartLocalLifetimeEarnedSoftCurrencyAtLastPrestige < 0)
+            {
+                MatchStartLocalLifetimeEarnedSoftCurrencyAtLastPrestige = 0;
+            }
+            if (MatchStartLocalLifetimeEarnedSoftCurrencyAtLastPrestige > MatchStartLocalLifetimeEarnedSoftCurrency)
+            {
+                MatchStartLocalLifetimeEarnedSoftCurrencyAtLastPrestige = MatchStartLocalLifetimeEarnedSoftCurrency;
+            }
+            if (MatchStartLocalPrestigeCount < 0) MatchStartLocalPrestigeCount = 0;
+            if (MatchStartLocalPermanentUpgradeLevel < 0) MatchStartLocalPermanentUpgradeLevel = 0;
             if (LastLoginUnixSeconds < 0) LastLoginUnixSeconds = 0;
             if (PendingOfflineGain < 0) PendingOfflineGain = 0;
             if (LastBankedOfflineRawSeconds < 0) LastBankedOfflineRawSeconds = 0;

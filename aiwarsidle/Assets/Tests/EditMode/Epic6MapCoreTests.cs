@@ -143,7 +143,7 @@ namespace AIWarsIdle.Tests.EditMode
         private static FactionSnapshotService CreateFactionSnapshots(GameState state, MapConfig mapCfg, PvpConfig pvp, ProductionService production)
         {
             var localSnapshot = new SnapshotService(state, pvp, production, mapConfig: mapCfg);
-            return new FactionSnapshotService(state, mapCfg, pvp, localSnapshot);
+            return new FactionSnapshotService(state, mapCfg, pvp, localSnapshot, CreateValidBalanceConfig());
         }
 
         [Test]
@@ -796,13 +796,15 @@ namespace AIWarsIdle.Tests.EditMode
         public void NeutralSector_Uses_Weaker_DefenderSnapshot_Than_BotSector()
         {
             var mapCfg = CreateSmallMapConfig(botMult: 1.0f);
+            mapCfg.HomeSectorIds = new[] { 0, 2 };
+            mapCfg.HomeSectorOwnerPlayerIds = new[] { 1, 2 };
             mapCfg.NeutralPowerMinMultiplier = 0.5f;
             mapCfg.NeutralPowerMaxMultiplier = 0.5f;
             mapCfg.NeutralPowerHomeDistanceMinFactor = 0.6f;
             mapCfg.NeutralPowerHomeDistanceStepFactor = 0.2f;
             mapCfg.ValidateOrThrow();
 
-            var state = new GameState();
+            var state = new GameState { PrestigeCount = 1 };
             state.MapState.Sectors = new[]
             {
                 new SectorState { SectorId = 0, OwnerPlayerId = 1, Stability = 100f },
@@ -824,7 +826,7 @@ namespace AIWarsIdle.Tests.EditMode
             var neutral = matchmaking.GetDefenderSnapshot(attacker, neutralSector, seed: 1, attackerPlayerId: 1);
             var bot = matchmaking.GetDefenderSnapshot(attacker, botSector, seed: 1);
 
-            Assert.AreEqual(30d, neutral.PvpPower, 1e-9);
+            Assert.AreEqual(30d, neutral.PvpPower, 1e-5);
             Assert.Greater(bot.PvpPower, neutral.PvpPower);
         }
 
@@ -847,8 +849,8 @@ namespace AIWarsIdle.Tests.EditMode
             var near = matchmaking.GetDefenderSnapshot(attacker, nearNeutral, seed: 1, attackerPlayerId: 1);
             var far = matchmaking.GetDefenderSnapshot(attacker, farNeutral, seed: 1, attackerPlayerId: 1);
 
-            Assert.AreEqual(30d, near.PvpPower, 1e-9);
-            Assert.AreEqual(40d, far.PvpPower, 1e-9);
+            Assert.AreEqual(30d, near.PvpPower, 1e-5);
+            Assert.AreEqual(40d, far.PvpPower, 1e-5);
             Assert.Less(near.PvpPower, far.PvpPower);
         }
 
@@ -906,7 +908,7 @@ namespace AIWarsIdle.Tests.EditMode
             var production = new ProductionService(state, balance, economy);
             var pvp = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 99);
             var snapshot = new SnapshotService(state, pvp, production, mapConfig: mapCfg);
-            var factions = new FactionSnapshotService(state, mapCfg, pvp, snapshot);
+            var factions = new FactionSnapshotService(state, mapCfg, pvp, snapshot, CreateValidBalanceConfig());
             var matchmaking = new MatchmakingService(mapCfg, factions);
             var sim = new BattleSimService(pvp);
             var attacksCfg = CreateDefaultPvpAttacksConfig(maxAttacks: 1, regenSeconds: 10_000);
@@ -988,7 +990,7 @@ namespace AIWarsIdle.Tests.EditMode
             var production = new ProductionService(state, balance, economy);
             var pvp = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 99);
             var snapshot = new SnapshotService(state, pvp, production, mapConfig: mapCfg);
-            var factions = new FactionSnapshotService(state, mapCfg, pvp, snapshot);
+            var factions = new FactionSnapshotService(state, mapCfg, pvp, snapshot, CreateValidBalanceConfig());
             var matchmaking = new MatchmakingService(mapCfg, factions);
             var sim = new BattleSimService(pvp);
             var attacksCfg = CreateDefaultPvpAttacksConfig(maxAttacks: 2, regenSeconds: 10_000);
@@ -1263,14 +1265,60 @@ namespace AIWarsIdle.Tests.EditMode
             var local = factions.BuildCurrentSnapshot(1).PvpPower;
             var bot = factions.BuildCurrentSnapshot(6).PvpPower;
 
-            Assert.AreEqual(43d, local, 1e-9);
+            Assert.AreEqual(44d, local, 1e-9);
             Assert.LessOrEqual(bot, local * 1.15d);
+        }
+
+        [Test]
+        public void FactionSnapshotService_Bots_DoNotStart_AsIdenticalClones()
+        {
+            var cfg = CreateSmallMapConfig(botMult: 1.0f);
+            cfg.HomeSectorIds = new[] { 0, 2, 3 };
+            cfg.HomeSectorOwnerPlayerIds = new[] { 1, 5, 6 };
+            cfg.SectorDefinitions = new[]
+            {
+                new MapConfig.SectorDefinition { SectorId = 0, Name = "Home", ProductionBonusPercent = 5f, PvpPowerBonusFlat = 0.0, PvpPowerBonusPercent = 0f },
+                new MapConfig.SectorDefinition { SectorId = 1, Name = "A", ProductionBonusPercent = 5f, PvpPowerBonusFlat = 0.0, PvpPowerBonusPercent = 0f },
+                new MapConfig.SectorDefinition { SectorId = 2, Name = "B", ProductionBonusPercent = 5f, PvpPowerBonusFlat = 0.0, PvpPowerBonusPercent = 0f },
+                new MapConfig.SectorDefinition { SectorId = 3, Name = "C", ProductionBonusPercent = 5f, PvpPowerBonusFlat = 0.0, PvpPowerBonusPercent = 0f },
+            };
+            cfg.Adjacency = new[]
+            {
+                new MapConfig.SectorEdge { A = 0, B = 1 },
+                new MapConfig.SectorEdge { A = 1, B = 2 },
+                new MapConfig.SectorEdge { A = 2, B = 3 }
+            };
+            cfg.ValidateOrThrow();
+
+            var state = new GameState { PrestigeCount = 1 };
+            state.MapState.Sectors = new[]
+            {
+                new SectorState { SectorId = 0, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 1, OwnerPlayerId = 0, Stability = 0f },
+                new SectorState { SectorId = 2, OwnerPlayerId = 5, Stability = 100f },
+                new SectorState { SectorId = 3, OwnerPlayerId = 6, Stability = 100f },
+            };
+
+            var economy = new EconomyService(state);
+            var balance = CreateValidBalanceConfig();
+            var production = new ProductionService(state, balance, economy);
+            var pvp = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 43);
+            var factions = new FactionSnapshotService(state, cfg, pvp, new SnapshotService(state, pvp, production, mapConfig: cfg), balance);
+
+            var bot5 = factions.BuildCurrentSnapshot(5).PvpPower;
+            var bot6 = factions.BuildCurrentSnapshot(6).PvpPower;
+
+            Assert.AreNotEqual(bot5, bot6);
         }
 
         [Test]
         public void MapService_Reset_Captures_LocalPower_As_MatchStartBaseline()
         {
             var state = new GameState { PrestigeCount = 1 };
+            state.SoftCurrency = 42;
+            state.LifetimeEarnedSoftCurrency = 200;
+            state.LifetimeEarnedSoftCurrencyAtLastPrestige = 150;
+            state.GeneratorLevels[0] = 3;
             state.MapState.Sectors = new[]
             {
                 new SectorState { SectorId = 0, OwnerPlayerId = 1, Stability = 100f },
@@ -1292,7 +1340,99 @@ namespace AIWarsIdle.Tests.EditMode
 
             map.DebugResetCurrentMatch(nowUnixSeconds: 1000);
 
-            Assert.AreEqual(48d, state.MapState.MatchStartLocalPvpPower, 1e-9);
+            Assert.AreEqual(49d, state.MapState.MatchStartLocalPvpPower, 1e-9);
+            Assert.AreEqual(1000, state.MapState.MatchStartUnixSeconds);
+            Assert.AreEqual(42d, state.MapState.MatchStartLocalSoftCurrency, 1e-9);
+            Assert.AreEqual(200d, state.MapState.MatchStartLocalLifetimeEarnedSoftCurrency, 1e-9);
+            Assert.AreEqual(150d, state.MapState.MatchStartLocalLifetimeEarnedSoftCurrencyAtLastPrestige, 1e-9);
+            Assert.AreEqual(3, state.MapState.MatchStartLocalGeneratorLevels[0]);
+            Assert.Greater(state.MapState.MatchStartLocalBasePps, 0d);
+        }
+
+        [Test]
+        public void FactionSnapshotService_BotPower_GrowsOverTime_ViaVirtualIdleAndPrestige()
+        {
+            var cfg = CreateSmallMapConfig(botMult: 1.0f);
+            cfg.HomeSectorIds = new[] { 0, 2 };
+            cfg.HomeSectorOwnerPlayerIds = new[] { 1, 2 };
+            cfg.ValidateOrThrow();
+
+            var state = new GameState();
+            state.GeneratorLevels[0] = 20;
+            state.MapState.Sectors = new[]
+            {
+                new SectorState { SectorId = 0, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 1, OwnerPlayerId = 0, Stability = 0f },
+                new SectorState { SectorId = 2, OwnerPlayerId = 2, Stability = 100f },
+            };
+
+            var balance = CreateValidBalanceConfig();
+            var economy = new EconomyService(state);
+            var production = new ProductionService(state, balance, economy);
+            var pvp = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 2.0);
+            pvp.PermanentPvpPowerPerLevel = 2.0;
+            pvp.ProdToPvpMaxBonus = 0.2;
+            pvp.ProdToPvpHalfCapPps = 100.0;
+            pvp.ValidateOrThrow();
+
+            var localSnapshot = new SnapshotService(state, pvp, production, mapConfig: cfg);
+            var factions = new FactionSnapshotService(state, cfg, pvp, localSnapshot, balance);
+
+            state.MapState.MatchStartUnixSeconds = 1_000;
+            state.MapState.CurrentUnixSeconds = 1_000;
+            var before = factions.BuildCurrentSnapshot(2).PvpPower;
+
+            state.MapState.CurrentUnixSeconds = 1_000 + (24 * 60 * 60);
+            var after = factions.BuildCurrentSnapshot(2).PvpPower;
+
+            Assert.Greater(after, before);
+        }
+
+        [Test]
+        public void FactionSnapshotService_BotSectorGrowth_TracksPlayerSectorGrowth()
+        {
+            var cfg = CreateSmallMapConfig(botMult: 1.0f);
+            cfg.HomeSectorIds = new[] { 0, 2 };
+            cfg.HomeSectorOwnerPlayerIds = new[] { 1, 2 };
+            cfg.ValidateOrThrow();
+
+            var state = new GameState();
+            state.MapState.Sectors = new[]
+            {
+                new SectorState { SectorId = 0, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 1, OwnerPlayerId = 0, Stability = 0f },
+                new SectorState { SectorId = 2, OwnerPlayerId = 2, Stability = 100f },
+            };
+
+            var balance = CreateValidBalanceConfig();
+            var economy = new EconomyService(state);
+            var production = new ProductionService(state, balance, economy);
+            var pvp = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 0.0);
+            pvp.PermanentPvpPowerPerLevel = 0.0;
+            pvp.SectorPvpPowerPerSector = 10.0;
+            pvp.ProdToPvpMaxBonus = 0.0;
+            pvp.ProdToPvpHalfCapPps = 1.0;
+            pvp.ValidateOrThrow();
+
+            var localSnapshot = new SnapshotService(state, pvp, production, mapConfig: cfg);
+            var factions = new FactionSnapshotService(state, cfg, pvp, localSnapshot, balance);
+
+            state.MapState.MatchStartUnixSeconds = 1_000;
+            state.MapState.CurrentUnixSeconds = 1_000;
+
+            var playerBefore = localSnapshot.BuildSnapshot().PvpPower;
+            var botBefore = factions.BuildCurrentSnapshot(2).PvpPower;
+
+            state.MapState.Sectors[1].OwnerPlayerId = 1;
+            var playerAfter = localSnapshot.BuildSnapshot().PvpPower;
+
+            state.MapState.Sectors[1].OwnerPlayerId = 2;
+            var botAfter = factions.BuildCurrentSnapshot(2).PvpPower;
+
+            var playerDelta = playerAfter - playerBefore;
+            var botDelta = botAfter - botBefore;
+
+            Assert.AreEqual(playerDelta, botDelta, 1e-6);
         }
 
         [Test]

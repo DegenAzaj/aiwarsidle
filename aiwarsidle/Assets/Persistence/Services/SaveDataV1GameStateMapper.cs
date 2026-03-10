@@ -57,7 +57,20 @@ namespace AIWarsIdle.Persistence.Services
 
             state.MapState ??= new MapState();
             state.MapState.MapSeasonId = save.MapSeasonId;
+            state.MapState.MatchStartUnixSeconds = save.MatchStartUnixSeconds;
             state.MapState.MatchStartLocalPvpPower = save.MatchStartLocalPvpPower;
+            state.MapState.MatchStartLocalBasePps = save.MatchStartLocalBasePps;
+            state.MapState.MatchStartLocalSoftCurrency = save.MatchStartLocalSoftCurrency;
+            state.MapState.MatchStartLocalLifetimeEarnedSoftCurrency = save.MatchStartLocalLifetimeEarnedSoftCurrency;
+            state.MapState.MatchStartLocalLifetimeEarnedSoftCurrencyAtLastPrestige = save.MatchStartLocalLifetimeEarnedSoftCurrencyAtLastPrestige;
+            state.MapState.MatchStartLocalPrestigeCount = save.MatchStartLocalPrestigeCount;
+            state.MapState.MatchStartLocalPermanentUpgradeLevel = save.MatchStartLocalPermanentUpgradeLevel;
+            state.MapState.CurrentUnixSeconds = save.LastLoginUnixSeconds;
+            state.MapState.MatchStartLocalGeneratorLevels = new int[GameState.GeneratorCount];
+            if (save.MatchStartLocalGeneratorLevels != null)
+            {
+                Array.Copy(save.MatchStartLocalGeneratorLevels, state.MapState.MatchStartLocalGeneratorLevels, Math.Min(save.MatchStartLocalGeneratorLevels.Length, state.MapState.MatchStartLocalGeneratorLevels.Length));
+            }
 
             var sectors = save.Sectors ?? Array.Empty<SectorSaveData>();
             var mappedSectors = new SectorState[sectors.Length];
@@ -143,7 +156,27 @@ namespace AIWarsIdle.Persistence.Services
             save.LastBankedOfflineEffectiveSeconds = state.LastBankedOfflineEffectiveSeconds;
 
             save.MapSeasonId = state.MapState?.MapSeasonId ?? 0;
+            save.MatchStartUnixSeconds = state.MapState?.MatchStartUnixSeconds ?? 0;
             save.MatchStartLocalPvpPower = state.MapState?.MatchStartLocalPvpPower ?? 0;
+            save.MatchStartLocalBasePps = state.MapState?.MatchStartLocalBasePps ?? 0;
+            save.MatchStartLocalSoftCurrency = state.MapState?.MatchStartLocalSoftCurrency ?? 0;
+            save.MatchStartLocalLifetimeEarnedSoftCurrency = state.MapState?.MatchStartLocalLifetimeEarnedSoftCurrency ?? 0;
+            save.MatchStartLocalLifetimeEarnedSoftCurrencyAtLastPrestige = state.MapState?.MatchStartLocalLifetimeEarnedSoftCurrencyAtLastPrestige ?? 0;
+            save.MatchStartLocalPrestigeCount = state.MapState?.MatchStartLocalPrestigeCount ?? 0;
+            save.MatchStartLocalPermanentUpgradeLevel = state.MapState?.MatchStartLocalPermanentUpgradeLevel ?? 0;
+            if (save.MatchStartLocalGeneratorLevels == null || save.MatchStartLocalGeneratorLevels.Length != GameState.GeneratorCount)
+            {
+                save.MatchStartLocalGeneratorLevels = new int[GameState.GeneratorCount];
+            }
+            var anchorGeneratorLevels = state.MapState?.MatchStartLocalGeneratorLevels;
+            if (anchorGeneratorLevels != null)
+            {
+                Array.Copy(anchorGeneratorLevels, save.MatchStartLocalGeneratorLevels, Math.Min(anchorGeneratorLevels.Length, save.MatchStartLocalGeneratorLevels.Length));
+            }
+            else
+            {
+                Array.Clear(save.MatchStartLocalGeneratorLevels, 0, save.MatchStartLocalGeneratorLevels.Length);
+            }
 
             var sectors = state.MapState?.Sectors ?? Array.Empty<SectorState>();
             save.Sectors = new SectorSaveData[sectors.Length];

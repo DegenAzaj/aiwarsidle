@@ -31,6 +31,38 @@ namespace AIWarsIdle.PvP.Services
             }
         }
 
+        public readonly struct MatchStartAnchor
+        {
+            public readonly double PvpPower;
+            public readonly double BasePps;
+            public readonly double SoftCurrency;
+            public readonly double LifetimeEarnedSoftCurrency;
+            public readonly double LifetimeEarnedSoftCurrencyAtLastPrestige;
+            public readonly int PrestigeCount;
+            public readonly int PermanentUpgradeLevel;
+            public readonly int[] GeneratorLevels;
+
+            public MatchStartAnchor(
+                double pvpPower,
+                double basePps,
+                double softCurrency,
+                double lifetimeEarnedSoftCurrency,
+                double lifetimeEarnedSoftCurrencyAtLastPrestige,
+                int prestigeCount,
+                int permanentUpgradeLevel,
+                int[] generatorLevels)
+            {
+                PvpPower = pvpPower;
+                BasePps = basePps;
+                SoftCurrency = softCurrency;
+                LifetimeEarnedSoftCurrency = lifetimeEarnedSoftCurrency;
+                LifetimeEarnedSoftCurrencyAtLastPrestige = lifetimeEarnedSoftCurrencyAtLastPrestige;
+                PrestigeCount = prestigeCount;
+                PermanentUpgradeLevel = permanentUpgradeLevel;
+                GeneratorLevels = generatorLevels ?? Array.Empty<int>();
+            }
+        }
+
         private const int DefaultLocalPlayerId = 1;
 
         private readonly GameState _state;
@@ -77,6 +109,42 @@ namespace AIWarsIdle.PvP.Services
                 League = _state.League,
                 SeasonPoints = _state.SeasonPoints
             };
+        }
+
+        public MatchStartAnchor BuildMatchStartAnchor()
+        {
+            var snapshot = BuildSnapshot();
+            var generatorLevels = new int[GameState.GeneratorCount];
+            if (_state.GeneratorLevels != null)
+            {
+                Array.Copy(_state.GeneratorLevels, generatorLevels, Math.Min(_state.GeneratorLevels.Length, generatorLevels.Length));
+            }
+
+            var basePps = _production.CalculateBaseProductionPerSecondWithoutSubscription();
+            if (double.IsNaN(basePps) || double.IsInfinity(basePps) || basePps < 0) basePps = 0;
+
+            var softCurrency = _state.SoftCurrency;
+            if (double.IsNaN(softCurrency) || double.IsInfinity(softCurrency) || softCurrency < 0) softCurrency = 0;
+
+            var lifetimeEarned = _state.LifetimeEarnedSoftCurrency;
+            if (double.IsNaN(lifetimeEarned) || double.IsInfinity(lifetimeEarned) || lifetimeEarned < 0) lifetimeEarned = 0;
+
+            var lifetimeAtLastPrestige = _state.LifetimeEarnedSoftCurrencyAtLastPrestige;
+            if (double.IsNaN(lifetimeAtLastPrestige) || double.IsInfinity(lifetimeAtLastPrestige) || lifetimeAtLastPrestige < 0)
+            {
+                lifetimeAtLastPrestige = 0;
+            }
+            if (lifetimeAtLastPrestige > lifetimeEarned) lifetimeAtLastPrestige = lifetimeEarned;
+
+            return new MatchStartAnchor(
+                snapshot?.PvpPower ?? 0,
+                basePps,
+                softCurrency,
+                lifetimeEarned,
+                lifetimeAtLastPrestige,
+                Math.Max(0, _state.PrestigeCount),
+                Math.Max(0, _state.PermanentUpgradeLevel),
+                generatorLevels);
         }
 
         public PowerBreakdown BuildPowerBreakdown()
