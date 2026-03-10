@@ -89,6 +89,12 @@ namespace AIWarsIdle.UI.Pvp
         private Vector2 _lastViewportSize;
         private AttackStrategy _selectedStrategy = AttackStrategy.Stable;
         private bool _powerInfoVisible;
+        private long _cachedLiveScoreStamp = long.MinValue;
+        private string _cachedLiveScoreTable;
+        private long _cachedDetailStamp = long.MinValue;
+        private int _cachedDetailSectorId = -1;
+        private AttackStrategy _cachedDetailStrategy = AttackStrategy.Stable;
+        private SectorDetailState _cachedDetailState;
 
         public int Radius
         {
@@ -128,6 +134,11 @@ namespace AIWarsIdle.UI.Pvp
             _selected = null;
             _lastLayoutHash = 0;
             _lastViewportSize = Vector2.zero;
+            _cachedLiveScoreStamp = long.MinValue;
+            _cachedLiveScoreTable = null;
+            _cachedDetailStamp = long.MinValue;
+            _cachedDetailSectorId = -1;
+            _cachedDetailStrategy = AttackStrategy.Stable;
         }
 
         private void Update()
@@ -1702,7 +1713,7 @@ namespace AIWarsIdle.UI.Pvp
             var powerTooltipBody = snapshotService != null
                 ? BuildPowerTooltipBody(snapshotService.BuildPowerBreakdown())
                 : string.Empty;
-            var liveScoreTable = BuildLiveScoreTable(loop);
+            var liveScoreTable = GetCachedLiveScoreTable(loop);
 
             UpdateExternalAttackHud(attackCountText, regenTimerText);
             hud.SetPowerTooltipContent("PvP Power", powerTooltipBody);
@@ -1839,6 +1850,17 @@ namespace AIWarsIdle.UI.Pvp
         private SectorDetailState BuildDetailState(DisplaySector sector)
         {
             var loop = _context?.Loop;
+            if (loop != null)
+            {
+                var detailStamp = ComputeDetailStateStamp(loop, sector, _selectedStrategy);
+                if (_cachedDetailSectorId == sector.SectorId &&
+                    _cachedDetailStrategy == _selectedStrategy &&
+                    _cachedDetailStamp == detailStamp)
+                {
+                    return _cachedDetailState;
+                }
+            }
+
             var ownerText = sector.OwnerPlayerId > 0 ? $"Owner: Player {sector.OwnerPlayerId}" : "Owner: Neutral";
             var bonusText = $"Bonus: +{sector.ProductionBonusPercent:0.#}% production";
             var stabilityText = $"Stability: {sector.Stability:0.#}%";
@@ -1878,7 +1900,7 @@ namespace AIWarsIdle.UI.Pvp
                 statusText = "This is a protected home sector.";
             }
 
-            return new SectorDetailState
+            var detailState = new SectorDetailState
             {
                 Sector = sector,
                 OwnerText = ownerText,
@@ -1892,6 +1914,16 @@ namespace AIWarsIdle.UI.Pvp
                 StrategyLabel = $"Strategy: {_selectedStrategy}",
                 CanAttack = canAttack
             };
+
+            if (loop != null)
+            {
+                _cachedDetailSectorId = sector.SectorId;
+                _cachedDetailStrategy = _selectedStrategy;
+                _cachedDetailStamp = ComputeDetailStateStamp(loop, sector, _selectedStrategy);
+                _cachedDetailState = detailState;
+            }
+
+            return detailState;
         }
 
         private void OnCycleStrategy()
@@ -2070,6 +2102,135 @@ namespace AIWarsIdle.UI.Pvp
             }
 
             return $"<mspace=0.58em>{string.Join("\n", lines)}</mspace>";
+        }
+
+        private string GetCachedLiveScoreTable(Bootstrap.GameLoop loop)
+        {
+            var stamp = ComputeLiveScoreStamp(loop);
+            if (_cachedLiveScoreStamp == stamp && !string.IsNullOrEmpty(_cachedLiveScoreTable))
+            {
+                return _cachedLiveScoreTable;
+            }
+
+            _cachedLiveScoreStamp = stamp;
+            _cachedLiveScoreTable = BuildLiveScoreTable(loop);
+            return _cachedLiveScoreTable;
+        }
+
+        private static long ComputeLiveScoreStamp(Bootstrap.GameLoop loop)
+        {
+            if (loop == null) return 0;
+
+            unchecked
+            {
+                long stamp = 17;
+                stamp = (stamp * 31) + loop.NowUnixSeconds;
+                stamp = (stamp * 31) + ComputeLocalPowerStateStamp(loop.State);
+
+                var mapState = loop.State?.MapState;
+                stamp = (stamp * 31) + (mapState?.MapSeasonId ?? 0);
+                stamp = (stamp * 31) + (mapState?.MatchStartUnixSeconds ?? 0);
+
+                var sectors = mapState?.Sectors;
+                if (sectors != null)
+                {
+                    for (var i = 0; i < sectors.Length; i++)
+                    {
+                        var sector = sectors[i];
+                        if (sector == null)
+                        {
+                            stamp = (stamp * 31) - 1;
+                            continue;
+                        }
+
+                        stamp = (stamp * 31) + sector.SectorId;
+                        stamp = (stamp * 31) + sector.OwnerPlayerId;
+                    }
+                }
+
+                return stamp;
+            }
+        }
+
+        private static long ComputeDetailStateStamp(Bootstrap.GameLoop loop, DisplaySector sector, AttackStrategy strategy)
+        {
+            if (loop == null) return 0;
+
+            unchecked
+            {
+                long stamp = 17;
+                stamp = (stamp * 31) + sector.SectorId;
+                stamp = (stamp * 31) + sector.OwnerPlayerId;
+                stamp = (stamp * 31) + (long)Mathf.RoundToInt(sector.Stability * 100f);
+                stamp = (stamp * 31) + (int)strategy;
+                stamp = (stamp * 31) + loop.NowUnixSeconds;
+                stamp = (stamp * 31) + ComputeLocalPowerStateStamp(loop.State);
+                stamp = (stamp * 31) + (loop.State?.PvpAttacksRemaining ?? 0);
+                stamp = (stamp * 31) + (loop.State?.NextPvpAttackRegenAtUnixSeconds ?? 0);
+
+                var runtimeSector = loop.Map?.GetSector(sector.SectorId);
+                if (runtimeSector != null)
+                {
+                    stamp = (stamp * 31) + runtimeSector.OwnerPlayerId;
+                    stamp = (stamp * 31) + runtimeSector.LastCombatUnixSeconds;
+                    stamp = (stamp * 31) + runtimeSector.CapturedUnixSeconds;
+                }
+
+                return stamp;
+            }
+        }
+
+        private static long ComputeLocalPowerStateStamp(MapState state)
+        {
+            if (state == null) return 0;
+
+            unchecked
+            {
+                long stamp = 17;
+                stamp = (stamp * 31) + state.MapSeasonId;
+                return stamp;
+            }
+        }
+
+        private static long ComputeLocalPowerStateStamp(GameState state)
+        {
+            if (state == null) return 0;
+
+            unchecked
+            {
+                long stamp = 17;
+                stamp = (stamp * 31) + state.PrestigeCount;
+                stamp = (stamp * 31) + state.PermanentUpgradeLevel;
+                stamp = (stamp * 31) + ComputeLocalPowerStateStamp(state.MapState);
+
+                var levels = state.GeneratorLevels;
+                if (levels != null)
+                {
+                    for (var i = 0; i < levels.Length; i++)
+                    {
+                        stamp = (stamp * 31) + levels[i];
+                    }
+                }
+
+                var sectors = state.MapState?.Sectors;
+                if (sectors != null)
+                {
+                    for (var i = 0; i < sectors.Length; i++)
+                    {
+                        var sector = sectors[i];
+                        if (sector == null)
+                        {
+                            stamp = (stamp * 31) - 1;
+                            continue;
+                        }
+
+                        stamp = (stamp * 31) + sector.SectorId;
+                        stamp = (stamp * 31) + sector.OwnerPlayerId;
+                    }
+                }
+
+                return stamp;
+            }
         }
 
         private static List<LiveScoreEntry> BuildLiveScoreEntries(Bootstrap.GameLoop loop)

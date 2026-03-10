@@ -17,6 +17,7 @@ namespace AIWarsIdle.PvP.Services
         private readonly PvpConfig _pvpConfig;
         private readonly BalanceConfig _balanceConfig;
         private readonly SnapshotService _localSnapshotService;
+        private readonly Dictionary<int, BotSimulationCacheEntry> _botSimulationCache = new();
 
         public FactionSnapshotService(
             GameState state,
@@ -57,20 +58,85 @@ namespace AIWarsIdle.PvP.Services
                 return BuildFallbackBotSnapshot(playerId);
             }
 
-            var virtualState = CreateVirtualBotState();
-            var elapsedSeconds = ResolveElapsedSeconds();
-            if (elapsedSeconds > 0)
+            var baseStamp = ComputeBotSimulationBaseStamp(playerId);
+            var currentUnixSeconds = _state.MapState?.CurrentUnixSeconds ?? 0;
+            if (!_botSimulationCache.TryGetValue(playerId, out var cached) || cached.BaseStamp != baseStamp)
             {
-                SimulateVirtualEconomy(virtualState, playerId, elapsedSeconds);
+                var virtualState = CreateVirtualBotState();
+                var simulationStartUnixSeconds = _state.MapState?.MatchStartUnixSeconds ?? 0;
+                cached = new BotSimulationCacheEntry(baseStamp, virtualState, simulationStartUnixSeconds);
+                _botSimulationCache[playerId] = cached;
             }
 
-            var production = CreateVirtualProductionService(virtualState, playerId, blendTowardsCurrentMapBonus: 1.0);
-            var snapshotService = new SnapshotService(virtualState, _pvpConfig, production, playerId, _mapConfig);
+            var targetUnixSeconds = Math.Max(cached.LastSimulatedUnixSeconds, currentUnixSeconds);
+            var deltaSeconds = ResolveElapsedSecondsSince(cached.LastSimulatedUnixSeconds, targetUnixSeconds);
+            if (deltaSeconds > 0)
+            {
+                SimulateVirtualEconomy(cached.VirtualState, playerId, deltaSeconds);
+                cached.LastSimulatedUnixSeconds = targetUnixSeconds;
+            }
+
+            if (cached.CachedSnapshot != null && cached.CachedSnapshotUnixSeconds == targetUnixSeconds)
+            {
+                return CloneSnapshot(cached.CachedSnapshot);
+            }
+
+            cached.VirtualState.MapState.CurrentUnixSeconds = targetUnixSeconds;
+            cached.VirtualState.MapState.MapSeasonId = _state.MapState?.MapSeasonId ?? 0;
+            var production = CreateVirtualProductionService(cached.VirtualState, playerId, blendTowardsCurrentMapBonus: 1.0);
+            var snapshotService = new SnapshotService(cached.VirtualState, _pvpConfig, production, playerId, _mapConfig);
             var snapshot = snapshotService.BuildSnapshot();
             snapshot.PvpPower = Math.Max(0, snapshot.PvpPower + GetOpeningPowerOffset(playerId));
             snapshot.League = 0;
             snapshot.SeasonPoints = 0;
+
+            cached.CachedSnapshot = CloneSnapshot(snapshot);
+            cached.CachedSnapshotUnixSeconds = targetUnixSeconds;
             return snapshot;
+        }
+
+        private long ComputeBotSimulationBaseStamp(int playerId)
+        {
+            unchecked
+            {
+                long stamp = 17;
+                stamp = (stamp * 31) + playerId;
+                stamp = (stamp * 31) + (_state.MapState?.MatchStartUnixSeconds ?? 0);
+                stamp = (stamp * 31) + (_state.MapState?.MapSeasonId ?? 0);
+                stamp = (stamp * 31) + BitConverter.DoubleToInt64Bits(ResolveAnchorSoftCurrency());
+                stamp = (stamp * 31) + BitConverter.DoubleToInt64Bits(ResolveAnchorLifetimeEarned());
+                stamp = (stamp * 31) + BitConverter.DoubleToInt64Bits(ResolveAnchorLifetimeAtLastPrestige());
+                stamp = (stamp * 31) + ResolveAnchorPrestigeCount();
+                stamp = (stamp * 31) + ResolveAnchorPermanentLevel();
+
+                var levels = _state.MapState?.MatchStartLocalGeneratorLevels;
+                if (levels != null)
+                {
+                    for (var i = 0; i < levels.Length; i++)
+                    {
+                        stamp = (stamp * 31) + levels[i];
+                    }
+                }
+
+                var sectors = _state.MapState?.Sectors;
+                if (sectors != null)
+                {
+                    for (var i = 0; i < sectors.Length; i++)
+                    {
+                        var sector = sectors[i];
+                        if (sector == null)
+                        {
+                            stamp = (stamp * 31) - 1;
+                            continue;
+                        }
+
+                        stamp = (stamp * 31) + sector.SectorId;
+                        stamp = (stamp * 31) + sector.OwnerPlayerId;
+                    }
+                }
+
+                return stamp;
+            }
         }
 
         private PvpSnapshot BuildFallbackBotSnapshot(int playerId)
@@ -232,6 +298,12 @@ namespace AIWarsIdle.PvP.Services
             return current - start;
         }
 
+        private static long ResolveElapsedSecondsSince(long fromUnixSeconds, long toUnixSeconds)
+        {
+            if (fromUnixSeconds <= 0 || toUnixSeconds <= 0 || toUnixSeconds <= fromUnixSeconds) return 0;
+            return toUnixSeconds - fromUnixSeconds;
+        }
+
         private double ResolveAnchorSoftCurrency()
         {
             var soft = _state.MapState?.MatchStartLocalSoftCurrency ?? 0;
@@ -319,6 +391,24 @@ namespace AIWarsIdle.PvP.Services
                     League = src.League,
                     SeasonPoints = src.SeasonPoints
                 };
+        }
+
+        private sealed class BotSimulationCacheEntry
+        {
+            public readonly long BaseStamp;
+            public readonly GameState VirtualState;
+            public long LastSimulatedUnixSeconds;
+            public long CachedSnapshotUnixSeconds;
+            public PvpSnapshot CachedSnapshot;
+
+            public BotSimulationCacheEntry(long baseStamp, GameState virtualState, long lastSimulatedUnixSeconds)
+            {
+                BaseStamp = baseStamp;
+                VirtualState = virtualState ?? throw new ArgumentNullException(nameof(virtualState));
+                LastSimulatedUnixSeconds = lastSimulatedUnixSeconds;
+                CachedSnapshotUnixSeconds = long.MinValue;
+                CachedSnapshot = null;
+            }
         }
 
         private sealed class BotMapProductionBonusProvider : IPermanentProductionMultiplierProvider
