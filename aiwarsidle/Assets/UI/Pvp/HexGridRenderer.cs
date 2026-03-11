@@ -76,6 +76,7 @@ namespace AIWarsIdle.UI.Pvp
         [SerializeField] private PvpSectorDetailPanelView _sceneDetailPanel;
         [SerializeField, Min(0f)] private float _detailPanelHorizontalOffset = 164f;
         [SerializeField, Min(0f)] private float _detailPanelVerticalOffset = 104f;
+        [SerializeField, Min(1f)] private float _detailPanelDistanceMultiplier = 1.35f;
         [SerializeField, Min(0f)] private float _detailPanelEdgePadding = 12f;
 
         private readonly List<HexCellView> _cells = new();
@@ -177,6 +178,7 @@ namespace AIWarsIdle.UI.Pvp
             _refreshIntervalSeconds = Mathf.Max(0f, _refreshIntervalSeconds);
             _detailPanelHorizontalOffset = Mathf.Max(0f, _detailPanelHorizontalOffset);
             _detailPanelVerticalOffset = Mathf.Max(0f, _detailPanelVerticalOffset);
+            _detailPanelDistanceMultiplier = Mathf.Max(1f, _detailPanelDistanceMultiplier);
             _detailPanelEdgePadding = Mathf.Max(0f, _detailPanelEdgePadding);
 
             if (!isActiveAndEnabled) return;
@@ -1714,17 +1716,19 @@ namespace AIWarsIdle.UI.Pvp
             var halfWidth = panelSize.x * 0.5f;
             var halfHeight = panelSize.y * 0.5f;
             var rightBias = localCenter.x <= 0f;
+            var horizontalOffset = _detailPanelHorizontalOffset * _detailPanelDistanceMultiplier;
+            var verticalOffset = _detailPanelVerticalOffset * _detailPanelDistanceMultiplier;
 
             var candidates = new[]
             {
-                localCenter + new Vector2(rightBias ? _detailPanelHorizontalOffset : -_detailPanelHorizontalOffset, _detailPanelVerticalOffset),
-                localCenter + new Vector2(rightBias ? -_detailPanelHorizontalOffset : _detailPanelHorizontalOffset, _detailPanelVerticalOffset),
-                localCenter + new Vector2(rightBias ? _detailPanelHorizontalOffset : -_detailPanelHorizontalOffset, _detailPanelVerticalOffset * 0.35f),
-                localCenter + new Vector2(rightBias ? -_detailPanelHorizontalOffset : _detailPanelHorizontalOffset, _detailPanelVerticalOffset * 0.35f),
-                localCenter + new Vector2(rightBias ? _detailPanelHorizontalOffset : -_detailPanelHorizontalOffset, -_detailPanelVerticalOffset * 0.55f),
-                localCenter + new Vector2(rightBias ? -_detailPanelHorizontalOffset : _detailPanelHorizontalOffset, -_detailPanelVerticalOffset * 0.55f),
-                localCenter + new Vector2(0f, _detailPanelVerticalOffset),
-                localCenter + new Vector2(0f, -_detailPanelVerticalOffset * 0.7f),
+                localCenter + new Vector2(rightBias ? horizontalOffset : -horizontalOffset, verticalOffset),
+                localCenter + new Vector2(rightBias ? -horizontalOffset : horizontalOffset, verticalOffset),
+                localCenter + new Vector2(rightBias ? horizontalOffset : -horizontalOffset, verticalOffset * 0.35f),
+                localCenter + new Vector2(rightBias ? -horizontalOffset : horizontalOffset, verticalOffset * 0.35f),
+                localCenter + new Vector2(rightBias ? horizontalOffset : -horizontalOffset, -verticalOffset * 0.55f),
+                localCenter + new Vector2(rightBias ? -horizontalOffset : horizontalOffset, -verticalOffset * 0.55f),
+                localCenter + new Vector2(0f, verticalOffset),
+                localCenter + new Vector2(0f, -verticalOffset * 0.7f),
             };
 
             var bestPosition = ClampDetailPanelPosition(candidates[0], parentBounds, halfWidth, halfHeight);

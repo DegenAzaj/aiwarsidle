@@ -38,8 +38,8 @@ MonoBehaviour:
   BotPowerMaxMultiplier: 1.2
   NeutralPowerMinMultiplier: 0.3
   NeutralPowerMaxMultiplier: 0.5
-  NeutralPowerHomeDistanceMinFactor: 0.05
-  NeutralPowerHomeDistanceStepFactor: 0.4
+  NeutralPowerHomeDistanceMinFactor: 0.01
+  NeutralPowerHomeDistanceStepFactor: 0.2
   WinSoftReward: 50
   LoseSoftReward: 10
   WinSeasonPoints: 10
