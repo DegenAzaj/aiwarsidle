@@ -32,6 +32,7 @@ namespace AIWarsIdle.UI.Pvp
         private const string GeneratedFrontierGlowName = "__hex_grid_frontier_glow";
         private const string GeneratedNetworkName = "__hex_grid_network";
         private const string SceneHudName = "PvpHexGridHud";
+        private const string SceneDetailPanelName = "PvpHexGridPanel";
 
         [Header("Context")]
         [SerializeField] private PvpScreenContext _context;
@@ -70,6 +71,9 @@ namespace AIWarsIdle.UI.Pvp
         [SerializeField] private PvpHudTemplateView _sceneHud;
 
         [Header("Detail Panel")]
+        [SerializeField] private HudSourceMode _detailPanelSourceMode = HudSourceMode.Prefab;
+        [SerializeField] private PvpSectorDetailPanelView _detailPanelPrefab;
+        [SerializeField] private PvpSectorDetailPanelView _sceneDetailPanel;
         [SerializeField, Min(0f)] private float _detailPanelHorizontalOffset = 164f;
         [SerializeField, Min(0f)] private float _detailPanelVerticalOffset = 104f;
         [SerializeField, Min(0f)] private float _detailPanelEdgePadding = 12f;
@@ -77,7 +81,8 @@ namespace AIWarsIdle.UI.Pvp
         private readonly List<HexCellView> _cells = new();
         private readonly Dictionary<int, HexCellView> _cellsBySectorId = new();
         private RectTransform _generatedRoot;
-        private SectorDetailPanelView _detailPanel;
+        private PvpSectorDetailPanelView _detailPanel;
+        private bool _ownsDetailPanelInstance;
         private PvpHudTemplateView _hud;
         private bool _ownsHudInstance;
         private PvpToastView _toast;
@@ -126,6 +131,7 @@ namespace AIWarsIdle.UI.Pvp
             _cells.Clear();
             _cellsBySectorId.Clear();
             _detailPanel = null;
+            _ownsDetailPanelInstance = false;
             _hud = null;
             _ownsHudInstance = false;
             _toast = null;
@@ -190,6 +196,7 @@ namespace AIWarsIdle.UI.Pvp
                 _cells.Clear();
                 _cellsBySectorId.Clear();
                 _detailPanel = null;
+                _ownsDetailPanelInstance = false;
                 _hud = null;
                 _toast = null;
                 _selected = null;
@@ -352,6 +359,7 @@ namespace AIWarsIdle.UI.Pvp
             UpdateFrontlines(root, snapshot);
 
             FitGridToViewport(root);
+            EnsureOverlaySiblingOrder();
 
             UpdateHud(snapshot);
             if (_detailPanel != null)
@@ -388,6 +396,7 @@ namespace AIWarsIdle.UI.Pvp
 
             UpdateOwnershipNetwork(_generatedRoot, snapshot);
             UpdateFrontlines(_generatedRoot, snapshot);
+            EnsureOverlaySiblingOrder();
             UpdateHud(snapshot);
         }
 
@@ -456,15 +465,61 @@ namespace AIWarsIdle.UI.Pvp
             return button;
         }
 
-        private SectorDetailPanelView GetOrCreateDetailPanel()
+        private PvpSectorDetailPanelView GetOrCreateDetailPanel()
         {
             if (_detailPanel != null) return _detailPanel;
+
+            if (_detailPanelSourceMode == HudSourceMode.SceneInstance)
+            {
+                if (_sceneDetailPanel == null)
+                {
+                    var scenePanel = transform.Find(SceneDetailPanelName);
+                    if (scenePanel != null)
+                    {
+                        _sceneDetailPanel = scenePanel.GetComponent<PvpSectorDetailPanelView>();
+                    }
+                }
+
+                if (_sceneDetailPanel != null)
+                {
+                    var generatedPanel = transform.Find(GeneratedPanelName);
+                    if (generatedPanel != null)
+                    {
+                        DestroyObject(generatedPanel.gameObject);
+                    }
+
+                    _detailPanel = _sceneDetailPanel;
+                    _detailPanel.SetActions(OnCycleStrategy, OnAttackSelectedSector);
+                    _ownsDetailPanelInstance = false;
+                    _detailPanel.transform.SetAsLastSibling();
+                    return _detailPanel;
+                }
+            }
 
             var existing = transform.Find(GeneratedPanelName);
             if (existing != null)
             {
-                _detailPanel = existing.GetComponent<SectorDetailPanelView>();
-                if (_detailPanel != null) return _detailPanel;
+                _detailPanel = existing.GetComponent<PvpSectorDetailPanelView>();
+                if (_detailPanel != null)
+                {
+                    _detailPanel.SetActions(OnCycleStrategy, OnAttackSelectedSector);
+                    _ownsDetailPanelInstance = true;
+                    _detailPanel.transform.SetAsLastSibling();
+                    return _detailPanel;
+                }
+            }
+
+            if (_detailPanelSourceMode == HudSourceMode.Prefab && _detailPanelPrefab != null)
+            {
+                _detailPanel = Instantiate(_detailPanelPrefab, transform, false);
+                _detailPanel.name = GeneratedPanelName;
+                HideEditorObject(_detailPanel.gameObject);
+                _detailPanel.SetActions(OnCycleStrategy, OnAttackSelectedSector);
+                _detailPanel.ShowEmpty();
+                _detailPanel.Hide();
+                _ownsDetailPanelInstance = true;
+                _detailPanel.transform.SetAsLastSibling();
+                return _detailPanel;
             }
 
             var panelGo = new GameObject(
@@ -472,7 +527,7 @@ namespace AIWarsIdle.UI.Pvp
                 typeof(RectTransform),
                 typeof(CanvasRenderer),
                 typeof(Image),
-                typeof(SectorDetailPanelView));
+                typeof(PvpSectorDetailPanelView));
             panelGo.transform.SetParent(transform, worldPositionStays: false);
             HideEditorObject(panelGo);
 
@@ -487,7 +542,7 @@ namespace AIWarsIdle.UI.Pvp
             bg.color = new Color32(26, 30, 43, 232);
             bg.raycastTarget = true;
 
-            _detailPanel = panelGo.GetComponent<SectorDetailPanelView>();
+            _detailPanel = panelGo.GetComponent<PvpSectorDetailPanelView>();
             _detailPanel.Initialize(
                 CreatePanelTitle(rect),
                 CreatePanelLine(rect, "owner", new Vector2(16f, -56f)),
@@ -503,6 +558,8 @@ namespace AIWarsIdle.UI.Pvp
                 OnAttackSelectedSector);
             _detailPanel.ShowEmpty();
             _detailPanel.Hide();
+            _ownsDetailPanelInstance = true;
+            _detailPanel.transform.SetAsLastSibling();
             return _detailPanel;
         }
 
@@ -532,6 +589,7 @@ namespace AIWarsIdle.UI.Pvp
                     _hud = _sceneHud;
                     _hud.SetPowerInfoActions(ShowPowerInfoTooltip, HidePowerInfoTooltip);
                     _ownsHudInstance = false;
+                    _hud.transform.SetAsLastSibling();
                     return _hud;
                 }
             }
@@ -544,6 +602,7 @@ namespace AIWarsIdle.UI.Pvp
                 {
                     _hud.SetPowerInfoActions(ShowPowerInfoTooltip, HidePowerInfoTooltip);
                     _ownsHudInstance = true;
+                    _hud.transform.SetAsLastSibling();
                     return _hud;
                 }
             }
@@ -555,6 +614,7 @@ namespace AIWarsIdle.UI.Pvp
                 HideEditorObject(_hud.gameObject);
                 _hud.SetPowerInfoActions(ShowPowerInfoTooltip, HidePowerInfoTooltip);
                 _ownsHudInstance = true;
+                _hud.transform.SetAsLastSibling();
                 return _hud;
             }
 
@@ -588,6 +648,7 @@ namespace AIWarsIdle.UI.Pvp
                 CreateHudTooltip(rect),
                 ShowPowerInfoTooltip);
             _ownsHudInstance = true;
+            _hud.transform.SetAsLastSibling();
             return _hud;
         }
 
@@ -623,7 +684,31 @@ namespace AIWarsIdle.UI.Pvp
 
             _toast = go.GetComponent<PvpToastView>();
             _toast.Initialize(CreateHudText(rect, "toast", new Vector2(0f, -12f), 18f, centered: true));
+            _toast.transform.SetAsLastSibling();
             return _toast;
+        }
+
+        private void EnsureOverlaySiblingOrder()
+        {
+            if (_generatedRoot != null)
+            {
+                _generatedRoot.SetAsFirstSibling();
+            }
+
+            if (_hud != null)
+            {
+                _hud.transform.SetAsLastSibling();
+            }
+
+            if (_toast != null)
+            {
+                _toast.transform.SetAsLastSibling();
+            }
+
+            if (_detailPanel != null)
+            {
+                _detailPanel.transform.SetAsLastSibling();
+            }
         }
 
         private void DestroyGeneratedRoot()
@@ -643,7 +728,7 @@ namespace AIWarsIdle.UI.Pvp
             _generatedRoot = null;
 
             var panel = transform.Find(GeneratedPanelName);
-            if (panel != null)
+            if (panel != null && _ownsDetailPanelInstance)
             {
                 DestroyObject(panel.gameObject);
             }
@@ -1861,31 +1946,36 @@ namespace AIWarsIdle.UI.Pvp
                 }
             }
 
-            var ownerText = sector.OwnerPlayerId > 0 ? $"Owner: Player {sector.OwnerPlayerId}" : "Owner: Neutral";
+            var ownerText = BuildOwnerText(sector);
             var bonusText = $"Bonus: +{sector.ProductionBonusPercent:0.#}% production";
             var stabilityText = $"Stability: {sector.Stability:0.#}%";
             var positionText = $"Coord: {sector.Coord.Q}, {sector.Coord.R}  |  Id: {sector.SectorId}";
-            var previewText = $"Preview: select runtime PvP services";
+            var previewText = "BREACH CHANCE: -";
             var statusText = "Sector ready.";
             var hintText = "Click Strategy to cycle Aggressive / Stable / Risky.";
-            var actionLabel = $"Attack ({_selectedStrategy})";
+            var actionLabel = $"ATTACK ({_selectedStrategy})";
             var canAttack = false;
 
             if (loop?.PvpCombat != null)
             {
                 var now = loop.NowUnixSeconds;
                 var evaluation = loop.PvpCombat.EvaluateAttack(sector.SectorId, now);
+                var preview = loop.PvpCombat.GetAttackPreview(sector.SectorId, _selectedStrategy, now);
 
                 if (evaluation.CanAttack)
                 {
-                    var preview = loop.PvpCombat.GetAttackPreview(sector.SectorId, _selectedStrategy, now);
-                    previewText = $"Preview: {FormatPreviewChance(preview)} win  ({_selectedStrategy})";
+                    previewText = $"BREACH CHANCE: {FormatPreviewChance(preview)}";
                     statusText = "Attack available.";
                     canAttack = true;
                 }
+                else if (ShouldShowBlockedPreview(evaluation.BlockReason))
+                {
+                    previewText = $"BREACH CHANCE: {FormatPreviewChance(preview)}";
+                    statusText = GetBlockReasonText(evaluation);
+                }
                 else
                 {
-                    previewText = $"Preview: blocked ({_selectedStrategy})";
+                    previewText = "BREACH CHANCE: BLOCKED";
                     statusText = GetBlockReasonText(evaluation);
                 }
 
@@ -1994,6 +2084,12 @@ namespace AIWarsIdle.UI.Pvp
             };
         }
 
+        private static bool ShouldShowBlockedPreview(PvpAttackBlockReason blockReason)
+        {
+            return blockReason == PvpAttackBlockReason.NoAdjacentOwnedSector ||
+                   blockReason == PvpAttackBlockReason.NoAttackCharges;
+        }
+
         private static string FormatDuration(long seconds)
         {
             if (seconds <= 0) return "0s";
@@ -2024,6 +2120,18 @@ namespace AIWarsIdle.UI.Pvp
             }
 
             return $"{min:P0} - {max:P0}";
+        }
+
+        private static string BuildOwnerText(DisplaySector sector)
+        {
+            if (sector.OwnerPlayerId > 0)
+            {
+                var playerColor = HexGridPalette.GetFrontlineColor(sector.OwnerPlayerId, Color.white);
+                return $"Owner: <color=#{ColorUtility.ToHtmlStringRGB(playerColor)}>Player {sector.OwnerPlayerId}</color>";
+            }
+
+            var neutralColor = HexGridPalette.GetColorForOwner(0, isHome: false, ownedHexAlpha: 1f);
+            return $"Owner: <color=#{ColorUtility.ToHtmlStringRGB(neutralColor)}>Neutral</color>";
         }
 
         private static string BuildPowerTooltipBody(SnapshotService.PowerBreakdown breakdown)
@@ -2798,109 +2906,6 @@ namespace AIWarsIdle.UI.Pvp
             vh.AddVert(v3, color, Vector2.right);
             vh.AddTriangle(index, index + 1, index + 2);
             vh.AddTriangle(index, index + 2, index + 3);
-        }
-    }
-
-    internal sealed class SectorDetailPanelView : MonoBehaviour
-    {
-        private TMP_Text _title;
-        private TMP_Text _owner;
-        private TMP_Text _bonus;
-        private TMP_Text _stability;
-        private TMP_Text _preview;
-        private TMP_Text _position;
-        private TMP_Text _status;
-        private Button _strategyButton;
-        private TMP_Text _strategyButtonLabel;
-        private Button _actionButton;
-        private TMP_Text _hint;
-        private TMP_Text _buttonLabel;
-        private Action _onCycleStrategy;
-        private Action _onAttack;
-
-        public void Initialize(
-            TMP_Text title,
-            TMP_Text owner,
-            TMP_Text bonus,
-            TMP_Text stability,
-            TMP_Text preview,
-            TMP_Text position,
-            TMP_Text status,
-            Button strategyButton,
-            Button actionButton,
-            TMP_Text hint,
-            Action onCycleStrategy,
-            Action onAttack)
-        {
-            _title = title;
-            _owner = owner;
-            _bonus = bonus;
-            _stability = stability;
-            _preview = preview;
-            _position = position;
-            _status = status;
-            _strategyButton = strategyButton;
-            _actionButton = actionButton;
-            _hint = hint;
-            _onCycleStrategy = onCycleStrategy;
-            _onAttack = onAttack;
-            _strategyButtonLabel = strategyButton != null
-                ? strategyButton.GetComponentInChildren<TMP_Text>(includeInactive: true)
-                : null;
-            _buttonLabel = actionButton != null
-                ? actionButton.GetComponentInChildren<TMP_Text>(includeInactive: true)
-                : null;
-
-            if (_strategyButton != null)
-            {
-                _strategyButton.onClick.RemoveAllListeners();
-                _strategyButton.onClick.AddListener(() => _onCycleStrategy?.Invoke());
-            }
-
-            if (_actionButton != null)
-            {
-                _actionButton.onClick.RemoveAllListeners();
-                _actionButton.onClick.AddListener(() => _onAttack?.Invoke());
-            }
-        }
-
-        public void ShowEmpty()
-        {
-            gameObject.SetActive(true);
-            if (_title != null) _title.text = "Sector";
-            if (_owner != null) _owner.text = "Owner: -";
-            if (_bonus != null) _bonus.text = "Bonus: -";
-            if (_stability != null) _stability.text = "Stability: -";
-            if (_preview != null) _preview.text = "Preview: -";
-            if (_position != null) _position.text = "Coord: -";
-            if (_status != null) _status.text = "Select a sector on the map.";
-            if (_hint != null) _hint.text = "Hexes are generated from radius and runtime map data.";
-            if (_strategyButton != null) _strategyButton.interactable = false;
-            if (_strategyButtonLabel != null) _strategyButtonLabel.text = "Strategy: Stable";
-            if (_actionButton != null) _actionButton.interactable = false;
-            if (_buttonLabel != null) _buttonLabel.text = "Attack";
-        }
-
-        public void Hide()
-        {
-            gameObject.SetActive(false);
-        }
-
-        public void ShowSector(HexGridRenderer.SectorDetailState detailState)
-        {
-            gameObject.SetActive(true);
-            if (_title != null) _title.text = detailState.Sector.Label;
-            if (_owner != null) _owner.text = detailState.OwnerText;
-            if (_bonus != null) _bonus.text = detailState.BonusText;
-            if (_stability != null) _stability.text = detailState.StabilityText;
-            if (_preview != null) _preview.text = detailState.PreviewText;
-            if (_position != null) _position.text = detailState.PositionText;
-            if (_status != null) _status.text = detailState.StatusText;
-            if (_hint != null) _hint.text = detailState.HintText;
-            if (_strategyButton != null) _strategyButton.interactable = true;
-            if (_strategyButtonLabel != null) _strategyButtonLabel.text = detailState.StrategyLabel;
-            if (_actionButton != null) _actionButton.interactable = detailState.CanAttack;
-            if (_buttonLabel != null) _buttonLabel.text = detailState.ActionLabel;
         }
     }
 

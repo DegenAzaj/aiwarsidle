@@ -25,8 +25,8 @@ MonoBehaviour:
   CombatMaintenanceFreeSectors: 6
   CombatMaintenancePenaltyPerExtraSector: 0.03
   CombatMaintenanceMinMultiplier: 0.75
-  UnderdogMaxAttackBonus: 0.25
-  UnderdogSectorDeficitForMaxBonus: 8
+  UnderdogMaxAttackBonus: 1
+  UnderdogSectorDeficitForMaxBonus: 3
   PrestigePvpPowerPerPrestige: 1
   PermanentPvpPowerPerLevel: 1
   SectorPvpPowerPerSector: 1

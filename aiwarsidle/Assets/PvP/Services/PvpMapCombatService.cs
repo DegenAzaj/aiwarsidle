@@ -54,7 +54,7 @@ namespace AIWarsIdle.PvP.Services
             if (nowUnixSeconds < 0) throw new ArgumentOutOfRangeException(nameof(nowUnixSeconds), "Timestamp must be >= 0.");
 
             var evaluation = EvaluateAttack(sectorId, nowUnixSeconds);
-            if (!evaluation.CanAttack)
+            if (!CanComputePreview(evaluation))
             {
                 return new AttackPreview { SectorId = sectorId, Strategy = strategy, WinChanceMin = 0f, WinChanceMax = 0f };
             }
@@ -84,6 +84,17 @@ namespace AIWarsIdle.PvP.Services
                 WinChanceMin = (float)previewBattle.WinChance,
                 WinChanceMax = (float)previewBattle.WinChance
             };
+        }
+
+        private static bool CanComputePreview(PvpAttackEvaluation evaluation)
+        {
+            if (evaluation.CanAttack)
+            {
+                return true;
+            }
+
+            return evaluation.BlockReason == PvpAttackBlockReason.NoAdjacentOwnedSector ||
+                   evaluation.BlockReason == PvpAttackBlockReason.NoAttackCharges;
         }
 
         public CombatResult AttackSector(int sectorId, AttackStrategy strategy, long nowUnixSeconds)
