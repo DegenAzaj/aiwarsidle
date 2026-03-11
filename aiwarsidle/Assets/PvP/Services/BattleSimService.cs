@@ -27,7 +27,9 @@ namespace AIWarsIdle.PvP.Services
             int seed,
             double attackerAttackMultiplier = 1.0,
             double flankBonus = 1.0,
+            double breakoutBonus = 1.0,
             double defenseBonus = 1.0,
+            double isolationDefenseMultiplier = 1.0,
             double maintenanceMultiplier = 1.0,
             double underdogBonus = 1.0)
         {
@@ -55,6 +57,14 @@ namespace AIWarsIdle.PvP.Services
             {
                 throw new ArgumentOutOfRangeException(nameof(defenseBonus), "Defense bonus must be finite and > 0.");
             }
+            if (double.IsNaN(breakoutBonus) || double.IsInfinity(breakoutBonus) || breakoutBonus <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(breakoutBonus), "Breakout bonus must be finite and > 0.");
+            }
+            if (double.IsNaN(isolationDefenseMultiplier) || double.IsInfinity(isolationDefenseMultiplier) || isolationDefenseMultiplier <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(isolationDefenseMultiplier), "Isolation multiplier must be finite and > 0.");
+            }
             if (double.IsNaN(maintenanceMultiplier) || double.IsInfinity(maintenanceMultiplier) || maintenanceMultiplier <= 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(maintenanceMultiplier), "Maintenance multiplier must be finite and > 0.");
@@ -67,8 +77,8 @@ namespace AIWarsIdle.PvP.Services
             var rng = new Random(seed);
             var strategyMultiplier = GetStrategyMultiplier(strategy);
             var stabilityMultiplier = GetStabilityMultiplier(stability);
-            var attackRoll = attackerPvpPower * strategyMultiplier * attackerAttackMultiplier * flankBonus * maintenanceMultiplier * underdogBonus;
-            var defenseRoll = defenderPvpPower * stabilityMultiplier * defenseBonus;
+            var attackRoll = attackerPvpPower * strategyMultiplier * attackerAttackMultiplier * flankBonus * breakoutBonus * maintenanceMultiplier * underdogBonus;
+            var defenseRoll = defenderPvpPower * stabilityMultiplier * defenseBonus * isolationDefenseMultiplier;
             var total = attackRoll + defenseRoll;
             var winChance = total <= 0 ? 0.5 : attackRoll / total;
             if (double.IsNaN(winChance) || double.IsInfinity(winChance)) winChance = 0.5;
@@ -94,7 +104,9 @@ namespace AIWarsIdle.PvP.Services
             long nowUnixSeconds,
             int seed,
             double flankBonus = 1.0,
+            double breakoutBonus = 1.0,
             double defenseBonus = 1.0,
+            double isolationDefenseMultiplier = 1.0,
             double maintenanceMultiplier = 1.0,
             double underdogBonus = 1.0)
         {
@@ -108,7 +120,9 @@ namespace AIWarsIdle.PvP.Services
                 seed,
                 attackerAttackMultiplier: attackMultiplier,
                 flankBonus: flankBonus,
+                breakoutBonus: breakoutBonus,
                 defenseBonus: defenseBonus,
+                isolationDefenseMultiplier: isolationDefenseMultiplier,
                 maintenanceMultiplier: maintenanceMultiplier,
                 underdogBonus: underdogBonus);
         }

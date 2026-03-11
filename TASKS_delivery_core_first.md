@@ -566,3 +566,48 @@ Zasada: UI jest cienką warstwą, tylko prezentacja + input → wywołania serwi
 7) EPIC 10 (bootstrap)  
 8) EPIC 11 (UI)  
 9) EPIC 12 (polish, readiness)  
+
+---
+
+## Dodatkowe zmiany po analizie balansu mapy
+
+Po analizie `MapConfig`, `PvpConfig` i flow walki na mapie zostały wdrożone dwie lokalne mechaniki anty-siege / anti-softlock:
+
+* `BreakoutBonus`
+  * dodatkowy bonus do ataku, gdy gracz próbuje wyjść spod własnego `home` i atakuje sektor blokujący wyjście
+  * bonus rośnie wraz z liczbą sąsiednich hexów przy `home`, które są zajęte przez tego samego przeciwnika
+  * cel: zmniejszenie sytuacji, w której bot podjeżdża pod `home`, zamyka wszystkie 3 wyjścia i gracz zostaje z serią słabych coin-flipów
+
+* `IsolationPenalty`
+  * kara do obrony sektora przeciwnika, jeśli atakowany hex ma zbyt mało wspierających sąsiadów należących do tego samego ownera i podłączonych do jego `home`
+  * cel: karać cienki front / nadmiernie wysunięte hexy przeciwnika i ułatwiać kontrofensywę bez globalnego pompowania `Underdog`
+
+Zmiany techniczne:
+
+* `PvpConfig` rozszerzony o parametry strojenia `BreakoutBonus` i `IsolationPenalty`
+* `BattleSimService` uwzględnia nowe mnożniki w `attackRoll` / `defenseRoll`
+* `PvpMapCombatService` oraz `PvpBotService` liczą nowe modyfikatory lokalnie z topologii mapy
+* globalny `Underdog` został osłabiony względem poprzedniego ustawienia, bo część roli przejęły nowe mechaniki lokalne
+
+Aktualny preset w `PvpConfig.asset`:
+
+* `UnderdogMaxAttackBonus = 0.2`
+* `UnderdogSectorDeficitForMaxBonus = 6`
+* `BreakoutBonusPerBlockedHomeNeighbor = 0.18`
+* `BreakoutBonusMaxMultiplier = 1.6`
+* `IsolationExpectedSupportNeighbors = 2`
+* `IsolationPenaltyPerMissingSupport = 0.15`
+* `IsolationMinDefenseMultiplier = 0.7`
+
+Uwagi balansowe:
+
+* model walki używa wzoru `attackRoll / (attackRoll + defenseRoll)`, więc nawet mocne mnożniki nie dają auto-win
+* celem tych zmian nie jest “darmowe zwycięstwo”, tylko przesunięcie lokalnych walk ratunkowych spod `home` z biednych ~50–60% w stronę bardziej grywalnych wartości
+* HUD z rozpisaniem składników ataku został cofnięty i nie jest częścią tego zakresu; zostaje sama mechanika + testy
+
+**TESTS**
+* [x] `GetAttackPreview_FlankBonus_IncreasesWinChance`
+* [x] `GetAttackPreview_MaintenancePenalty_ReducesWinChance_ForExpandedAttacker`
+* [x] `GetAttackPreview_UnderdogBonus_IncreasesWinChance_WhenDefenderHasMoreSectors`
+* [x] `GetAttackPreview_BreakoutBonus_IncreasesWinChance_WhenHomeIsBoxedIn`
+* [x] `GetAttackPreview_IsolationPenalty_IncreasesWinChance_Against_ThinFrontier`

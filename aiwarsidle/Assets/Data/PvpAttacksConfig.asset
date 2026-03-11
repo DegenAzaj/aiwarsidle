@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PvpAttacksConfig
   m_EditorClassIdentifier: AIWarsIdle.PvP::AIWarsIdle.PvP.Config.PvpAttacksConfig
   MaxAttacks: 5
-  RegenSeconds: 3600
+  RegenSeconds: 1800
   AdExtraAttacksPerDay: 1
   PremiumExtraAttacksPerPurchase: 0
   PremiumCurrencyCostPerPurchase: 0

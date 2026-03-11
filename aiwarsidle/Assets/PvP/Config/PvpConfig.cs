@@ -57,6 +57,23 @@ namespace AIWarsIdle.PvP.Config
         [Min(1)]
         public int UnderdogSectorDeficitForMaxBonus = 8;
 
+        [Header("Siege / Breakout")]
+        [Min(0f)]
+        public float BreakoutBonusPerBlockedHomeNeighbor = 0.10f;
+
+        [Min(1f)]
+        public float BreakoutBonusMaxMultiplier = 1.30f;
+
+        [Header("Isolation")]
+        [Min(1)]
+        public int IsolationExpectedSupportNeighbors = 2;
+
+        [Range(0f, 1f)]
+        public float IsolationPenaltyPerMissingSupport = 0.10f;
+
+        [Range(0.01f, 1f)]
+        public float IsolationMinDefenseMultiplier = 0.70f;
+
         [Header("PvpPower progression")]
         public double PrestigePvpPowerPerPrestige = 1.0;
         public double PermanentPvpPowerPerLevel = 1.0;
@@ -120,6 +137,28 @@ namespace AIWarsIdle.PvP.Config
             if (UnderdogSectorDeficitForMaxBonus <= 0)
             {
                 throw new InvalidOperationException($"{nameof(UnderdogSectorDeficitForMaxBonus)} must be > 0.");
+            }
+
+            ValidateFiniteNonNegativeOrThrow(BreakoutBonusPerBlockedHomeNeighbor, nameof(BreakoutBonusPerBlockedHomeNeighbor));
+            ValidateFinitePositiveOrThrow(BreakoutBonusMaxMultiplier, nameof(BreakoutBonusMaxMultiplier));
+            if (BreakoutBonusMaxMultiplier < 1f)
+            {
+                throw new InvalidOperationException($"{nameof(BreakoutBonusMaxMultiplier)} must be >= 1.");
+            }
+
+            if (IsolationExpectedSupportNeighbors <= 0)
+            {
+                throw new InvalidOperationException($"{nameof(IsolationExpectedSupportNeighbors)} must be > 0.");
+            }
+            ValidateFiniteNonNegativeOrThrow(IsolationPenaltyPerMissingSupport, nameof(IsolationPenaltyPerMissingSupport));
+            if (IsolationPenaltyPerMissingSupport > 1f)
+            {
+                throw new InvalidOperationException($"{nameof(IsolationPenaltyPerMissingSupport)} must be <= 1.");
+            }
+            ValidateFinitePositiveOrThrow(IsolationMinDefenseMultiplier, nameof(IsolationMinDefenseMultiplier));
+            if (IsolationMinDefenseMultiplier > 1f)
+            {
+                throw new InvalidOperationException($"{nameof(IsolationMinDefenseMultiplier)} must be <= 1.");
             }
 
             ValidateFiniteNonNegativeOrThrow(PrestigePvpPowerPerPrestige, nameof(PrestigePvpPowerPerPrestige));

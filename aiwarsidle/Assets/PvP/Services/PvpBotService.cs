@@ -171,7 +171,9 @@ namespace AIWarsIdle.PvP.Services
                 nowUnixSeconds,
                 seed,
                 flankBonus: modifiers.FlankBonus,
+                breakoutBonus: modifiers.BreakoutBonus,
                 defenseBonus: modifiers.DefenseBonus,
+                isolationDefenseMultiplier: modifiers.IsolationDefenseMultiplier,
                 maintenanceMultiplier: modifiers.MaintenanceMultiplier,
                 underdogBonus: modifiers.UnderdogBonus);
 
@@ -216,7 +218,9 @@ namespace AIWarsIdle.PvP.Services
         {
             return new CombatModifiers(
                 ComputeFlankBonus(attackerPlayerId, targetSectorId),
+                ComputeBreakoutBonus(attackerPlayerId, defenderPlayerId, targetSectorId),
                 _battleSim.Config.DefenseBonus,
+                ComputeIsolationDefenseMultiplier(defenderPlayerId, targetSectorId),
                 ComputeMaintenanceMultiplier(attackerPlayerId),
                 ComputeUnderdogBonus(attackerPlayerId, defenderPlayerId));
         }
@@ -244,6 +248,70 @@ namespace AIWarsIdle.PvP.Services
             var penalty = extra * _battleSim.Config.CombatMaintenancePenaltyPerExtraSector;
             var multiplier = 1.0 - penalty;
             if (multiplier < _battleSim.Config.CombatMaintenanceMinMultiplier) multiplier = _battleSim.Config.CombatMaintenanceMinMultiplier;
+            if (multiplier > 1.0) multiplier = 1.0;
+            return multiplier;
+        }
+
+        private double ComputeBreakoutBonus(int attackerPlayerId, int defenderPlayerId, int targetSectorId)
+        {
+            if (defenderPlayerId <= 0 || defenderPlayerId == attackerPlayerId) return 1.0;
+
+            var breakoutPressure = 0;
+            var homeIds = _mapConfig.GetEffectiveHomeSectorIds();
+            for (var i = 0; i < homeIds.Length; i++)
+            {
+                var homeId = homeIds[i];
+                if (_mapConfig.GetHomeOwnerPlayerId(homeId) != attackerPlayerId) continue;
+                if (!_map.IsAdjacent(homeId, targetSectorId)) continue;
+
+                var homeNeighbors = GetAdjacentSectorIds(homeId);
+                for (var j = 0; j < homeNeighbors.Count; j++)
+                {
+                    var neighborId = homeNeighbors[j];
+                    if (neighborId == targetSectorId) continue;
+
+                    var neighbor = _map.GetSector(neighborId);
+                    if (neighbor == null) continue;
+                    if (neighbor.OwnerPlayerId == defenderPlayerId)
+                    {
+                        breakoutPressure++;
+                    }
+                }
+            }
+
+            if (breakoutPressure <= 0) return 1.0;
+
+            var raw = 1.0 + (_battleSim.Config.BreakoutBonusPerBlockedHomeNeighbor * breakoutPressure);
+            return Math.Min(_battleSim.Config.BreakoutBonusMaxMultiplier, raw);
+        }
+
+        private double ComputeIsolationDefenseMultiplier(int defenderPlayerId, int targetSectorId)
+        {
+            if (defenderPlayerId <= 0) return 1.0;
+
+            var connectedDefender = MapConnectivityService.BuildHomeConnectedSectorSet(_state.MapState, _mapConfig, defenderPlayerId);
+            if (connectedDefender.Count == 0 || !connectedDefender.Contains(targetSectorId))
+            {
+                return _battleSim.Config.IsolationMinDefenseMultiplier;
+            }
+
+            var supportCount = 0;
+            var adjacent = GetAdjacentSectorIds(targetSectorId);
+            for (var i = 0; i < adjacent.Count; i++)
+            {
+                var neighborId = adjacent[i];
+                if (!connectedDefender.Contains(neighborId)) continue;
+
+                var neighbor = _map.GetSector(neighborId);
+                if (neighbor == null || neighbor.OwnerPlayerId != defenderPlayerId) continue;
+                supportCount++;
+            }
+
+            var missingSupport = Math.Max(0, _battleSim.Config.IsolationExpectedSupportNeighbors - supportCount);
+            if (missingSupport <= 0) return 1.0;
+
+            var multiplier = 1.0 - (_battleSim.Config.IsolationPenaltyPerMissingSupport * missingSupport);
+            if (multiplier < _battleSim.Config.IsolationMinDefenseMultiplier) multiplier = _battleSim.Config.IsolationMinDefenseMultiplier;
             if (multiplier > 1.0) multiplier = 1.0;
             return multiplier;
         }
@@ -303,6 +371,28 @@ namespace AIWarsIdle.PvP.Services
                 BotProfile.Expansive => ExpansiveIntervalSeconds,
                 _ => DefensiveIntervalSeconds
             };
+        }
+
+        private System.Collections.Generic.List<int> GetAdjacentSectorIds(int sectorId)
+        {
+            var result = new System.Collections.Generic.List<int>();
+            var edges = _mapConfig.Adjacency;
+            if (edges == null || edges.Length == 0) return result;
+
+            for (var i = 0; i < edges.Length; i++)
+            {
+                var edge = edges[i];
+                if (edge.A == sectorId)
+                {
+                    result.Add(edge.B);
+                }
+                else if (edge.B == sectorId)
+                {
+                    result.Add(edge.A);
+                }
+            }
+
+            return result;
         }
 
         private static int MixSeed(params int[] values)
@@ -458,14 +548,18 @@ namespace AIWarsIdle.PvP.Services
         private readonly struct CombatModifiers
         {
             public readonly double FlankBonus;
+            public readonly double BreakoutBonus;
             public readonly double DefenseBonus;
+            public readonly double IsolationDefenseMultiplier;
             public readonly double MaintenanceMultiplier;
             public readonly double UnderdogBonus;
 
-            public CombatModifiers(double flankBonus, double defenseBonus, double maintenanceMultiplier, double underdogBonus)
+            public CombatModifiers(double flankBonus, double breakoutBonus, double defenseBonus, double isolationDefenseMultiplier, double maintenanceMultiplier, double underdogBonus)
             {
                 FlankBonus = flankBonus;
+                BreakoutBonus = breakoutBonus;
                 DefenseBonus = defenseBonus;
+                IsolationDefenseMultiplier = isolationDefenseMultiplier;
                 MaintenanceMultiplier = maintenanceMultiplier;
                 UnderdogBonus = underdogBonus;
             }

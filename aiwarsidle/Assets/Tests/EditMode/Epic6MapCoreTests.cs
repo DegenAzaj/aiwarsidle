@@ -50,6 +50,11 @@ namespace AIWarsIdle.Tests.EditMode
             cfg.CombatMaintenanceMinMultiplier = 1.0f;
             cfg.UnderdogMaxAttackBonus = 0.0f;
             cfg.UnderdogSectorDeficitForMaxBonus = 1;
+            cfg.BreakoutBonusPerBlockedHomeNeighbor = 0.0f;
+            cfg.BreakoutBonusMaxMultiplier = 1.0f;
+            cfg.IsolationExpectedSupportNeighbors = 1;
+            cfg.IsolationPenaltyPerMissingSupport = 0.0f;
+            cfg.IsolationMinDefenseMultiplier = 1.0f;
 
             cfg.PrestigePvpPowerPerPrestige = prestigePowerPerPrestige;
             cfg.PermanentPvpPowerPerLevel = 0.0;
@@ -792,6 +797,173 @@ namespace AIWarsIdle.Tests.EditMode
             var previewWithUnderdog = combatWithUnderdog.GetAttackPreview(1, AttackStrategy.Stable, 1001, seedBase: 1);
 
             Assert.Greater(previewWithUnderdog.WinChanceMin, previewNoUnderdog.WinChanceMin);
+        }
+
+        [Test]
+        public void GetAttackPreview_BreakoutBonus_IncreasesWinChance_WhenHomeIsBoxedIn()
+        {
+            var state = new GameState { PvpAttacksRemaining = 1, PrestigeCount = 1 };
+            state.MapState.Sectors = new[]
+            {
+                new SectorState { SectorId = 0, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 1, OwnerPlayerId = 2, Stability = 0f },
+                new SectorState { SectorId = 2, OwnerPlayerId = 2, Stability = 0f },
+                new SectorState { SectorId = 3, OwnerPlayerId = 2, Stability = 0f },
+                new SectorState { SectorId = 4, OwnerPlayerId = 2, Stability = 100f },
+            };
+
+            var mapCfg = ScriptableObject.CreateInstance<MapConfig>();
+            mapCfg.MapSeasonLengthDays = 7;
+            mapCfg.MapSeasonAnchorUnixSecondsUtc = 0;
+            mapCfg.LocalPlayerId = 1;
+            mapCfg.HomeSectorId = 0;
+            mapCfg.HomeSectorIds = new[] { 0, 4 };
+            mapCfg.HomeSectorOwnerPlayerIds = new[] { 1, 2 };
+            mapCfg.HomeSectorStability = 100f;
+            mapCfg.EnforceSectorCountRange = false;
+            mapCfg.RequireConnectedGraph = true;
+            mapCfg.SectorDefinitions = new[]
+            {
+                new MapConfig.SectorDefinition { SectorId = 0, Name = "PlayerHome" },
+                new MapConfig.SectorDefinition { SectorId = 1, Name = "GateA" },
+                new MapConfig.SectorDefinition { SectorId = 2, Name = "GateB" },
+                new MapConfig.SectorDefinition { SectorId = 3, Name = "GateC" },
+                new MapConfig.SectorDefinition { SectorId = 4, Name = "BotHome" },
+            };
+            mapCfg.Adjacency = new[]
+            {
+                new MapConfig.SectorEdge { A = 0, B = 1 },
+                new MapConfig.SectorEdge { A = 0, B = 2 },
+                new MapConfig.SectorEdge { A = 0, B = 3 },
+                new MapConfig.SectorEdge { A = 1, B = 4 },
+                new MapConfig.SectorEdge { A = 2, B = 4 },
+                new MapConfig.SectorEdge { A = 3, B = 4 },
+            };
+            mapCfg.StabilityGrowthPerSecond = 0f;
+            mapCfg.FreshCaptureWindowSeconds = 60;
+            mapCfg.StabilityStartNeutral = 0f;
+            mapCfg.StabilityStartOnCapture = 10f;
+            mapCfg.StabilityGainOnDefenseWin = 5f;
+            mapCfg.CaptureStabilityMultiplierAggressive = 1f;
+            mapCfg.CaptureStabilityMultiplierStable = 1f;
+            mapCfg.CaptureStabilityMultiplierRisky = 1f;
+            mapCfg.BotPowerMinMultiplier = 1f;
+            mapCfg.BotPowerMaxMultiplier = 1f;
+            mapCfg.ValidateOrThrow();
+
+            var economy = new EconomyService(state);
+            var balance = CreateValidBalanceConfig();
+            var production = new ProductionService(state, balance, economy);
+
+            var withoutBreakout = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 99);
+            withoutBreakout.BreakoutBonusPerBlockedHomeNeighbor = 0f;
+            withoutBreakout.BreakoutBonusMaxMultiplier = 1f;
+            withoutBreakout.ValidateOrThrow();
+
+            var withBreakout = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 99);
+            withBreakout.BreakoutBonusPerBlockedHomeNeighbor = 0.2f;
+            withBreakout.BreakoutBonusMaxMultiplier = 2f;
+            withBreakout.ValidateOrThrow();
+
+            var map = new MapService(state.MapState, mapCfg);
+            map.AdvanceTime(1000);
+
+            var snapshotWithout = new SnapshotService(state, withoutBreakout, production, mapConfig: mapCfg);
+            var snapshotWith = new SnapshotService(state, withBreakout, production, mapConfig: mapCfg);
+            var factions = CreateFactionSnapshots(state, mapCfg, withBreakout, production);
+            var matchmaking = new MatchmakingService(mapCfg, factions);
+            var attacks = new PvpAttackChargesService(state, CreateDefaultPvpAttacksConfig());
+            var league = new LeagueService(state, CreateValidLeagueConfig());
+
+            var combatWithout = new PvpMapCombatService(state, map, mapCfg, attacks, snapshotWithout, matchmaking, new BattleSimService(withoutBreakout), economy, league);
+            var combatWith = new PvpMapCombatService(state, map, mapCfg, attacks, snapshotWith, matchmaking, new BattleSimService(withBreakout), economy, league);
+
+            var previewWithout = combatWithout.GetAttackPreview(1, AttackStrategy.Stable, 1001, seedBase: 1);
+            var previewWith = combatWith.GetAttackPreview(1, AttackStrategy.Stable, 1001, seedBase: 1);
+
+            Assert.Greater(previewWith.WinChanceMin, previewWithout.WinChanceMin);
+        }
+
+        [Test]
+        public void GetAttackPreview_IsolationPenalty_IncreasesWinChance_Against_ThinFrontier()
+        {
+            var state = new GameState { PvpAttacksRemaining = 1, PrestigeCount = 1 };
+            state.MapState.Sectors = new[]
+            {
+                new SectorState { SectorId = 0, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 1, OwnerPlayerId = 1, Stability = 100f },
+                new SectorState { SectorId = 2, OwnerPlayerId = 2, Stability = 0f },
+                new SectorState { SectorId = 3, OwnerPlayerId = 2, Stability = 100f },
+            };
+
+            var mapCfg = ScriptableObject.CreateInstance<MapConfig>();
+            mapCfg.MapSeasonLengthDays = 7;
+            mapCfg.MapSeasonAnchorUnixSecondsUtc = 0;
+            mapCfg.LocalPlayerId = 1;
+            mapCfg.HomeSectorId = 0;
+            mapCfg.HomeSectorIds = new[] { 0, 3 };
+            mapCfg.HomeSectorOwnerPlayerIds = new[] { 1, 2 };
+            mapCfg.HomeSectorStability = 100f;
+            mapCfg.EnforceSectorCountRange = false;
+            mapCfg.RequireConnectedGraph = true;
+            mapCfg.SectorDefinitions = new[]
+            {
+                new MapConfig.SectorDefinition { SectorId = 0, Name = "PlayerHome" },
+                new MapConfig.SectorDefinition { SectorId = 1, Name = "PlayerFrontier" },
+                new MapConfig.SectorDefinition { SectorId = 2, Name = "ThinFrontier" },
+                new MapConfig.SectorDefinition { SectorId = 3, Name = "BotHome" },
+            };
+            mapCfg.Adjacency = new[]
+            {
+                new MapConfig.SectorEdge { A = 0, B = 1 },
+                new MapConfig.SectorEdge { A = 1, B = 2 },
+                new MapConfig.SectorEdge { A = 2, B = 3 },
+            };
+            mapCfg.StabilityGrowthPerSecond = 0f;
+            mapCfg.FreshCaptureWindowSeconds = 60;
+            mapCfg.StabilityStartNeutral = 0f;
+            mapCfg.StabilityStartOnCapture = 10f;
+            mapCfg.StabilityGainOnDefenseWin = 5f;
+            mapCfg.CaptureStabilityMultiplierAggressive = 1f;
+            mapCfg.CaptureStabilityMultiplierStable = 1f;
+            mapCfg.CaptureStabilityMultiplierRisky = 1f;
+            mapCfg.BotPowerMinMultiplier = 1f;
+            mapCfg.BotPowerMaxMultiplier = 1f;
+            mapCfg.ValidateOrThrow();
+
+            var economy = new EconomyService(state);
+            var balance = CreateValidBalanceConfig();
+            var production = new ProductionService(state, balance, economy);
+
+            var withoutIsolation = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 99);
+            withoutIsolation.IsolationExpectedSupportNeighbors = 1;
+            withoutIsolation.IsolationPenaltyPerMissingSupport = 0f;
+            withoutIsolation.IsolationMinDefenseMultiplier = 1f;
+            withoutIsolation.ValidateOrThrow();
+
+            var withIsolation = CreateDeterministicPvpConfig(prestigePowerPerPrestige: 99);
+            withIsolation.IsolationExpectedSupportNeighbors = 2;
+            withIsolation.IsolationPenaltyPerMissingSupport = 0.2f;
+            withIsolation.IsolationMinDefenseMultiplier = 0.5f;
+            withIsolation.ValidateOrThrow();
+
+            var map = new MapService(state.MapState, mapCfg);
+            map.AdvanceTime(1000);
+
+            var snapshotWithout = new SnapshotService(state, withoutIsolation, production, mapConfig: mapCfg);
+            var snapshotWith = new SnapshotService(state, withIsolation, production, mapConfig: mapCfg);
+            var factions = CreateFactionSnapshots(state, mapCfg, withIsolation, production);
+            var matchmaking = new MatchmakingService(mapCfg, factions);
+            var attacks = new PvpAttackChargesService(state, CreateDefaultPvpAttacksConfig());
+            var league = new LeagueService(state, CreateValidLeagueConfig());
+
+            var combatWithout = new PvpMapCombatService(state, map, mapCfg, attacks, snapshotWithout, matchmaking, new BattleSimService(withoutIsolation), economy, league);
+            var combatWith = new PvpMapCombatService(state, map, mapCfg, attacks, snapshotWith, matchmaking, new BattleSimService(withIsolation), economy, league);
+
+            var previewWithout = combatWithout.GetAttackPreview(2, AttackStrategy.Stable, 1001, seedBase: 1);
+            var previewWith = combatWith.GetAttackPreview(2, AttackStrategy.Stable, 1001, seedBase: 1);
+
+            Assert.Greater(previewWith.WinChanceMin, previewWithout.WinChanceMin);
         }
 
         [Test]
