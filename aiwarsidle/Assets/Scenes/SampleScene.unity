@@ -3888,6 +3888,12 @@ MonoBehaviour:
   _detailPanelVerticalOffset: 200
   _detailPanelDistanceMultiplier: 2
   _detailPanelEdgePadding: 12
+  _duelStyle:
+    HackLinkThickness: 4.5
+    ControlRingThickness: 3
+    ControlRingScale: 0.88
+    IdlePanelSideInset: 32
+    IdlePanelTopInset: 56
 --- !u!114 &567681726
 MonoBehaviour:
   m_ObjectHideFlags: 0

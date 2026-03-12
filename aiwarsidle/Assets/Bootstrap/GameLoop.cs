@@ -35,6 +35,7 @@ namespace AIWarsIdle.Bootstrap
         private readonly BattleSimService _battleSim;
         private readonly PvpMapCombatService _combat;
         private readonly PvpBotService _bots;
+        private readonly HexHackDuelService _hexHackDuel;
         private readonly SessionTelemetryService _sessionTelemetry;
         private readonly SubscriptionService _subscription;
         private readonly RewardedAdsUseCaseService _rewardedAds;
@@ -64,6 +65,7 @@ namespace AIWarsIdle.Bootstrap
         public MatchmakingService Matchmaking => _matchmaking;
         public BattleSimService BattleSim => _battleSim;
         public PvpMapCombatService PvpCombat => _combat;
+        public HexHackDuelService HexHackDuel => _hexHackDuel;
         public ISubscriptionService Subscription => _subscription;
         public RewardedAdsUseCaseService RewardedAds => _rewardedAds;
         public long NowUnixSeconds => LastNowUnixSeconds;
@@ -131,6 +133,7 @@ namespace AIWarsIdle.Bootstrap
             _factionSnapshots = pvpConfig == null ? null : new FactionSnapshotService(State, _mapConfig, pvpConfig, _snapshot, balanceConfig);
             _matchmaking = _mapConfig == null ? null : new MatchmakingService(_mapConfig, _factionSnapshots);
             _battleSim = pvpConfig == null ? null : new BattleSimService(pvpConfig, _overclock);
+            _hexHackDuel = new HexHackDuelService(_snapshot);
             _combat =
                 _pvpAttacks != null &&
                 _league != null &&
@@ -170,6 +173,7 @@ namespace AIWarsIdle.Bootstrap
 
             _map.AdvanceTime(now);
             _bots?.Tick(now);
+            _hexHackDuel?.Tick(0f);
 
             _offline.BankOfflineGain(now);
 
@@ -190,6 +194,7 @@ namespace AIWarsIdle.Bootstrap
             _league?.ResetSeasonIfNeeded(now);
             _map.AdvanceTime(now);
             _bots?.Tick(now);
+            _hexHackDuel?.Tick(deltaSeconds);
 
             _production.Tick(now, deltaSeconds);
 
@@ -219,6 +224,7 @@ namespace AIWarsIdle.Bootstrap
                 _league?.ResetSeasonIfNeeded(now);
                 _map.AdvanceTime(now);
                 _bots?.Tick(now);
+                _hexHackDuel?.Tick(0f);
                 _offline.MarkBackgrounded(now);
                 _autosave.OnApplicationPause(isPaused);
                 return;
@@ -236,6 +242,7 @@ namespace AIWarsIdle.Bootstrap
             _league?.ResetSeasonIfNeeded(now);
             _map.AdvanceTime(now);
             _bots?.Tick(now);
+            _hexHackDuel?.Tick(0f);
             _offline.BankOfflineGain(now);
             _autosave.OnApplicationPause(isPaused);
             _autosave.ForceSave();

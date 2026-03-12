@@ -102,6 +102,36 @@ namespace AIWarsIdle.UI.Pvp
             gameObject.SetActive(false);
         }
 
+        public void ShowStatusCard(
+            string title,
+            string owner,
+            string bonus,
+            string stability,
+            string status,
+            string hint,
+            string actionLabel,
+            bool actionEnabled,
+            string strategyLabel,
+            bool strategyEnabled,
+            string previewText = "")
+        {
+            gameObject.SetActive(true);
+            if (_title != null) _title.text = title ?? string.Empty;
+            if (_owner != null) _owner.text = owner ?? string.Empty;
+            if (_bonus != null) _bonus.text = bonus ?? string.Empty;
+            if (_stability != null) _stability.text = stability ?? string.Empty;
+            if (_status != null)
+            {
+                _status.text = status ?? string.Empty;
+                _status.color = actionEnabled ? _statusReadyColor : _statusDefaultColor;
+            }
+            if (_hint != null) _hint.text = hint ?? string.Empty;
+            if (_strategyButton != null) _strategyButton.interactable = strategyEnabled;
+            if (_strategyButtonLabel != null) _strategyButtonLabel.text = strategyLabel ?? string.Empty;
+            if (_actionButton != null) _actionButton.interactable = actionEnabled;
+            if (_actionButtonLabel != null) _actionButtonLabel.text = BuildActionButtonLabel(actionLabel ?? string.Empty, previewText ?? string.Empty);
+        }
+
         internal void ShowSector(HexGridRenderer.SectorDetailState detailState)
         {
             gameObject.SetActive(true);
@@ -115,7 +145,7 @@ namespace AIWarsIdle.UI.Pvp
                 _status.color = detailState.CanAttack ? _statusReadyColor : _statusBlockedColor;
             }
             if (_hint != null) _hint.text = detailState.HintText;
-            if (_strategyButton != null) _strategyButton.interactable = true;
+            if (_strategyButton != null) _strategyButton.interactable = detailState.CanCycleStrategy;
             if (_strategyButtonLabel != null) _strategyButtonLabel.text = detailState.StrategyLabel;
             if (_actionButton != null) _actionButton.interactable = detailState.CanAttack;
             if (_actionButtonLabel != null) _actionButtonLabel.text = BuildActionButtonLabel(detailState.ActionLabel, detailState.PreviewText);

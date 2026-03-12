@@ -14,6 +14,7 @@ namespace AIWarsIdle.UI.Pvp
         public GameLoop Loop => _bootstrapper != null ? _bootstrapper.Loop : null;
         public MapService Map => Loop?.Map;
         public PvpMapCombatService Combat => Loop?.PvpCombat;
+        public HexHackDuelService HexHackDuel => Loop?.HexHackDuel;
         public PvpAttackChargesService PvpAttacks => Loop?.PvpAttacks;
         public LeagueService League => Loop?.League;
         public SnapshotService Snapshot => Loop?.Snapshot;

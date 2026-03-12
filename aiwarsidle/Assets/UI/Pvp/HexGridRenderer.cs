@@ -12,6 +12,16 @@ namespace AIWarsIdle.UI.Pvp
     [ExecuteAlways]
     public sealed class HexGridRenderer : MonoBehaviour
     {
+        [Serializable]
+        private sealed class DuelStyleConfig
+        {
+            public float HackLinkThickness = 4.5f;
+            public float ControlRingThickness = 3f;
+            public float ControlRingScale = 0.88f;
+            public float IdlePanelSideInset = 32f;
+            public float IdlePanelTopInset = 56f;
+        }
+
         private const int ScoreboardPlayerColumnWidth = 14;
         private const int ScoreboardPowerColumnWidth = 7;
         private const int ScoreboardScoreColumnWidth = 5;
@@ -31,6 +41,8 @@ namespace AIWarsIdle.UI.Pvp
         private const string GeneratedFrontierName = "__hex_grid_frontier";
         private const string GeneratedFrontierGlowName = "__hex_grid_frontier_glow";
         private const string GeneratedNetworkName = "__hex_grid_network";
+        private const string GeneratedHackLinksName = "__hex_grid_hack_links";
+        private const string GeneratedControlRingsName = "__hex_grid_control_rings";
         private const string SceneHudName = "PvpHexGridHud";
         private const string SceneDetailPanelName = "PvpHexGridPanel";
 
@@ -79,6 +91,9 @@ namespace AIWarsIdle.UI.Pvp
         [SerializeField, Min(1f)] private float _detailPanelDistanceMultiplier = 1.35f;
         [SerializeField, Min(0f)] private float _detailPanelEdgePadding = 12f;
 
+        [Header("Hex Hack Duel Style")]
+        [SerializeField] private DuelStyleConfig _duelStyle = new();
+
         private readonly List<HexCellView> _cells = new();
         private readonly Dictionary<int, HexCellView> _cellsBySectorId = new();
         private RectTransform _generatedRoot;
@@ -101,6 +116,7 @@ namespace AIWarsIdle.UI.Pvp
         private int _cachedDetailSectorId = -1;
         private AttackStrategy _cachedDetailStrategy = AttackStrategy.Stable;
         private SectorDetailState _cachedDetailState;
+        private DuelStyleConfig DuelStyle => _duelStyle ??= new DuelStyleConfig();
 
         public int Radius
         {
@@ -180,6 +196,11 @@ namespace AIWarsIdle.UI.Pvp
             _detailPanelVerticalOffset = Mathf.Max(0f, _detailPanelVerticalOffset);
             _detailPanelDistanceMultiplier = Mathf.Max(1f, _detailPanelDistanceMultiplier);
             _detailPanelEdgePadding = Mathf.Max(0f, _detailPanelEdgePadding);
+            DuelStyle.HackLinkThickness = Mathf.Max(1f, DuelStyle.HackLinkThickness);
+            DuelStyle.ControlRingThickness = Mathf.Max(1f, DuelStyle.ControlRingThickness);
+            DuelStyle.ControlRingScale = Mathf.Clamp(DuelStyle.ControlRingScale, 0.5f, 1.2f);
+            DuelStyle.IdlePanelSideInset = Mathf.Max(0f, DuelStyle.IdlePanelSideInset);
+            DuelStyle.IdlePanelTopInset = Mathf.Max(0f, DuelStyle.IdlePanelTopInset);
 
             if (!isActiveAndEnabled) return;
             Rebuild();
@@ -236,6 +257,12 @@ namespace AIWarsIdle.UI.Pvp
                 loop = _context.Loop;
             }
 
+            var duel = _context?.HexHackDuel ?? loop?.HexHackDuel;
+            if (duel != null)
+            {
+                return BuildDuelSnapshot(duel);
+            }
+
             var config = loop?.MapConfig;
             if (config == null && _context != null && _context.Bootstrapper != null)
             {
@@ -280,6 +307,7 @@ namespace AIWarsIdle.UI.Pvp
                     IsHome = previewCorners.Contains(coord),
                     OwnerPlayerId = previewCorners.Contains(coord) ? i + 1 : 0,
                     Stability = 0f,
+                    InfoText = string.Empty,
                 };
 
                 if (useConfigOrder)
@@ -320,9 +348,42 @@ namespace AIWarsIdle.UI.Pvp
                 sectors.Add(sector);
             }
 
+            for (var i = 0; i < sectors.Count; i++)
+            {
+                var sector = sectors[i];
+                var shouldShowStability = sector.IsHome || sector.Stability < 100f;
+                sector.InfoText = shouldShowStability ? $"{Mathf.RoundToInt(sector.Stability)}%" : string.Empty;
+                sectors[i] = sector;
+            }
+
             ApplyConnectivityMarkers(config, sectors);
 
             return new GridSnapshot(resolvedRadius, coords.Count, sectors);
+        }
+
+        private GridSnapshot BuildDuelSnapshot(HexHackDuelService duel)
+        {
+            var sectors = new List<DisplaySector>(duel.Nodes.Count);
+            for (var i = 0; i < duel.Nodes.Count; i++)
+            {
+                var node = duel.Nodes[i];
+                sectors.Add(new DisplaySector
+                {
+                    Coord = new HexCoord(node.Coord.Q, node.Coord.R),
+                    SectorIndex = i,
+                    SectorId = node.Id,
+                    Label = node.Label,
+                    IsHome = node.IsCore,
+                    OwnerPlayerId = node.OwnerPlayerId,
+                    Stability = Mathf.Abs(node.Control),
+                    ControlValue = node.Control,
+                    ProductionBonusPercent = node.IsCore ? 30f : 0f,
+                    InfoText = FormatDuelControlShort(node.Control),
+                    IsDuelSector = true
+                });
+            }
+
+            return new GridSnapshot(1, sectors.Count, sectors);
         }
 
         private int ResolveRadius(int configCount, int runtimeCount)
@@ -359,14 +420,20 @@ namespace AIWarsIdle.UI.Pvp
 
             UpdateOwnershipNetwork(root, snapshot);
             UpdateFrontlines(root, snapshot);
+            UpdateDuelOverlays(root, snapshot);
 
             FitGridToViewport(root);
             EnsureOverlaySiblingOrder();
 
             UpdateHud(snapshot);
+            UpdateIdleDuelPanel();
             if (_detailPanel != null)
             {
-                _detailPanel.Hide();
+                var duel = _context?.HexHackDuel;
+                if (duel == null || duel.IsMatchActive || _selected != null)
+                {
+                    _detailPanel.Hide();
+                }
             }
         }
 
@@ -398,8 +465,10 @@ namespace AIWarsIdle.UI.Pvp
 
             UpdateOwnershipNetwork(_generatedRoot, snapshot);
             UpdateFrontlines(_generatedRoot, snapshot);
+            UpdateDuelOverlays(_generatedRoot, snapshot);
             EnsureOverlaySiblingOrder();
             UpdateHud(snapshot);
+            UpdateIdleDuelPanel();
         }
 
         private RectTransform GetOrCreateGeneratedRoot()
@@ -695,6 +764,11 @@ namespace AIWarsIdle.UI.Pvp
             if (_generatedRoot != null)
             {
                 _generatedRoot.SetAsFirstSibling();
+                SetOverlayLastSibling(_generatedRoot, GeneratedNetworkName);
+                SetOverlayLastSibling(_generatedRoot, GeneratedFrontierName);
+                SetOverlayLastSibling(_generatedRoot, GeneratedFrontierGlowName);
+                SetOverlayLastSibling(_generatedRoot, GeneratedHackLinksName);
+                SetOverlayLastSibling(_generatedRoot, GeneratedControlRingsName);
             }
 
             if (_hud != null)
@@ -710,6 +784,16 @@ namespace AIWarsIdle.UI.Pvp
             if (_detailPanel != null)
             {
                 _detailPanel.transform.SetAsLastSibling();
+            }
+        }
+
+        private static void SetOverlayLastSibling(Transform parent, string childName)
+        {
+            if (parent == null || string.IsNullOrEmpty(childName)) return;
+            var child = parent.Find(childName);
+            if (child != null)
+            {
+                child.SetAsLastSibling();
             }
         }
 
@@ -916,7 +1000,9 @@ namespace AIWarsIdle.UI.Pvp
                 return;
             }
 
-            var segments = BuildOwnershipNetworkSegments(snapshot);
+            var segments = ContainsDuelSectors(snapshot)
+                ? BuildDuelOwnershipNetworkSegments(snapshot)
+                : BuildOwnershipNetworkSegments(snapshot);
             graphic.gameObject.SetActive(segments.Count > 0);
             graphic.SetSegments(segments, Mathf.Max(1f, _frontlineThickness * 0.8f));
         }
@@ -994,6 +1080,79 @@ namespace AIWarsIdle.UI.Pvp
             var graphic = go.GetComponent<HexFrontierGraphic>();
             graphic.raycastTarget = false;
             return graphic;
+        }
+
+        private HexFrontierGraphic GetOrCreateHackLinksGraphic(RectTransform parent)
+        {
+            var existing = parent.Find(GeneratedHackLinksName);
+            if (existing != null)
+            {
+                return existing.GetComponent<HexFrontierGraphic>();
+            }
+
+            var go = new GameObject(GeneratedHackLinksName, typeof(RectTransform), typeof(CanvasRenderer), typeof(HexFrontierGraphic));
+            go.transform.SetParent(parent, worldPositionStays: false);
+            go.transform.SetSiblingIndex(Math.Min(1, parent.childCount - 1));
+            HideEditorObject(go);
+
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            rect.localScale = Vector3.one;
+
+            var graphic = go.GetComponent<HexFrontierGraphic>();
+            graphic.raycastTarget = false;
+            return graphic;
+        }
+
+        private HexFrontierGraphic GetOrCreateControlRingsGraphic(RectTransform parent)
+        {
+            var existing = parent.Find(GeneratedControlRingsName);
+            if (existing != null)
+            {
+                return existing.GetComponent<HexFrontierGraphic>();
+            }
+
+            var go = new GameObject(GeneratedControlRingsName, typeof(RectTransform), typeof(CanvasRenderer), typeof(HexFrontierGraphic));
+            go.transform.SetParent(parent, worldPositionStays: false);
+            go.transform.SetSiblingIndex(Math.Min(1, parent.childCount - 1));
+            HideEditorObject(go);
+
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            rect.localScale = Vector3.one;
+
+            var graphic = go.GetComponent<HexFrontierGraphic>();
+            graphic.raycastTarget = false;
+            return graphic;
+        }
+
+        private void UpdateDuelOverlays(RectTransform root, GridSnapshot snapshot)
+        {
+            var linksGraphic = GetOrCreateHackLinksGraphic(root);
+            var ringsGraphic = GetOrCreateControlRingsGraphic(root);
+            var duel = _context?.HexHackDuel;
+            if (duel == null || !ContainsDuelSectors(snapshot))
+            {
+                linksGraphic.SetSegments(Array.Empty<HexFrontierGraphic.LineSegment>(), Mathf.Max(2f, _frontlineThickness * 0.9f));
+                linksGraphic.gameObject.SetActive(false);
+                ringsGraphic.SetSegments(Array.Empty<HexFrontierGraphic.LineSegment>(), DuelStyle.ControlRingThickness);
+                ringsGraphic.gameObject.SetActive(false);
+                return;
+            }
+
+            var links = BuildDuelLinkSegments(snapshot, duel);
+            linksGraphic.gameObject.SetActive(links.Count > 0);
+            linksGraphic.SetSegments(links, DuelStyle.HackLinkThickness);
+
+            var rings = BuildDuelControlRingSegments(snapshot);
+            ringsGraphic.gameObject.SetActive(rings.Count > 0);
+            ringsGraphic.SetSegments(rings, DuelStyle.ControlRingThickness);
         }
 
         private List<HexFrontierGraphic.LineSegment> BuildFrontlineSegments(GridSnapshot snapshot)
@@ -1171,6 +1330,133 @@ namespace AIWarsIdle.UI.Pvp
             }
 
             return segments;
+        }
+
+        private List<HexFrontierGraphic.LineSegment> BuildDuelLinkSegments(GridSnapshot snapshot, HexHackDuelService duel)
+        {
+            var segments = new List<HexFrontierGraphic.LineSegment>();
+            var byId = new Dictionary<int, DisplaySector>(snapshot.Sectors.Count);
+            for (var i = 0; i < snapshot.Sectors.Count; i++)
+            {
+                byId[snapshot.Sectors[i].SectorId] = snapshot.Sectors[i];
+            }
+
+            AppendDuelLinkSegments(duel.PlayerLinks, byId, segments);
+            AppendDuelLinkSegments(duel.EnemyLinks, byId, segments);
+            return segments;
+        }
+
+        private List<HexFrontierGraphic.LineSegment> BuildDuelOwnershipNetworkSegments(GridSnapshot snapshot)
+        {
+            var segments = new List<HexFrontierGraphic.LineSegment>();
+            if (snapshot.Sectors == null || snapshot.Sectors.Count == 0) return segments;
+
+            var byCoord = new Dictionary<HexCoord, DisplaySector>(snapshot.Sectors.Count);
+            var processedEdges = new HashSet<long>();
+            for (var i = 0; i < snapshot.Sectors.Count; i++)
+            {
+                byCoord[snapshot.Sectors[i].Coord] = snapshot.Sectors[i];
+            }
+
+            for (var i = 0; i < snapshot.Sectors.Count; i++)
+            {
+                var sector = snapshot.Sectors[i];
+                if (!sector.IsDuelSector || sector.OwnerPlayerId <= 0) continue;
+
+                for (var neighborIndex = 0; neighborIndex < HexGridMath.NeighborDirections.Length; neighborIndex++)
+                {
+                    var neighborCoord = new HexCoord(
+                        sector.Coord.Q + HexGridMath.NeighborDirections[neighborIndex].Q,
+                        sector.Coord.R + HexGridMath.NeighborDirections[neighborIndex].R);
+                    if (!byCoord.TryGetValue(neighborCoord, out var neighbor)) continue;
+                    if (neighbor.OwnerPlayerId != sector.OwnerPlayerId) continue;
+
+                    var edgeKey = GetEdgeKey(sector.SectorId, neighbor.SectorId);
+                    if (!processedEdges.Add(edgeKey)) continue;
+
+                    var start = HexGridMath.AxialToLocalPosition(sector.Coord, _hexRadius);
+                    var end = HexGridMath.AxialToLocalPosition(neighbor.Coord, _hexRadius);
+                    segments.Add(new HexFrontierGraphic.LineSegment(
+                        start,
+                        end,
+                        HexGridPalette.GetNetworkColor(sector.OwnerPlayerId, _ownershipNetworkAlpha)));
+                }
+            }
+
+            return segments;
+        }
+
+        private void AppendDuelLinkSegments(
+            IReadOnlyList<DuelLinkState> links,
+            Dictionary<int, DisplaySector> byId,
+            List<HexFrontierGraphic.LineSegment> segments)
+        {
+            if (links == null) return;
+
+            for (var i = 0; i < links.Count; i++)
+            {
+                var link = links[i];
+                if (!link.IsActive) continue;
+                if (!byId.TryGetValue(link.SourceId, out var source)) continue;
+                if (!byId.TryGetValue(link.TargetId, out var target)) continue;
+
+                var start = HexGridMath.AxialToLocalPosition(source.Coord, _hexRadius);
+                var end = HexGridMath.AxialToLocalPosition(target.Coord, _hexRadius);
+                var color = HexGridPalette.GetFrontlineColor(link.OwnerPlayerId, Color.white);
+                segments.Add(new HexFrontierGraphic.LineSegment(start, end, color));
+            }
+        }
+
+        private List<HexFrontierGraphic.LineSegment> BuildDuelControlRingSegments(GridSnapshot snapshot)
+        {
+            var segments = new List<HexFrontierGraphic.LineSegment>();
+            var visualRadius = _hexRadius * _cellFill * DuelStyle.ControlRingScale;
+
+            for (var i = 0; i < snapshot.Sectors.Count; i++)
+            {
+                var sector = snapshot.Sectors[i];
+                if (!sector.IsDuelSector) continue;
+
+                var progress = Mathf.Clamp01(Mathf.Abs(sector.ControlValue) / 100f);
+                if (progress <= 0.001f) continue;
+
+                var color = sector.ControlValue >= 0f
+                    ? HexGridPalette.GetFrontlineColor(1, Color.white)
+                    : HexGridPalette.GetFrontlineColor(2, Color.white);
+
+                var corners = HexGridMath.GetHexCorners(HexGridMath.AxialToLocalPosition(sector.Coord, _hexRadius), visualRadius);
+                var edgeBudget = progress * 6f;
+                for (var edgeIndex = 0; edgeIndex < 6; edgeIndex++)
+                {
+                    var remaining = edgeBudget - edgeIndex;
+                    if (remaining <= 0f) break;
+
+                    var start = corners[edgeIndex];
+                    var end = corners[(edgeIndex + 1) % 6];
+                    if (remaining < 1f)
+                    {
+                        end = Vector2.Lerp(start, end, remaining);
+                    }
+
+                    segments.Add(new HexFrontierGraphic.LineSegment(start, end, color));
+                }
+            }
+
+            return segments;
+        }
+
+        private static bool ContainsDuelSectors(GridSnapshot snapshot)
+        {
+            if (snapshot.Sectors == null) return false;
+            for (var i = 0; i < snapshot.Sectors.Count; i++)
+            {
+                if (snapshot.Sectors[i].IsDuelSector)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private float GetPulsedGlowAlpha()
@@ -1662,6 +1948,12 @@ namespace AIWarsIdle.UI.Pvp
 
         private void SelectCell(HexCellView cell)
         {
+            if (_context?.HexHackDuel != null)
+            {
+                HandleDuelCellTap(cell);
+                return;
+            }
+
             GetOrCreateDetailPanel();
 
             if (_selected == cell)
@@ -1690,7 +1982,14 @@ namespace AIWarsIdle.UI.Pvp
             _selected = null;
             if (_detailPanel != null)
             {
-                _detailPanel.Hide();
+                if (_context?.HexHackDuel != null && (!_context.HexHackDuel.IsMatchActive || _context.HexHackDuel.IsMatchFinished))
+                {
+                    UpdateIdleDuelPanel();
+                }
+                else
+                {
+                    _detailPanel.Hide();
+                }
             }
         }
 
@@ -1699,6 +1998,68 @@ namespace AIWarsIdle.UI.Pvp
             var panel = GetOrCreateDetailPanel();
             panel.ShowSector(BuildDetailState(cell.CurrentSector));
             PositionDetailPanel(panel.GetComponent<RectTransform>(), cell);
+        }
+
+        private void UpdateIdleDuelPanel()
+        {
+            var duel = _context?.HexHackDuel;
+            if (duel == null || (duel.IsMatchActive && !duel.IsMatchFinished)) return;
+
+            var panel = GetOrCreateDetailPanel();
+            panel.ShowStatusCard(
+                title: "Hex Hack Duel",
+                owner: "Mode: 1vAI real-time",
+                bonus: "Board: 2-3-2 ring",
+                stability: "CORE: node D",
+                status: duel.ResultSummary,
+                hint: duel.IsMatchActive
+                    ? "Tap neutral or enemy nodes to auto-link from adjacent player nodes."
+                    : "Press PLAY to start a 30 second test duel. You start on C, AI starts on E.",
+                actionLabel: duel.IsMatchFinished ? "PLAY AGAIN" : "PLAY",
+                actionEnabled: !duel.IsMatchActive || duel.IsMatchFinished,
+                strategyLabel: "Command: Clear",
+                strategyEnabled: duel.IsMatchFinished,
+                previewText: duel.IsMatchActive ? string.Empty : "TEST MATCH");
+            PositionIdleDuelPanel(panel.GetComponent<RectTransform>());
+        }
+
+        private void PositionIdleDuelPanel(RectTransform panelRect)
+        {
+            if (panelRect == null) return;
+            var parentRect = transform as RectTransform;
+            if (parentRect == null) return;
+
+            var bounds = parentRect.rect;
+            var halfWidth = panelRect.rect.width * 0.5f;
+            var halfHeight = panelRect.rect.height * 0.5f;
+            panelRect.anchoredPosition = new Vector2(
+                bounds.xMax - halfWidth - DuelStyle.IdlePanelSideInset,
+                Mathf.Clamp(bounds.yMax - halfHeight - DuelStyle.IdlePanelTopInset, bounds.yMin + halfHeight + 16f, bounds.yMax - halfHeight - 16f));
+        }
+
+        private void HandleDuelCellTap(HexCellView cell)
+        {
+            if (cell == null) return;
+
+            var duel = _context?.HexHackDuel;
+            if (duel == null) return;
+
+            if (!duel.IsMatchActive)
+            {
+                GetOrCreateToast().Show("Press PLAY to start.");
+                return;
+            }
+
+            var sector = cell.CurrentSector;
+            if (HexHackDuelService.IsPlayerOwner(sector.OwnerPlayerId))
+            {
+                GetOrCreateToast().Show("Tap a neutral or enemy node.");
+                return;
+            }
+
+            var result = duel.AutoAssignPlayerLinksToTarget(sector.SectorId);
+            GetOrCreateToast().Show(result.Message);
+            RefreshFromSource(forceRebuild: false);
         }
 
         private void PositionDetailPanel(RectTransform panelRect, HexCellView cell)
@@ -1774,10 +2135,33 @@ namespace AIWarsIdle.UI.Pvp
         {
             var hud = GetOrCreateHud();
             var loop = _context?.Loop;
+            var duel = _context?.HexHackDuel;
 
             if (loop == null)
             {
                 hud.ShowPreview(snapshot.Count, _radius, _powerInfoVisible);
+                return;
+            }
+
+            if (duel != null)
+            {
+                var countText = duel.IsMatchActive
+                    ? $"Links: {CountActiveLinks(duel.PlayerLinks)}"
+                    : "Press PLAY";
+                var matchText = duel.IsMatchActive
+                    ? FormatClockDuration(Mathf.CeilToInt(duel.RemainingSeconds))
+                    : "00:30 test duel";
+                var duelPowerText = $"YOU {duel.PlayerPower:0.#}  |  AI {duel.EnemyPower:0.#}";
+                var table = BuildDuelScoreTable(duel);
+                UpdateExternalAttackHud(countText, duel.IsMatchActive && duel.ElapsedSeconds >= HexHackDuelService.OverdriveStartsAtSeconds ? "OVERDRIVE" : string.Empty);
+                hud.SetPowerTooltipContent("Hex Hack Duel", "Player push and AI push scale by the clamped power ratio. CORE adds +30% push from node D.");
+                hud.ShowState(
+                    _externalAttacksTexts.Count > 0 ? string.Empty : countText,
+                    matchText,
+                    duelPowerText,
+                    duel.IsMatchFinished ? duel.ResultSummary : "Hex Hack Duel",
+                    table,
+                    _powerInfoVisible);
                 return;
             }
 
@@ -1939,6 +2323,12 @@ namespace AIWarsIdle.UI.Pvp
         private SectorDetailState BuildDetailState(DisplaySector sector)
         {
             var loop = _context?.Loop;
+            var duel = _context?.HexHackDuel;
+            if (duel != null && sector.IsDuelSector)
+            {
+                return BuildDuelDetailState(sector, duel);
+            }
+
             if (loop != null)
             {
                 var detailStamp = ComputeDetailStateStamp(loop, sector, _selectedStrategy);
@@ -2006,7 +2396,8 @@ namespace AIWarsIdle.UI.Pvp
                 HintText = hintText,
                 ActionLabel = actionLabel,
                 StrategyLabel = $"Strategy: {_selectedStrategy}",
-                CanAttack = canAttack
+                CanAttack = canAttack,
+                CanCycleStrategy = true
             };
 
             if (loop != null)
@@ -2020,8 +2411,71 @@ namespace AIWarsIdle.UI.Pvp
             return detailState;
         }
 
+        private SectorDetailState BuildDuelDetailState(DisplaySector sector, HexHackDuelService duel)
+        {
+            var ownerText = BuildDuelOwnerText(sector);
+            var bonusText = sector.IsHome ? "Core: +30% push from this node." : "Hack node.";
+            var stabilityText = $"Control: {FormatDuelControlLong(sector.ControlValue)}";
+            var positionText = $"Node {sector.Label}  |  Coord {sector.Coord.Q},{sector.Coord.R}";
+            var hintText = duel.IsMatchActive
+                ? "Tap a neutral or enemy node to route pressure from adjacent player nodes."
+                : "Press PLAY to launch a 30 second test duel.";
+            var statusText = duel.ResultSummary;
+            var previewText = BuildDuelPreviewText(sector, duel);
+            var actionLabel = duel.IsMatchActive ? "LINK" : "PLAY";
+            var canAttack = true;
+            var strategyLabel = "Command: Reset";
+            var strategyEnabled = duel.IsMatchFinished;
+
+            if (duel.IsMatchFinished)
+            {
+                actionLabel = "PLAY AGAIN";
+                canAttack = true;
+                strategyLabel = "Command: Reset";
+            }
+
+            return new SectorDetailState
+            {
+                Sector = sector,
+                OwnerText = ownerText,
+                BonusText = bonusText,
+                StabilityText = stabilityText,
+                PreviewText = previewText,
+                PositionText = positionText,
+                StatusText = statusText,
+                HintText = hintText,
+                ActionLabel = actionLabel,
+                StrategyLabel = strategyLabel,
+                CanAttack = canAttack,
+                CanCycleStrategy = strategyEnabled
+            };
+        }
+
         private void OnCycleStrategy()
         {
+            var duel = _context?.HexHackDuel;
+            if (duel != null)
+            {
+                if (duel.IsMatchFinished)
+                {
+                    duel.StartMatch();
+                    GetOrCreateToast().Show("Hex Hack Duel started.");
+                }
+                else
+                {
+                    duel.ClearAllPlayerLinks();
+                    GetOrCreateToast().Show("All player links cleared.");
+                }
+
+                RefreshFromSource(forceRebuild: false);
+                if (_selected != null)
+                {
+                    UpdateDetailPanel(_selected);
+                }
+
+                return;
+            }
+
             _selectedStrategy = _selectedStrategy switch
             {
                 AttackStrategy.Aggressive => AttackStrategy.Stable,
@@ -2037,6 +2491,13 @@ namespace AIWarsIdle.UI.Pvp
 
         private void OnAttackSelectedSector()
         {
+            var duel = _context?.HexHackDuel;
+            if (duel != null)
+            {
+                HandleDuelAction();
+                return;
+            }
+
             if (_selected == null) return;
 
             var loop = _context?.Loop;
@@ -2057,6 +2518,29 @@ namespace AIWarsIdle.UI.Pvp
                 : $"Defeat on sector {_selected.SectorId}. {result.Battle.LeaguePointsDelta} SP");
 
             RefreshFromSource(forceRebuild: false);
+        }
+
+        private void HandleDuelAction()
+        {
+            var duel = _context?.HexHackDuel;
+            if (duel == null) return;
+
+            if (!duel.IsMatchActive)
+            {
+                duel.StartMatch();
+                GetOrCreateToast().Show("Hex Hack Duel started.");
+                if (_detailPanel != null)
+                {
+                    _detailPanel.Hide();
+                }
+                if (_selected != null)
+                {
+                    _selected.SetSelected(false);
+                    _selected = null;
+                }
+                RefreshFromSource(forceRebuild: false);
+                return;
+            }
         }
 
         private void ShowPowerInfoTooltip()
@@ -2138,6 +2622,45 @@ namespace AIWarsIdle.UI.Pvp
             return $"Owner: <color=#{ColorUtility.ToHtmlStringRGB(neutralColor)}>Neutral</color>";
         }
 
+        private static string BuildDuelOwnerText(DisplaySector sector)
+        {
+            if (sector.OwnerPlayerId > 0)
+            {
+                var playerColor = HexGridPalette.GetFrontlineColor(sector.OwnerPlayerId, Color.white);
+                var ownerName = sector.OwnerPlayerId == 1 ? "You" : "AI";
+                return $"Owner: <color=#{ColorUtility.ToHtmlStringRGB(playerColor)}>{ownerName}</color>";
+            }
+
+            var neutralColor = HexGridPalette.GetColorForOwner(0, isHome: false, ownedHexAlpha: 1f);
+            return $"Owner: <color=#{ColorUtility.ToHtmlStringRGB(neutralColor)}>Neutral</color>";
+        }
+
+        private string BuildDuelPreviewText(DisplaySector sector, HexHackDuelService duel)
+        {
+            if (!duel.IsMatchActive)
+            {
+                return "PLAY to initialize the board.";
+            }
+
+            return HexHackDuelService.IsPlayerOwner(sector.OwnerPlayerId) && Mathf.Approximately(sector.ControlValue, 100f)
+                ? "Player source node."
+                : $"Auto-link from adjacent player nodes. Active links {CountActiveLinks(duel.PlayerLinks)}";
+        }
+
+        private static string FormatDuelControlShort(float control)
+        {
+            if (Mathf.Abs(control) < 0.5f) return "0";
+            return control > 0f
+                ? $"P{Mathf.Abs(Mathf.RoundToInt(control))}"
+                : $"E{Mathf.Abs(Mathf.RoundToInt(control))}";
+        }
+
+        private static string FormatDuelControlLong(float control)
+        {
+            if (Mathf.Abs(control) < 0.001f) return "Neutral";
+            return control > 0f ? $"+{control:0.#} player" : $"{control:0.#} enemy";
+        }
+
         private static string BuildPowerTooltipBody(SnapshotService.PowerBreakdown breakdown)
         {
             return
@@ -2214,6 +2737,52 @@ namespace AIWarsIdle.UI.Pvp
             }
 
             return $"<mspace=0.58em>{string.Join("\n", lines)}</mspace>";
+        }
+
+        private static string BuildDuelScoreTable(HexHackDuelService duel)
+        {
+            var lines = new[]
+            {
+                FormatLiveScoreHeaderRow(),
+                FormatLiveScoreRow(1, "You", TrimCell(FormatPowerCell(duel.PlayerPower), 6), duel.PlayerHexCount.ToString()),
+                FormatLiveScoreRow(2, "AI", TrimCell(FormatPowerCell(duel.EnemyPower), 6), duel.EnemyHexCount.ToString()),
+                $"{TrimCell("CORE", ScoreboardPlayerColumnWidth).PadRight(ScoreboardPlayerColumnWidth)} {TrimCell(GetCoreOwnerText(duel), ScoreboardPowerColumnWidth + ScoreboardScoreColumnWidth + 1)}"
+            };
+
+            return $"<mspace=0.58em>{string.Join("\n", lines)}</mspace>";
+        }
+
+        private static string GetCoreOwnerText(HexHackDuelService duel)
+        {
+            for (var i = 0; i < duel.Nodes.Count; i++)
+            {
+                var node = duel.Nodes[i];
+                if (!node.IsCore) continue;
+                return node.OwnerPlayerId switch
+                {
+                    1 => "You",
+                    2 => "AI",
+                    _ => "Neutral"
+                };
+            }
+
+            return "-";
+        }
+
+        private static int CountActiveLinks(IReadOnlyList<DuelLinkState> links)
+        {
+            if (links == null) return 0;
+
+            var count = 0;
+            for (var i = 0; i < links.Count; i++)
+            {
+                if (links[i].IsActive)
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         private string GetCachedLiveScoreTable(Bootstrap.GameLoop loop)
@@ -2503,9 +3072,12 @@ namespace AIWarsIdle.UI.Pvp
             public bool IsHome;
             public int OwnerPlayerId;
             public float Stability;
+            public float ControlValue;
             public float ProductionBonusPercent;
             public bool IsAttackFrontier;
             public bool IsDisconnectedOwned;
+            public bool IsDuelSector;
+            public string InfoText;
         }
 
         internal struct SectorDetailState
@@ -2521,6 +3093,7 @@ namespace AIWarsIdle.UI.Pvp
             public string ActionLabel;
             public string StrategyLabel;
             public bool CanAttack;
+            public bool CanCycleStrategy;
         }
 
         private readonly struct LiveScoreEntry
@@ -2637,6 +3210,20 @@ namespace AIWarsIdle.UI.Pvp
         public static Vector2 GetCellSize(float hexRadius)
         {
             return new Vector2(Sqrt3 * hexRadius, 2f * hexRadius);
+        }
+
+        public static Vector2[] GetHexCorners(Vector2 center, float hexRadius)
+        {
+            var corners = new Vector2[6];
+            for (var i = 0; i < 6; i++)
+            {
+                var angle = Mathf.Deg2Rad * ((60f * i) - 30f);
+                corners[i] = new Vector2(
+                    center.x + (hexRadius * Mathf.Cos(angle)),
+                    center.y + (hexRadius * Mathf.Sin(angle)));
+            }
+
+            return corners;
         }
 
         public static (Vector2 start, Vector2 end) GetSharedEdge(Vector2 a, Vector2 b, float hexRadius)
@@ -2766,11 +3353,9 @@ namespace AIWarsIdle.UI.Pvp
 
             if (_info != null)
             {
-                var shouldShowStability = sector.IsHome || sector.Stability < 100f;
-                _info.text = shouldShowStability
-                    ? $"{Mathf.RoundToInt(sector.Stability)}%"
-                    : string.Empty;
-                _info.gameObject.SetActive(shouldShowStability);
+                var infoText = sector.InfoText ?? string.Empty;
+                _info.text = infoText;
+                _info.gameObject.SetActive(!string.IsNullOrEmpty(infoText));
             }
 
             if (_homeBadge != null)
