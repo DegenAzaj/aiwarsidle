@@ -91,7 +91,7 @@ namespace AIWarsIdle.PvP.Config
 
         [Header("Stability")]
         [Min(0f)]
-        public float StabilityGrowthPerSecond = 0.5f;
+        public float StabilityGrowthPerSecond = 0.03f;
 
         [Min(0)]
         public int FreshCaptureWindowSeconds = 300;
@@ -107,13 +107,13 @@ namespace AIWarsIdle.PvP.Config
         public float StabilityGainOnDefenseWin = 5f;
 
         [Min(0.01f)]
-        public float CaptureStabilityMultiplierAggressive = 0.8f;
+        public float CaptureStabilityMultiplierAggressive = 0.7f;
 
         [Min(0.01f)]
-        public float CaptureStabilityMultiplierStable = 1.0f;
+        public float CaptureStabilityMultiplierStable = 1.6f;
 
         [Min(0.01f)]
-        public float CaptureStabilityMultiplierRisky = 0.6f;
+        public float CaptureStabilityMultiplierRisky = 0.3f;
 
         [Min(0)]
         [Tooltip("Optional. If >0, you cannot attack the same sector again until this cooldown expires.")]

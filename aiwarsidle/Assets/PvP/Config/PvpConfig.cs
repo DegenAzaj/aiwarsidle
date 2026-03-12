@@ -15,20 +15,20 @@ namespace AIWarsIdle.PvP.Config
 
         [Header("Strategy multipliers")]
         [Min(0.01f)]
-        public float StrategyMultiplierAggressive = 1.05f;
+        public float StrategyMultiplierAggressive = 1.08f;
 
         [Min(0.01f)]
-        public float StrategyMultiplierStable = 1.00f;
+        public float StrategyMultiplierStable = 0.98f;
 
         [Min(0.01f)]
-        public float StrategyMultiplierRisky = 1.10f;
+        public float StrategyMultiplierRisky = 1.16f;
 
         [Header("Defense vs Stability")]
         [Min(0.01f)]
-        public float StabilityMultiplierMin = 0.90f;
+        public float StabilityMultiplierMin = 0.80f;
 
         [Min(0.01f)]
-        public float StabilityMultiplierMax = 1.20f;
+        public float StabilityMultiplierMax = 1.35f;
 
         [Header("Combat Outcome")]
         [Min(0.01f)]

@@ -25,14 +25,14 @@ MonoBehaviour:
   MaxSectorCount: 30
   RequireConnectedGraph: 1
   Adjacency: []
-  StabilityGrowthPerSecond: 0.5
+  StabilityGrowthPerSecond: 0.03
   FreshCaptureWindowSeconds: 300
   StabilityStartNeutral: 0
   StabilityStartOnCapture: 10
   StabilityGainOnDefenseWin: 5
-  CaptureStabilityMultiplierAggressive: 0.8
-  CaptureStabilityMultiplierStable: 1
-  CaptureStabilityMultiplierRisky: 0.6
+  CaptureStabilityMultiplierAggressive: 0.7
+  CaptureStabilityMultiplierStable: 1.6
+  CaptureStabilityMultiplierRisky: 0.3
   SectorAttackCooldownSeconds: 0
   BotPowerMinMultiplier: 0.8
   BotPowerMaxMultiplier: 1.2

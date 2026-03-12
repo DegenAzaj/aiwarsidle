@@ -14,21 +14,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: AIWarsIdle.PvP::AIWarsIdle.PvP.Config.PvpConfig
   PowerVarianceMin: 0.95
   PowerVarianceMax: 1.05
-  StrategyMultiplierAggressive: 1.05
-  StrategyMultiplierStable: 1
-  StrategyMultiplierRisky: 1.1
-  StabilityMultiplierMin: 0.9
+  StrategyMultiplierAggressive: 1.08
+  StrategyMultiplierStable: 0.98
+  StrategyMultiplierRisky: 1.16
+  StabilityMultiplierMin: 0.1
   StabilityMultiplierMax: 1.2
   DefenseBonus: 1.1
-  FlankBonusPerExtraAttacker: 0.1
-  FlankBonusMaxMultiplier: 1.3
+  FlankBonusPerExtraAttacker: 0.7
+  FlankBonusMaxMultiplier: 3
   CombatMaintenanceFreeSectors: 6
   CombatMaintenancePenaltyPerExtraSector: 0.03
   CombatMaintenanceMinMultiplier: 0.75
   UnderdogMaxAttackBonus: 0.2
   UnderdogSectorDeficitForMaxBonus: 6
-  BreakoutBonusPerBlockedHomeNeighbor: 0.18
-  BreakoutBonusMaxMultiplier: 1.6
+  BreakoutBonusPerBlockedHomeNeighbor: 1
+  BreakoutBonusMaxMultiplier: 3
   IsolationExpectedSupportNeighbors: 2
   IsolationPenaltyPerMissingSupport: 0.15
   IsolationMinDefenseMultiplier: 0.7
