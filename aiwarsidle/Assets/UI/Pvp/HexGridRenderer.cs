@@ -373,12 +373,14 @@ namespace AIWarsIdle.UI.Pvp
                     SectorIndex = i,
                     SectorId = node.Id,
                     Label = node.Label,
-                    IsHome = node.IsCore,
+                    IsHome = false,
+                    IsCoreSector = node.IsCore,
                     OwnerPlayerId = node.OwnerPlayerId,
                     Stability = Mathf.Abs(node.Control),
                     ControlValue = node.Control,
                     ProductionBonusPercent = node.IsCore ? 30f : 0f,
                     InfoText = FormatDuelControlShort(node.Control),
+                    BadgeText = node.IsCore ? "CORE" : string.Empty,
                     IsDuelSector = true
                 });
             }
@@ -2013,12 +2015,12 @@ namespace AIWarsIdle.UI.Pvp
                 stability: "CORE: node D",
                 status: duel.ResultSummary,
                 hint: duel.IsMatchActive
-                    ? "Tap neutral or enemy nodes to auto-link from adjacent player nodes."
+                    ? "Tap neutral, enemy, or damaged allied nodes to auto-link from adjacent player nodes."
                     : "Press PLAY to start a 30 second test duel. You start on C, AI starts on E.",
                 actionLabel: duel.IsMatchFinished ? "PLAY AGAIN" : "PLAY",
                 actionEnabled: !duel.IsMatchActive || duel.IsMatchFinished,
-                strategyLabel: "Command: Clear",
-                strategyEnabled: duel.IsMatchFinished,
+                strategyLabel: $"Difficulty: {duel.Difficulty}",
+                strategyEnabled: !duel.IsMatchActive || duel.IsMatchFinished,
                 previewText: duel.IsMatchActive ? string.Empty : "TEST MATCH");
             PositionIdleDuelPanel(panel.GetComponent<RectTransform>());
         }
@@ -2051,9 +2053,12 @@ namespace AIWarsIdle.UI.Pvp
             }
 
             var sector = cell.CurrentSector;
-            if (HexHackDuelService.IsPlayerOwner(sector.OwnerPlayerId))
+            var isFullyControlledPlayerNode =
+                HexHackDuelService.IsPlayerOwner(sector.OwnerPlayerId) &&
+                Mathf.Approximately(sector.ControlValue, 100f);
+            if (isFullyControlledPlayerNode)
             {
-                GetOrCreateToast().Show("Tap a neutral or enemy node.");
+                GetOrCreateToast().Show("Tap a neutral, enemy, or damaged allied node.");
                 return;
             }
 
@@ -2414,24 +2419,23 @@ namespace AIWarsIdle.UI.Pvp
         private SectorDetailState BuildDuelDetailState(DisplaySector sector, HexHackDuelService duel)
         {
             var ownerText = BuildDuelOwnerText(sector);
-            var bonusText = sector.IsHome ? "Core: +30% push from this node." : "Hack node.";
+            var bonusText = sector.IsCoreSector ? "Core: +30% push from this node." : "Hack node.";
             var stabilityText = $"Control: {FormatDuelControlLong(sector.ControlValue)}";
             var positionText = $"Node {sector.Label}  |  Coord {sector.Coord.Q},{sector.Coord.R}";
             var hintText = duel.IsMatchActive
-                ? "Tap a neutral or enemy node to route pressure from adjacent player nodes."
+                ? "Tap a neutral, enemy, or damaged allied node to route pressure from adjacent player nodes."
                 : "Press PLAY to launch a 30 second test duel.";
             var statusText = duel.ResultSummary;
             var previewText = BuildDuelPreviewText(sector, duel);
             var actionLabel = duel.IsMatchActive ? "LINK" : "PLAY";
             var canAttack = true;
-            var strategyLabel = "Command: Reset";
-            var strategyEnabled = duel.IsMatchFinished;
+            var strategyLabel = $"Difficulty: {duel.Difficulty}";
+            var strategyEnabled = !duel.IsMatchActive || duel.IsMatchFinished;
 
             if (duel.IsMatchFinished)
             {
                 actionLabel = "PLAY AGAIN";
                 canAttack = true;
-                strategyLabel = "Command: Reset";
             }
 
             return new SectorDetailState
@@ -2456,16 +2460,8 @@ namespace AIWarsIdle.UI.Pvp
             var duel = _context?.HexHackDuel;
             if (duel != null)
             {
-                if (duel.IsMatchFinished)
-                {
-                    duel.StartMatch();
-                    GetOrCreateToast().Show("Hex Hack Duel started.");
-                }
-                else
-                {
-                    duel.ClearAllPlayerLinks();
-                    GetOrCreateToast().Show("All player links cleared.");
-                }
+                duel.CycleDifficulty();
+                GetOrCreateToast().Show($"Difficulty set to {duel.Difficulty}.");
 
                 RefreshFromSource(forceRebuild: false);
                 if (_selected != null)
@@ -3070,6 +3066,7 @@ namespace AIWarsIdle.UI.Pvp
             public int SectorId;
             public string Label;
             public bool IsHome;
+            public bool IsCoreSector;
             public int OwnerPlayerId;
             public float Stability;
             public float ControlValue;
@@ -3078,6 +3075,7 @@ namespace AIWarsIdle.UI.Pvp
             public bool IsDisconnectedOwned;
             public bool IsDuelSector;
             public string InfoText;
+            public string BadgeText;
         }
 
         internal struct SectorDetailState
@@ -3329,6 +3327,7 @@ namespace AIWarsIdle.UI.Pvp
             CurrentSector = sector;
             SectorId = sector.SectorId;
             _baseColor = HexGridPalette.GetColorForOwner(sector.OwnerPlayerId, sector.IsHome, ownedHexAlpha);
+            var showsSpecialBadge = sector.IsHome || sector.IsCoreSector;
 
             if (_graphic != null)
             {
@@ -3337,7 +3336,7 @@ namespace AIWarsIdle.UI.Pvp
 
             if (_label != null)
             {
-                if (sector.IsHome)
+                if (showsSpecialBadge)
                 {
                     _label.text = showCoordinates
                         ? $"{sector.Label}\n{sector.Coord.Q},{sector.Coord.R}"
@@ -3360,12 +3359,15 @@ namespace AIWarsIdle.UI.Pvp
 
             if (_homeBadge != null)
             {
-                _homeBadge.gameObject.SetActive(showHomeBadge && sector.IsHome);
+                _homeBadge.text = string.IsNullOrWhiteSpace(sector.BadgeText)
+                    ? "HOME"
+                    : sector.BadgeText;
+                _homeBadge.gameObject.SetActive(showHomeBadge && showsSpecialBadge);
             }
 
             if (_marker != null)
             {
-                if (!showConnectivityMarkers || sector.IsHome)
+                if (!showConnectivityMarkers || showsSpecialBadge)
                 {
                     _marker.text = string.Empty;
                     _marker.gameObject.SetActive(false);

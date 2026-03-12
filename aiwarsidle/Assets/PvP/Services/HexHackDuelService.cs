@@ -13,11 +13,11 @@ namespace AIWarsIdle.PvP.Services
         public const float CorePushBonus = 0.30f;
         public const float OverdriveStartsAtSeconds = 25f;
         public const float OverdriveMultiplier = 2f;
-        public const int MaxEnemyLinks = 2;
-
         private const int NeutralOwnerId = 0;
         private const int PlayerOwnerId = 1;
         private const int EnemyOwnerId = 2;
+        private const double MinPowerRatioClamp = 0.7d;
+        private const double MaxPowerRatioClamp = 1.3d;
 
         private static readonly DuelNodeDefinition[] NodeDefinitions =
         {
@@ -56,7 +56,7 @@ namespace AIWarsIdle.PvP.Services
             _seedRng = new Random(seed);
             _nodes = new DuelNodeState[NodeDefinitions.Length];
             _playerLinks = new DuelLinkState[NodeDefinitions.Length];
-            _enemyLinks = new DuelLinkState[MaxEnemyLinks];
+            _enemyLinks = new DuelLinkState[NodeDefinitions.Length];
             ResetBoard();
         }
 
@@ -66,6 +66,7 @@ namespace AIWarsIdle.PvP.Services
         public float ElapsedSeconds => MatchDurationSeconds - _remainingSeconds;
         public double PlayerPower { get; private set; }
         public double EnemyPower { get; private set; }
+        public DuelDifficulty Difficulty { get; private set; } = DuelDifficulty.Medium;
         public string ResultSummary { get; private set; } = "Press PLAY to start a duel.";
         public IReadOnlyList<DuelNodeState> Nodes => _nodes;
         public IReadOnlyList<DuelLinkState> PlayerLinks => _playerLinks;
@@ -79,8 +80,7 @@ namespace AIWarsIdle.PvP.Services
             ResetBoard();
             var localPower = _snapshotService?.BuildSnapshot().PvpPower ?? 100d;
             PlayerPower = Math.Max(1d, localPower);
-            var variance = 0.9d + (_seedRng.NextDouble() * 0.2d);
-            EnemyPower = Math.Max(1d, PlayerPower * variance);
+            EnemyPower = Math.Max(1d, ResolveEnemyPower(PlayerPower, Difficulty));
             _remainingSeconds = MatchDurationSeconds;
             _decisionCarrySeconds = 0f;
             _tickCarrySeconds = 0f;
@@ -88,6 +88,16 @@ namespace AIWarsIdle.PvP.Services
             ResultSummary = "Match in progress.";
             IsMatchActive = true;
             IsMatchFinished = false;
+        }
+
+        public void CycleDifficulty()
+        {
+            Difficulty = Difficulty switch
+            {
+                DuelDifficulty.Easy => DuelDifficulty.Medium,
+                DuelDifficulty.Medium => DuelDifficulty.Hard,
+                _ => DuelDifficulty.Easy
+            };
         }
 
         public void Tick(float deltaSeconds)
@@ -134,9 +144,9 @@ namespace AIWarsIdle.PvP.Services
                 return DuelCommandResult.Fail("Source must be fully controlled by you.");
             }
 
-            if (target.OwnerPlayerId == PlayerOwnerId)
+            if (!CanTargetNodeForPressure(target, PlayerOwnerId))
             {
-                return DuelCommandResult.Fail("Pick a neutral or enemy node.");
+                return DuelCommandResult.Fail("Pick a neutral, enemy, or damaged allied node.");
             }
 
             if (!IsAdjacent(sourceId, targetId))
@@ -179,9 +189,9 @@ namespace AIWarsIdle.PvP.Services
                 return DuelCommandResult.Fail("Invalid node.");
             }
 
-            if (target.OwnerPlayerId == PlayerOwnerId)
+            if (!CanTargetNodeForPressure(target, PlayerOwnerId))
             {
-                return DuelCommandResult.Fail("Target a neutral or enemy node.");
+                return DuelCommandResult.Fail("Target a neutral, enemy, or damaged allied node.");
             }
 
             var sources = CollectAutoLinkSources(targetId);
@@ -222,13 +232,18 @@ namespace AIWarsIdle.PvP.Services
 
         private List<int> CollectAutoLinkSources(int targetId)
         {
+            return CollectAutoLinkSources(targetId, PlayerOwnerId);
+        }
+
+        private List<int> CollectAutoLinkSources(int targetId, int ownerPlayerId)
+        {
             var sources = new List<int>(_playerLinks.Length);
             var neighbors = Neighbors[targetId];
             for (var i = 0; i < neighbors.Length; i++)
             {
                 var sourceId = neighbors[i];
                 var node = _nodes[sourceId];
-                if (node.OwnerPlayerId != PlayerOwnerId || node.Control < 100f) continue;
+                if (node.OwnerPlayerId != ownerPlayerId || !IsFullyControlledByOwner(node, ownerPlayerId)) continue;
                 sources.Add(sourceId);
             }
 
@@ -251,8 +266,8 @@ namespace AIWarsIdle.PvP.Services
             var playerPush = new float[_nodes.Length];
             var enemyPush = new float[_nodes.Length];
 
-            AccumulatePush(_playerLinks, PlayerOwnerId, playerPush, EnemyPower <= 0d ? 1d : Math.Clamp(PlayerPower / EnemyPower, 0.7d, 1.3d));
-            AccumulatePush(_enemyLinks, EnemyOwnerId, enemyPush, PlayerPower <= 0d ? 1d : Math.Clamp(EnemyPower / PlayerPower, 0.7d, 1.3d));
+            AccumulatePush(_playerLinks, PlayerOwnerId, playerPush, EnemyPower <= 0d ? 1d : Math.Clamp(PlayerPower / EnemyPower, MinPowerRatioClamp, MaxPowerRatioClamp));
+            AccumulatePush(_enemyLinks, EnemyOwnerId, enemyPush, PlayerPower <= 0d ? 1d : Math.Clamp(EnemyPower / PlayerPower, MinPowerRatioClamp, MaxPowerRatioClamp));
 
             for (var i = 0; i < _nodes.Length; i++)
             {
@@ -367,27 +382,29 @@ namespace AIWarsIdle.PvP.Services
         {
             Array.Clear(_enemyLinks, 0, _enemyLinks.Length);
 
-            var candidates = new List<DuelAiCandidate>(18);
-            for (var i = 0; i < _nodes.Length; i++)
+            var bestTargetId = -1;
+            var bestScore = float.MinValue;
+            for (var targetId = 0; targetId < _nodes.Length; targetId++)
             {
-                var source = _nodes[i];
-                if (source.OwnerPlayerId != EnemyOwnerId || source.Control < 100f) continue;
+                var target = _nodes[targetId];
+                if (!CanTargetNodeForPressure(target, EnemyOwnerId)) continue;
 
-                var neighbors = Neighbors[i];
-                for (var j = 0; j < neighbors.Length; j++)
-                {
-                    var targetId = neighbors[j];
-                    var target = _nodes[targetId];
-                    if (target.OwnerPlayerId == EnemyOwnerId) continue;
-                    candidates.Add(new DuelAiCandidate(i, targetId, ScoreEnemyCandidate(targetId)));
-                }
+                var sources = CollectAutoLinkSources(targetId, EnemyOwnerId);
+                if (sources.Count == 0) continue;
+
+                var score = ScoreEnemyCandidate(targetId);
+                if (score <= bestScore) continue;
+
+                bestScore = score;
+                bestTargetId = targetId;
             }
 
-            candidates.Sort((a, b) => b.Score.CompareTo(a.Score));
+            if (bestTargetId < 0) return;
 
-            for (var i = 0; i < candidates.Count && i < _enemyLinks.Length; i++)
+            var selectedSources = CollectAutoLinkSources(bestTargetId, EnemyOwnerId);
+            for (var i = 0; i < selectedSources.Count; i++)
             {
-                _enemyLinks[i] = new DuelLinkState(candidates[i].SourceId, candidates[i].TargetId, EnemyOwnerId);
+                _enemyLinks[i] = new DuelLinkState(selectedSources[i], bestTargetId, EnemyOwnerId);
             }
         }
 
@@ -461,17 +478,37 @@ namespace AIWarsIdle.PvP.Services
                 var link = links[i];
                 if (!link.IsActive) continue;
 
-                if (_nodes[link.SourceId].OwnerPlayerId != ownerPlayerId || _nodes[link.SourceId].Control < 100f)
+                if (_nodes[link.SourceId].OwnerPlayerId != ownerPlayerId || !IsFullyControlledByOwner(_nodes[link.SourceId], ownerPlayerId))
                 {
                     links[i] = default;
                     continue;
                 }
 
-                if (_nodes[link.TargetId].OwnerPlayerId == ownerPlayerId || !IsAdjacent(link.SourceId, link.TargetId))
+                if (!CanTargetNodeForPressure(_nodes[link.TargetId], ownerPlayerId) || !IsAdjacent(link.SourceId, link.TargetId))
                 {
                     links[i] = default;
                 }
             }
+        }
+
+        private static bool CanTargetNodeForPressure(DuelNodeState node, int ownerPlayerId)
+        {
+            if (node.OwnerPlayerId != ownerPlayerId)
+            {
+                return true;
+            }
+
+            return !IsFullyControlledByOwner(node, ownerPlayerId);
+        }
+
+        private static bool IsFullyControlledByOwner(DuelNodeState node, int ownerPlayerId)
+        {
+            return ownerPlayerId switch
+            {
+                PlayerOwnerId => node.Control >= 100f,
+                EnemyOwnerId => node.Control <= -100f,
+                _ => false
+            };
         }
 
         private int RemoveLinksFromSource(DuelLinkState[] links, int sourceId)
@@ -540,6 +577,17 @@ namespace AIWarsIdle.PvP.Services
             return 1.5f + ((float)_seedRng.NextDouble() * 1.0f);
         }
 
+        private static double ResolveEnemyPower(double playerPower, DuelDifficulty difficulty)
+        {
+            var safePlayerPower = Math.Max(1d, playerPower);
+            return difficulty switch
+            {
+                DuelDifficulty.Easy => safePlayerPower * MinPowerRatioClamp,
+                DuelDifficulty.Hard => safePlayerPower * MaxPowerRatioClamp,
+                _ => safePlayerPower
+            };
+        }
+
         private int CountOwned(int ownerPlayerId)
         {
             var count = 0;
@@ -599,6 +647,13 @@ namespace AIWarsIdle.PvP.Services
                 Score = score;
             }
         }
+    }
+
+    public enum DuelDifficulty
+    {
+        Easy = 0,
+        Medium = 1,
+        Hard = 2
     }
 
     public readonly struct DuelNodeState
