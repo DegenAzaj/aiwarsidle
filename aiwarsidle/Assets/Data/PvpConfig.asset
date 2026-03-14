@@ -37,3 +37,22 @@ MonoBehaviour:
   SectorPvpPowerPerSector: 1
   ProdToPvpMaxBonus: 0.2
   ProdToPvpHalfCapPps: 100
+  HexHackDuelCombat:
+    AttackMode: 0
+    MaxConcurrentTargets: 2
+    MatchDurationSeconds: 30
+    TickIntervalSeconds: 0.025
+    BasePushPerSecond: 25
+    AttackControlThreshold: 20
+    FlankBonusPerExtraAttacker: 0.25
+    DefenseBonusPerFriendlyNeighbor: 0.2
+    CorePushBonus: 0.3
+    LowControlVulnerabilityThreshold: 50
+    LowControlVulnerabilityMultiplier: 1.25
+    OverdriveStartsAtSeconds: 25
+    OverdriveMultiplier: 2
+    EasyEnemyPowerRatio: 0.95
+    HardEnemyPowerRatio: 1.05
+    InitialAiDecisionDelaySeconds: 0
+    AiDecisionDelayMinSeconds: 0.4
+    AiDecisionDelayMaxSeconds: 1

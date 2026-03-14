@@ -133,7 +133,7 @@ namespace AIWarsIdle.Bootstrap
             _factionSnapshots = pvpConfig == null ? null : new FactionSnapshotService(State, _mapConfig, pvpConfig, _snapshot, balanceConfig);
             _matchmaking = _mapConfig == null ? null : new MatchmakingService(_mapConfig, _factionSnapshots);
             _battleSim = pvpConfig == null ? null : new BattleSimService(pvpConfig, _overclock);
-            _hexHackDuel = new HexHackDuelService(_snapshot);
+            _hexHackDuel = new HexHackDuelService(_snapshot, pvpConfig);
             _combat =
                 _pvpAttacks != null &&
                 _league != null &&

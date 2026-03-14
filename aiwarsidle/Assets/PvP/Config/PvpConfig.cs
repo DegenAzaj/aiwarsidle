@@ -3,9 +3,72 @@ using UnityEngine;
 
 namespace AIWarsIdle.PvP.Config
 {
+    public enum HexHackDuelAttackMode
+    {
+        AutoAdjacentPressure = 0,
+        ManualSwipeSources = 1
+    }
+
     [CreateAssetMenu(menuName = "AI Wars Idle/PvP Config", fileName = "PvpConfig")]
     public sealed class PvpConfig : ScriptableObject
     {
+        [Serializable]
+        public sealed class HexHackDuelCombatSection
+        {
+            public HexHackDuelAttackMode AttackMode = HexHackDuelAttackMode.AutoAdjacentPressure;
+
+            [Min(1)]
+            public int MaxConcurrentTargets = 2;
+
+            [Min(1f)]
+            public float MatchDurationSeconds = 30f;
+
+            [Min(0.01f)]
+            public float TickIntervalSeconds = 0.1f;
+
+            [Min(0.01f)]
+            public float BasePushPerSecond = 25f;
+
+            [Range(0f, 100f)]
+            public float AttackControlThreshold = 20f;
+
+            [Min(0f)]
+            public float FlankBonusPerExtraAttacker = 0.25f;
+
+            [Min(0f)]
+            public float DefenseBonusPerFriendlyNeighbor = 0.20f;
+
+            [Min(0f)]
+            public float CorePushBonus = 0.30f;
+
+            [Range(0f, 100f)]
+            public float LowControlVulnerabilityThreshold = 50f;
+
+            [Min(1f)]
+            public float LowControlVulnerabilityMultiplier = 1.25f;
+
+            [Min(0f)]
+            public float OverdriveStartsAtSeconds = 25f;
+
+            [Min(1f)]
+            public float OverdriveMultiplier = 2f;
+
+            [Range(0.01f, 1f)]
+            public float EasyEnemyPowerRatio = 0.7f;
+
+            [Range(1f, 3f)]
+            public float HardEnemyPowerRatio = 1.3f;
+
+            [Min(0f)]
+            public float InitialAiDecisionDelaySeconds = 0f;
+
+            [Min(0.1f)]
+            public float AiDecisionDelayMinSeconds = 1.5f;
+
+            [Min(0.1f)]
+            public float AiDecisionDelayMaxSeconds = 2.5f;
+        }
+
         [Header("Randomness")]
         [Min(0.01f)]
         public float PowerVarianceMin = 0.95f;
@@ -85,6 +148,9 @@ namespace AIWarsIdle.PvP.Config
 
         [Tooltip("Soft-cap PPS point: when base PPS equals this value, production-derived bonus reaches half of ProdToPvpMaxBonus.")]
         public double ProdToPvpHalfCapPps = 100.0;
+
+        [Header("Hex Hack Duel Combat")]
+        public HexHackDuelCombatSection HexHackDuelCombat = new();
 
         public void ValidateOrThrow()
         {
@@ -172,6 +238,64 @@ namespace AIWarsIdle.PvP.Config
             }
 
             ValidateFinitePositiveOrThrow(ProdToPvpHalfCapPps, nameof(ProdToPvpHalfCapPps));
+
+            if (HexHackDuelCombat == null)
+            {
+                throw new InvalidOperationException($"{nameof(HexHackDuelCombat)} must be assigned.");
+            }
+
+            if (HexHackDuelCombat.MaxConcurrentTargets <= 0)
+            {
+                throw new InvalidOperationException($"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.MaxConcurrentTargets)} must be > 0.");
+            }
+
+            ValidateFinitePositiveOrThrow(HexHackDuelCombat.MatchDurationSeconds, $"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.MatchDurationSeconds)}");
+            ValidateFinitePositiveOrThrow(HexHackDuelCombat.TickIntervalSeconds, $"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.TickIntervalSeconds)}");
+            ValidateFinitePositiveOrThrow(HexHackDuelCombat.BasePushPerSecond, $"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.BasePushPerSecond)}");
+            ValidateFiniteNonNegativeOrThrow(HexHackDuelCombat.AttackControlThreshold, $"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.AttackControlThreshold)}");
+            if (HexHackDuelCombat.AttackControlThreshold > 100f)
+            {
+                throw new InvalidOperationException($"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.AttackControlThreshold)} must be <= 100.");
+            }
+            ValidateFiniteNonNegativeOrThrow(HexHackDuelCombat.FlankBonusPerExtraAttacker, $"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.FlankBonusPerExtraAttacker)}");
+            ValidateFiniteNonNegativeOrThrow(HexHackDuelCombat.DefenseBonusPerFriendlyNeighbor, $"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.DefenseBonusPerFriendlyNeighbor)}");
+            ValidateFiniteNonNegativeOrThrow(HexHackDuelCombat.CorePushBonus, $"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.CorePushBonus)}");
+            ValidateFiniteNonNegativeOrThrow(HexHackDuelCombat.LowControlVulnerabilityThreshold, $"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.LowControlVulnerabilityThreshold)}");
+            if (HexHackDuelCombat.LowControlVulnerabilityThreshold > 100f)
+            {
+                throw new InvalidOperationException($"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.LowControlVulnerabilityThreshold)} must be <= 100.");
+            }
+            ValidateFinitePositiveOrThrow(HexHackDuelCombat.LowControlVulnerabilityMultiplier, $"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.LowControlVulnerabilityMultiplier)}");
+            if (HexHackDuelCombat.LowControlVulnerabilityMultiplier < 1f)
+            {
+                throw new InvalidOperationException($"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.LowControlVulnerabilityMultiplier)} must be >= 1.");
+            }
+            ValidateFiniteNonNegativeOrThrow(HexHackDuelCombat.OverdriveStartsAtSeconds, $"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.OverdriveStartsAtSeconds)}");
+            ValidateFinitePositiveOrThrow(HexHackDuelCombat.OverdriveMultiplier, $"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.OverdriveMultiplier)}");
+            ValidateFinitePositiveOrThrow(HexHackDuelCombat.EasyEnemyPowerRatio, $"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.EasyEnemyPowerRatio)}");
+            if (HexHackDuelCombat.EasyEnemyPowerRatio > 1f)
+            {
+                throw new InvalidOperationException($"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.EasyEnemyPowerRatio)} must be <= 1.");
+            }
+
+            ValidateFinitePositiveOrThrow(HexHackDuelCombat.HardEnemyPowerRatio, $"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.HardEnemyPowerRatio)}");
+            if (HexHackDuelCombat.HardEnemyPowerRatio < 1f)
+            {
+                throw new InvalidOperationException($"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.HardEnemyPowerRatio)} must be >= 1.");
+            }
+
+            ValidateFiniteNonNegativeOrThrow(HexHackDuelCombat.InitialAiDecisionDelaySeconds, $"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.InitialAiDecisionDelaySeconds)}");
+            ValidateFinitePositiveOrThrow(HexHackDuelCombat.AiDecisionDelayMinSeconds, $"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.AiDecisionDelayMinSeconds)}");
+            ValidateFinitePositiveOrThrow(HexHackDuelCombat.AiDecisionDelayMaxSeconds, $"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.AiDecisionDelayMaxSeconds)}");
+            if (HexHackDuelCombat.AiDecisionDelayMinSeconds > HexHackDuelCombat.AiDecisionDelayMaxSeconds)
+            {
+                throw new InvalidOperationException($"{nameof(HexHackDuelCombat)} min AI delay must be <= max AI delay.");
+            }
+
+            if (HexHackDuelCombat.OverdriveStartsAtSeconds > HexHackDuelCombat.MatchDurationSeconds)
+            {
+                throw new InvalidOperationException($"{nameof(HexHackDuelCombat)} overdrive start must be <= match duration.");
+            }
         }
 
         private static void ValidateFinitePositiveOrThrow(float value, string name)

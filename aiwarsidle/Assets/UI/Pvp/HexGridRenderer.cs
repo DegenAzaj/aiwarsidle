@@ -5,6 +5,7 @@ using AIWarsIdle.PvP.Config;
 using AIWarsIdle.PvP.Services;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace AIWarsIdle.UI.Pvp
@@ -15,6 +16,7 @@ namespace AIWarsIdle.UI.Pvp
         [Serializable]
         private sealed class DuelStyleConfig
         {
+            public bool ShowAdjacencyGrid = false;
             public float HackLinkThickness = 4.5f;
             public float ControlRingThickness = 3f;
             public float ControlRingScale = 0.88f;
@@ -881,7 +883,9 @@ namespace AIWarsIdle.UI.Pvp
                 CreateLabel(rect),
                 CreateInfoLabel(rect),
                 CreateHomeBadge(rect),
-                CreateMarkerLabel(rect));
+                CreateMarkerLabel(rect),
+                HandleDuelCellDragBegin,
+                HandleDuelCellDragEnd);
             cell.Apply(sector, _showCoordinates, _showHomeBadge, _ownedHexAlpha, _showConnectivityMarkers);
 
             button.onClick.AddListener(() => SelectCell(cell));
@@ -995,14 +999,16 @@ namespace AIWarsIdle.UI.Pvp
             var graphic = GetOrCreateNetworkGraphic(root);
             if (graphic == null) return;
 
-            if (!_showOwnershipNetwork)
+            var isDuelSnapshot = ContainsDuelSectors(snapshot);
+            var shouldShowOwnershipNetwork = _showOwnershipNetwork && (!isDuelSnapshot || DuelStyle.ShowAdjacencyGrid);
+            if (!shouldShowOwnershipNetwork)
             {
                 graphic.SetSegments(Array.Empty<HexFrontierGraphic.LineSegment>(), Mathf.Max(1f, _frontlineThickness * 0.8f));
                 graphic.gameObject.SetActive(false);
                 return;
             }
 
-            var segments = ContainsDuelSectors(snapshot)
+            var segments = isDuelSnapshot
                 ? BuildDuelOwnershipNetworkSegments(snapshot)
                 : BuildOwnershipNetworkSegments(snapshot);
             graphic.gameObject.SetActive(segments.Count > 0);
@@ -2015,8 +2021,8 @@ namespace AIWarsIdle.UI.Pvp
                 stability: "CORE: node D",
                 status: duel.ResultSummary,
                 hint: duel.IsMatchActive
-                    ? "Tap neutral, enemy, or damaged allied nodes to auto-link from adjacent player nodes."
-                    : "Press PLAY to start a 30 second test duel. You start on C, AI starts on E.",
+                    ? BuildDuelActiveHintText(duel)
+                    : $"Press PLAY to start a {duel.MatchDurationSeconds:0.#} second test duel. You start on C, AI starts on E.",
                 actionLabel: duel.IsMatchFinished ? "PLAY AGAIN" : "PLAY",
                 actionEnabled: !duel.IsMatchActive || duel.IsMatchFinished,
                 strategyLabel: $"Difficulty: {duel.Difficulty}",
@@ -2053,10 +2059,16 @@ namespace AIWarsIdle.UI.Pvp
             }
 
             var sector = cell.CurrentSector;
-            var isFullyControlledPlayerNode =
+            if (duel.AttackMode == HexHackDuelAttackMode.ManualSwipeSources)
+            {
+                HandleManualDuelCellTap(sector, duel);
+                return;
+            }
+
+            var isOperationalPlayerNode =
                 HexHackDuelService.IsPlayerOwner(sector.OwnerPlayerId) &&
-                Mathf.Approximately(sector.ControlValue, 100f);
-            if (isFullyControlledPlayerNode)
+                sector.ControlValue > duel.AttackControlThreshold;
+            if (isOperationalPlayerNode)
             {
                 GetOrCreateToast().Show("Tap a neutral, enemy, or damaged allied node.");
                 return;
@@ -2065,6 +2077,77 @@ namespace AIWarsIdle.UI.Pvp
             var result = duel.AutoAssignPlayerLinksToTarget(sector.SectorId);
             GetOrCreateToast().Show(result.Message);
             RefreshFromSource(forceRebuild: false);
+        }
+
+        private void HandleManualDuelCellTap(DisplaySector sector, HexHackDuelService duel)
+        {
+            if (HexHackDuelService.IsPlayerOwner(sector.OwnerPlayerId))
+            {
+                if (duel.HasPlayerLinkFromSource(sector.SectorId))
+                {
+                    var cancel = duel.CancelPlayerLinkFromSource(sector.SectorId);
+                    GetOrCreateToast().Show(cancel.Message);
+                    RefreshFromSource(forceRebuild: false);
+                    return;
+                }
+
+                GetOrCreateToast().Show($"Swipe from a player node above {duel.AttackControlThreshold:0} control into an adjacent target.");
+                return;
+            }
+
+            GetOrCreateToast().Show("Swipe from a player node to create the link.");
+        }
+
+        private void HandleDuelCellDragBegin(HexCellView cell, PointerEventData eventData)
+        {
+            if (cell == null) return;
+
+            var duel = _context?.HexHackDuel;
+            if (duel == null || !duel.IsMatchActive || duel.AttackMode != HexHackDuelAttackMode.ManualSwipeSources) return;
+
+            var sector = cell.CurrentSector;
+            var isValidSource =
+                HexHackDuelService.IsPlayerOwner(sector.OwnerPlayerId) &&
+                sector.ControlValue > duel.AttackControlThreshold;
+            if (!isValidSource)
+            {
+                GetOrCreateToast().Show($"Swipe must start from a player node above {duel.AttackControlThreshold:0} control.");
+            }
+        }
+
+        private void HandleDuelCellDragEnd(HexCellView sourceCell, PointerEventData eventData)
+        {
+            if (sourceCell == null || eventData == null) return;
+
+            var duel = _context?.HexHackDuel;
+            if (duel == null || !duel.IsMatchActive || duel.AttackMode != HexHackDuelAttackMode.ManualSwipeSources) return;
+
+            var sourceSector = sourceCell.CurrentSector;
+            var isValidSource =
+                HexHackDuelService.IsPlayerOwner(sourceSector.OwnerPlayerId) &&
+                sourceSector.ControlValue > duel.AttackControlThreshold;
+            if (!isValidSource) return;
+
+            var targetCell = FindCellAtScreenPosition(eventData.position, eventData.pressEventCamera);
+            if (targetCell == null || targetCell == sourceCell) return;
+
+            var result = duel.TryAssignPlayerLinkFromSource(sourceSector.SectorId, targetCell.SectorId);
+            GetOrCreateToast().Show(result.Message);
+            RefreshFromSource(forceRebuild: false);
+        }
+
+        private HexCellView FindCellAtScreenPosition(Vector2 screenPosition, Camera eventCamera)
+        {
+            for (var i = 0; i < _cells.Count; i++)
+            {
+                if (_cells[i].transform is not RectTransform rect) continue;
+                if (RectTransformUtility.RectangleContainsScreenPoint(rect, screenPosition, eventCamera))
+                {
+                    return _cells[i];
+                }
+            }
+
+            return null;
         }
 
         private void PositionDetailPanel(RectTransform panelRect, HexCellView cell)
@@ -2158,7 +2241,7 @@ namespace AIWarsIdle.UI.Pvp
                     : "00:30 test duel";
                 var duelPowerText = $"YOU {duel.PlayerPower:0.#}  |  AI {duel.EnemyPower:0.#}";
                 var table = BuildDuelScoreTable(duel);
-                UpdateExternalAttackHud(countText, duel.IsMatchActive && duel.ElapsedSeconds >= HexHackDuelService.OverdriveStartsAtSeconds ? "OVERDRIVE" : string.Empty);
+                UpdateExternalAttackHud(countText, duel.IsMatchActive && duel.ElapsedSeconds >= duel.OverdriveStartsAtSeconds ? "OVERDRIVE" : string.Empty);
                 hud.SetPowerTooltipContent("Hex Hack Duel", "Player push and AI push scale by the clamped power ratio. CORE adds +30% push from node D.");
                 hud.ShowState(
                     _externalAttacksTexts.Count > 0 ? string.Empty : countText,
@@ -2423,8 +2506,8 @@ namespace AIWarsIdle.UI.Pvp
             var stabilityText = $"Control: {FormatDuelControlLong(sector.ControlValue)}";
             var positionText = $"Node {sector.Label}  |  Coord {sector.Coord.Q},{sector.Coord.R}";
             var hintText = duel.IsMatchActive
-                ? "Tap a neutral, enemy, or damaged allied node to route pressure from adjacent player nodes."
-                : "Press PLAY to launch a 30 second test duel.";
+                ? BuildDuelActiveHintText(duel)
+                : $"Press PLAY to launch a {duel.MatchDurationSeconds:0.#} second test duel.";
             var statusText = duel.ResultSummary;
             var previewText = BuildDuelPreviewText(sector, duel);
             var actionLabel = duel.IsMatchActive ? "LINK" : "PLAY";
@@ -2631,6 +2714,13 @@ namespace AIWarsIdle.UI.Pvp
             return $"Owner: <color=#{ColorUtility.ToHtmlStringRGB(neutralColor)}>Neutral</color>";
         }
 
+        private static string BuildDuelActiveHintText(HexHackDuelService duel)
+        {
+            return duel.AttackMode == HexHackDuelAttackMode.ManualSwipeSources
+                ? $"Swipe from a player node above {duel.AttackControlThreshold:0} control into an adjacent target. Tap a linked source to cancel. Max {duel.MaxConcurrentTargets} targets."
+                : "Tap a neutral, enemy, or damaged allied node to route pressure from adjacent player nodes.";
+        }
+
         private string BuildDuelPreviewText(DisplaySector sector, HexHackDuelService duel)
         {
             if (!duel.IsMatchActive)
@@ -2638,7 +2728,22 @@ namespace AIWarsIdle.UI.Pvp
                 return "PLAY to initialize the board.";
             }
 
-            return HexHackDuelService.IsPlayerOwner(sector.OwnerPlayerId) && Mathf.Approximately(sector.ControlValue, 100f)
+            if (duel.AttackMode == HexHackDuelAttackMode.ManualSwipeSources)
+            {
+                if (HexHackDuelService.IsPlayerOwner(sector.OwnerPlayerId) && duel.HasPlayerLinkFromSource(sector.SectorId))
+                {
+                    return "Tap to cancel this source link.";
+                }
+
+                if (HexHackDuelService.IsPlayerOwner(sector.OwnerPlayerId) && sector.ControlValue > duel.AttackControlThreshold)
+                {
+                    return "Swipe from this node into an adjacent target.";
+                }
+
+                return $"Manual links active {CountActiveLinks(duel.PlayerLinks)}. Max targets {duel.MaxConcurrentTargets}.";
+            }
+
+            return HexHackDuelService.IsPlayerOwner(sector.OwnerPlayerId) && sector.ControlValue > duel.AttackControlThreshold
                 ? "Player source node."
                 : $"Auto-link from adjacent player nodes. Active links {CountActiveLinks(duel.PlayerLinks)}";
         }
@@ -3292,7 +3397,7 @@ namespace AIWarsIdle.UI.Pvp
         }
     }
 
-    internal sealed class HexCellView : MonoBehaviour
+    internal sealed class HexCellView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         private HexCellGraphic _graphic;
         private Button _button;
@@ -3300,6 +3405,8 @@ namespace AIWarsIdle.UI.Pvp
         private TMP_Text _info;
         private TMP_Text _homeBadge;
         private TMP_Text _marker;
+        private Action<HexCellView, PointerEventData> _onBeginDrag;
+        private Action<HexCellView, PointerEventData> _onEndDrag;
         private Color _baseColor;
         private bool _selected;
 
@@ -3312,7 +3419,9 @@ namespace AIWarsIdle.UI.Pvp
             TMP_Text label,
             TMP_Text info,
             TMP_Text homeBadge,
-            TMP_Text marker)
+            TMP_Text marker,
+            Action<HexCellView, PointerEventData> onBeginDrag,
+            Action<HexCellView, PointerEventData> onEndDrag)
         {
             _graphic = graphic;
             _button = button;
@@ -3320,6 +3429,8 @@ namespace AIWarsIdle.UI.Pvp
             _info = info;
             _homeBadge = homeBadge;
             _marker = marker;
+            _onBeginDrag = onBeginDrag;
+            _onEndDrag = onEndDrag;
         }
 
         public void Apply(HexGridRenderer.DisplaySector sector, bool showCoordinates, bool showHomeBadge, float ownedHexAlpha, bool showConnectivityMarkers)
@@ -3396,6 +3507,20 @@ namespace AIWarsIdle.UI.Pvp
             {
                 _graphic.color = selected ? Color.Lerp(_baseColor, Color.white, 0.18f) : _baseColor;
             }
+        }
+
+        public void OnBeginDrag(PointerEventData eventData)
+        {
+            _onBeginDrag?.Invoke(this, eventData);
+        }
+
+        public void OnDrag(PointerEventData eventData)
+        {
+        }
+
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            _onEndDrag?.Invoke(this, eventData);
         }
     }
 
