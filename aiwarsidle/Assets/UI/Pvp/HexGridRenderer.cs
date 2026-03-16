@@ -381,7 +381,7 @@ namespace AIWarsIdle.UI.Pvp
                     Stability = Mathf.Abs(node.Control),
                     ControlValue = node.Control,
                     ProductionBonusPercent = node.IsCore ? 30f : 0f,
-                    InfoText = FormatDuelControlShort(node.Control),
+                    InfoText = BuildDuelHexInfoText(node),
                     BadgeText = node.IsCore ? "CORE" : string.Empty,
                     IsDuelSector = true
                 });
@@ -2756,6 +2756,24 @@ namespace AIWarsIdle.UI.Pvp
                 : $"E{Mathf.Abs(Mathf.RoundToInt(control))}";
         }
 
+        private static string BuildDuelHexInfoText(DuelNodeState node)
+        {
+            if (node.IsCore)
+            {
+                return string.Empty;
+            }
+
+            if (node.OwnerPlayerId <= 0 && Mathf.Abs(node.Control) < 0.5f)
+            {
+                return string.Empty;
+            }
+
+            var amount = Mathf.Abs(Mathf.RoundToInt(node.Control));
+            var colorOwnerId = node.Control >= 0f ? 1 : 2;
+            var color = HexGridPalette.GetFrontlineColor(colorOwnerId, Color.white);
+            return $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{amount}</color>";
+        }
+
         private static string FormatDuelControlLong(float control)
         {
             if (Mathf.Abs(control) < 0.001f) return "Neutral";
@@ -3344,7 +3362,7 @@ namespace AIWarsIdle.UI.Pvp
         private static readonly Color NeutralColor = new(0.33f, 0.37f, 0.44f, 1f);
         public static readonly Color[] OwnerColors =
         {
-            new(0.91f, 0.35f, 0.29f, 1f),
+            new(0.2039f, 1f, 0.1176f, 1f),
             new(0.95f, 0.66f, 0.23f, 1f),
             new(0.40f, 0.72f, 0.34f, 1f),
             new(0.18f, 0.62f, 0.87f, 1f),
@@ -3447,7 +3465,12 @@ namespace AIWarsIdle.UI.Pvp
 
             if (_label != null)
             {
-                if (showsSpecialBadge)
+                if (sector.IsDuelSector && sector.IsCoreSector)
+                {
+                    _label.text = string.Empty;
+                    _label.gameObject.SetActive(false);
+                }
+                else if (showsSpecialBadge)
                 {
                     _label.text = showCoordinates
                         ? $"{sector.Label}\n{sector.Coord.Q},{sector.Coord.R}"
@@ -3470,6 +3493,24 @@ namespace AIWarsIdle.UI.Pvp
 
             if (_homeBadge != null)
             {
+                if (_homeBadge.transform is RectTransform badgeRect)
+                {
+                    if (sector.IsDuelSector && sector.IsCoreSector)
+                    {
+                        badgeRect.anchorMin = new Vector2(0.5f, 0.5f);
+                        badgeRect.anchorMax = new Vector2(0.5f, 0.5f);
+                        badgeRect.pivot = new Vector2(0.5f, 0.5f);
+                        badgeRect.anchoredPosition = Vector2.zero;
+                    }
+                    else
+                    {
+                        badgeRect.anchorMin = new Vector2(0.5f, 1f);
+                        badgeRect.anchorMax = new Vector2(0.5f, 1f);
+                        badgeRect.pivot = new Vector2(0.5f, 1f);
+                        badgeRect.anchoredPosition = new Vector2(0f, -8f);
+                    }
+                }
+
                 _homeBadge.text = string.IsNullOrWhiteSpace(sector.BadgeText)
                     ? "HOME"
                     : sector.BadgeText;

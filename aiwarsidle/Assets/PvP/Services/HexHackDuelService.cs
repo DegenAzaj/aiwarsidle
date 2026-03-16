@@ -124,7 +124,7 @@ namespace AIWarsIdle.PvP.Services
             {
                 _tickCarrySeconds -= _combatConfig.TickIntervalSeconds;
                 SimulateTick(_combatConfig.TickIntervalSeconds);
-                if (HasFullBoardControl(PlayerOwnerId) || HasFullBoardControl(EnemyOwnerId))
+                if (HasFullBoardControl(PlayerOwnerId) || HasFullBoardControl(EnemyOwnerId) || !HasOperationalHex(PlayerOwnerId) || !HasOperationalHex(EnemyOwnerId))
                 {
                     FinishMatch();
                     break;
@@ -1586,7 +1586,8 @@ namespace AIWarsIdle.PvP.Services
         private float GetSourcePushScale(DuelNodeState node, int ownerPlayerId)
         {
             var signedControl = ownerPlayerId == PlayerOwnerId ? node.Control : -node.Control;
-            return Mathf.Clamp01(signedControl / 100f);
+            var normalizedControl = Mathf.Clamp01(signedControl / 100f);
+            return _combatConfig.OperationalMinPushScale + ((1f - _combatConfig.OperationalMinPushScale) * normalizedControl);
         }
 
         private float GetIncomingVulnerabilityMultiplier(DuelNodeState node)
@@ -1730,6 +1731,19 @@ namespace AIWarsIdle.PvP.Services
         private bool HasFullBoardControl(int ownerPlayerId)
         {
             return CountOwned(ownerPlayerId) == _nodes.Length;
+        }
+
+        private bool HasOperationalHex(int ownerPlayerId)
+        {
+            for (var i = 0; i < _nodes.Length; i++)
+            {
+                if (CanAttackFromNode(_nodes[i], ownerPlayerId))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private bool TryGetNode(int nodeId, out DuelNodeState node)

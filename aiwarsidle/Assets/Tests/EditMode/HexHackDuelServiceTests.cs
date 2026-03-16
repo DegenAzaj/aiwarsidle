@@ -280,6 +280,26 @@ namespace AIWarsIdle.Tests
         }
 
         [Test]
+        public void Match_EndsImmediatelyWhenSideLosesAllOperationalHexes()
+        {
+            var duel = new HexHackDuelService(pvpConfig: CreateSlowAiConfig(), seed: 7);
+            duel.StartMatch();
+
+            Assert.IsTrue(duel.AutoAssignPlayerLinksToTarget(3).Success);
+            duel.Tick(4.1f);
+            Assert.AreEqual(1, duel.Nodes[3].OwnerPlayerId);
+
+            Assert.IsTrue(duel.AutoAssignPlayerLinksToTarget(4).Success);
+            duel.Tick(3.0f);
+
+            Assert.IsFalse(duel.IsMatchActive);
+            Assert.IsTrue(duel.IsMatchFinished);
+            Assert.AreEqual(2, duel.Nodes[4].OwnerPlayerId);
+            Assert.Greater(duel.Nodes[4].Control, -10f);
+            Assert.Less(duel.RemainingSeconds, 30f);
+        }
+
+        [Test]
         public void ManualSwipeMode_PlayerCanAssignAndCancelSourceLink()
         {
             var duel = new HexHackDuelService(pvpConfig: CreateManualSwipeConfig(), seed: 7);
@@ -346,12 +366,13 @@ namespace AIWarsIdle.Tests
                 MatchDurationSeconds = 30f,
                 TickIntervalSeconds = 0.1f,
                 BasePushPerSecond = 25f,
-                AttackControlThreshold = 20f,
+                AttackControlThreshold = 10f,
+                OperationalMinPushScale = 0.35f,
                 FlankBonusPerExtraAttacker = 0.25f,
                 DefenseBonusPerFriendlyNeighbor = 0.20f,
                 CorePushBonus = 0.30f,
-                LowControlVulnerabilityThreshold = 50f,
-                LowControlVulnerabilityMultiplier = 1.25f,
+                LowControlVulnerabilityThreshold = 35f,
+                LowControlVulnerabilityMultiplier = 1.10f,
                 OverdriveStartsAtSeconds = 25f,
                 OverdriveMultiplier = 2f,
                 EasyEnemyPowerRatio = 0.7f,
@@ -373,12 +394,13 @@ namespace AIWarsIdle.Tests
                 MatchDurationSeconds = 30f,
                 TickIntervalSeconds = 0.1f,
                 BasePushPerSecond = 25f,
-                AttackControlThreshold = 20f,
+                AttackControlThreshold = 10f,
+                OperationalMinPushScale = 0.35f,
                 FlankBonusPerExtraAttacker = 0.25f,
                 DefenseBonusPerFriendlyNeighbor = 0.20f,
                 CorePushBonus = 0.30f,
-                LowControlVulnerabilityThreshold = 50f,
-                LowControlVulnerabilityMultiplier = 1.25f,
+                LowControlVulnerabilityThreshold = 35f,
+                LowControlVulnerabilityMultiplier = 1.10f,
                 OverdriveStartsAtSeconds = 25f,
                 OverdriveMultiplier = 2f,
                 EasyEnemyPowerRatio = 1f,

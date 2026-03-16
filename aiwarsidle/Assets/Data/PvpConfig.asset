@@ -43,12 +43,13 @@ MonoBehaviour:
     MatchDurationSeconds: 30
     TickIntervalSeconds: 0.025
     BasePushPerSecond: 25
-    AttackControlThreshold: 20
+    AttackControlThreshold: 10
+    OperationalMinPushScale: 0.35
     FlankBonusPerExtraAttacker: 0.25
     DefenseBonusPerFriendlyNeighbor: 0.2
     CorePushBonus: 0.3
-    LowControlVulnerabilityThreshold: 50
-    LowControlVulnerabilityMultiplier: 1.25
+    LowControlVulnerabilityThreshold: 35
+    LowControlVulnerabilityMultiplier: 1.1
     OverdriveStartsAtSeconds: 25
     OverdriveMultiplier: 2
     EasyEnemyPowerRatio: 0.95

@@ -30,7 +30,10 @@ namespace AIWarsIdle.PvP.Config
             public float BasePushPerSecond = 25f;
 
             [Range(0f, 100f)]
-            public float AttackControlThreshold = 20f;
+            public float AttackControlThreshold = 10f;
+
+            [Range(0f, 1f)]
+            public float OperationalMinPushScale = 0.35f;
 
             [Min(0f)]
             public float FlankBonusPerExtraAttacker = 0.25f;
@@ -42,10 +45,10 @@ namespace AIWarsIdle.PvP.Config
             public float CorePushBonus = 0.30f;
 
             [Range(0f, 100f)]
-            public float LowControlVulnerabilityThreshold = 50f;
+            public float LowControlVulnerabilityThreshold = 35f;
 
             [Min(1f)]
-            public float LowControlVulnerabilityMultiplier = 1.25f;
+            public float LowControlVulnerabilityMultiplier = 1.10f;
 
             [Min(0f)]
             public float OverdriveStartsAtSeconds = 25f;
@@ -256,6 +259,11 @@ namespace AIWarsIdle.PvP.Config
             if (HexHackDuelCombat.AttackControlThreshold > 100f)
             {
                 throw new InvalidOperationException($"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.AttackControlThreshold)} must be <= 100.");
+            }
+            ValidateFiniteNonNegativeOrThrow(HexHackDuelCombat.OperationalMinPushScale, $"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.OperationalMinPushScale)}");
+            if (HexHackDuelCombat.OperationalMinPushScale > 1f)
+            {
+                throw new InvalidOperationException($"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.OperationalMinPushScale)} must be <= 1.");
             }
             ValidateFiniteNonNegativeOrThrow(HexHackDuelCombat.FlankBonusPerExtraAttacker, $"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.FlankBonusPerExtraAttacker)}");
             ValidateFiniteNonNegativeOrThrow(HexHackDuelCombat.DefenseBonusPerFriendlyNeighbor, $"{nameof(HexHackDuelCombat)}.{nameof(HexHackDuelCombat.DefenseBonusPerFriendlyNeighbor)}");
