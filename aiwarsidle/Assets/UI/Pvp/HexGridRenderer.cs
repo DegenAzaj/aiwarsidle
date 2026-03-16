@@ -106,6 +106,7 @@ namespace AIWarsIdle.UI.Pvp
         private PvpToastView _toast;
         private readonly List<TMP_Text> _externalAttacksTexts = new();
         private readonly List<TMP_Text> _externalRegenTexts = new();
+        private readonly List<TMP_Text> _externalPvpPowerTexts = new();
         private HexCellView _selected;
         private float _refreshCarry;
         private int _lastLayoutHash;
@@ -156,6 +157,7 @@ namespace AIWarsIdle.UI.Pvp
             _toast = null;
             _externalAttacksTexts.Clear();
             _externalRegenTexts.Clear();
+            _externalPvpPowerTexts.Clear();
             _selected = null;
             _lastLayoutHash = 0;
             _lastViewportSize = Vector2.zero;
@@ -431,6 +433,7 @@ namespace AIWarsIdle.UI.Pvp
 
             UpdateHud(snapshot);
             UpdateIdleDuelPanel();
+            UpdateDuelViewVisibility();
             if (_detailPanel != null)
             {
                 var duel = _context?.HexHackDuel;
@@ -473,6 +476,7 @@ namespace AIWarsIdle.UI.Pvp
             EnsureOverlaySiblingOrder();
             UpdateHud(snapshot);
             UpdateIdleDuelPanel();
+            UpdateDuelViewVisibility();
         }
 
         private RectTransform GetOrCreateGeneratedRoot()
@@ -2034,15 +2038,30 @@ namespace AIWarsIdle.UI.Pvp
         private void PositionIdleDuelPanel(RectTransform panelRect)
         {
             if (panelRect == null) return;
-            var parentRect = transform as RectTransform;
-            if (parentRect == null) return;
+            panelRect.anchorMin = new Vector2(0.5f, 0.5f);
+            panelRect.anchorMax = new Vector2(0.5f, 0.5f);
+            panelRect.pivot = new Vector2(0.5f, 0.5f);
+            panelRect.anchoredPosition = Vector2.zero;
+        }
 
-            var bounds = parentRect.rect;
-            var halfWidth = panelRect.rect.width * 0.5f;
-            var halfHeight = panelRect.rect.height * 0.5f;
-            panelRect.anchoredPosition = new Vector2(
-                bounds.xMax - halfWidth - DuelStyle.IdlePanelSideInset,
-                Mathf.Clamp(bounds.yMax - halfHeight - DuelStyle.IdlePanelTopInset, bounds.yMin + halfHeight + 16f, bounds.yMax - halfHeight - 16f));
+        private void UpdateDuelViewVisibility()
+        {
+            var duel = _context?.HexHackDuel;
+            var showMatchView = duel != null && duel.IsMatchActive && !duel.IsMatchFinished;
+            if (_generatedRoot != null)
+            {
+                _generatedRoot.gameObject.SetActive(showMatchView);
+            }
+
+            if (_hud != null)
+            {
+                _hud.gameObject.SetActive(showMatchView);
+            }
+
+            if (_detailPanel != null && !showMatchView)
+            {
+                _detailPanel.gameObject.SetActive(true);
+            }
         }
 
         private void HandleDuelCellTap(HexCellView cell)
@@ -2241,7 +2260,21 @@ namespace AIWarsIdle.UI.Pvp
                     : "00:30 test duel";
                 var duelPowerText = $"YOU {duel.PlayerPower:0.#}  |  AI {duel.EnemyPower:0.#}";
                 var table = BuildDuelScoreTable(duel);
-                UpdateExternalAttackHud(countText, duel.IsMatchActive && duel.ElapsedSeconds >= duel.OverdriveStartsAtSeconds ? "OVERDRIVE" : string.Empty);
+                var duelAttacks = loop.PvpAttacks;
+                var duelRemaining = duelAttacks != null ? Mathf.Clamp(loop.State.PvpAttacksRemaining, 0, duelAttacks.MaxAttacks) : 0;
+                var externalCountText = duelAttacks != null ? $"{duelRemaining}/{Mathf.Max(duelAttacks.MaxAttacks, duelRemaining)}" : string.Empty;
+                var externalRegenText = string.Empty;
+                var externalPowerText = loop.Snapshot != null ? $"{loop.Snapshot.BuildSnapshot().PvpPower:0.##}" : string.Empty;
+                if (duelAttacks != null && duelRemaining < duelAttacks.MaxAttacks)
+                {
+                    var duelNextRegenAt = loop.State.NextPvpAttackRegenAtUnixSeconds;
+                    if (duelNextRegenAt > loop.NowUnixSeconds)
+                    {
+                        externalRegenText = FormatClockDuration(duelNextRegenAt - loop.NowUnixSeconds);
+                    }
+                }
+
+                UpdateExternalAttackHud(externalCountText, externalRegenText, externalPowerText);
                 hud.SetPowerTooltipContent("Hex Hack Duel", "Player push and AI push scale by the clamped power ratio. CORE adds +30% push from node D.");
                 hud.ShowState(
                     _externalAttacksTexts.Count > 0 ? string.Empty : countText,
@@ -2276,7 +2309,7 @@ namespace AIWarsIdle.UI.Pvp
                 : string.Empty;
             var liveScoreTable = GetCachedLiveScoreTable(loop);
 
-            UpdateExternalAttackHud(attackCountText, regenTimerText);
+            UpdateExternalAttackHud(attackCountText, regenTimerText, powerText);
             hud.SetPowerTooltipContent("PvP Power", powerTooltipBody);
             hud.ShowState(_externalAttacksTexts.Count > 0 ? string.Empty : $"Attacks: {attackCountText}",
                 matchEndsText,
@@ -2286,7 +2319,7 @@ namespace AIWarsIdle.UI.Pvp
                 _powerInfoVisible);
         }
 
-        private void UpdateExternalAttackHud(string countText, string regenText)
+        private void UpdateExternalAttackHud(string countText, string regenText, string powerText)
         {
             EnsureExternalHudRefs();
 
@@ -2305,11 +2338,19 @@ namespace AIWarsIdle.UI.Pvp
                     _externalRegenTexts[i].text = string.IsNullOrEmpty(regenText) ? string.Empty : regenText;
                 }
             }
+
+            for (var i = 0; i < _externalPvpPowerTexts.Count; i++)
+            {
+                if (_externalPvpPowerTexts[i] != null)
+                {
+                    _externalPvpPowerTexts[i].text = powerText;
+                }
+            }
         }
 
         private void EnsureExternalHudRefs()
         {
-            if (_externalAttacksTexts.Count > 0 && _externalRegenTexts.Count > 0) return;
+            if (_externalAttacksTexts.Count > 0 && _externalRegenTexts.Count > 0 && _externalPvpPowerTexts.Count > 0) return;
             if (!CanQuerySceneHierarchy()) return;
 
             var attacksBarRoot = FindNamedChildInScene("res_bar");
@@ -2330,6 +2371,15 @@ namespace AIWarsIdle.UI.Pvp
                     regenRoot,
                     _externalRegenTexts,
                     text => text.name == "Text (TMP)");
+            }
+
+            if (_externalPvpPowerTexts.Count == 0)
+            {
+                var powerRoot = FindNamedChildInScene("PvP_power");
+                CollectTextComponents(
+                    powerRoot,
+                    _externalPvpPowerTexts,
+                    text => text.name == "pvp_power_text");
             }
         }
 

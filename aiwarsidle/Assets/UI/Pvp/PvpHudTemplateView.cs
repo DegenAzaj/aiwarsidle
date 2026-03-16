@@ -109,7 +109,6 @@ namespace AIWarsIdle.UI.Pvp
             if (_attacks != null) _attacks.text = attacks;
             if (_matchEnds != null) _matchEnds.text = matchEnds;
             if (_power != null) _power.text = power;
-            if (_scenePowerText != null) _scenePowerText.text = power;
             if (_tableTitle != null) _tableTitle.text = tableTitle;
             if (_liveScoreTable != null) _liveScoreTable.text = ApplyTableHeaderColor(liveScoreTable);
             SetPowerInfoVisible(infoVisible);
@@ -185,8 +184,6 @@ namespace AIWarsIdle.UI.Pvp
 
         private void ResolveSceneOverrides()
         {
-            _scenePowerText ??= FindTextByName("pvp_power_text");
-
             if (_scenePowerInfoButton == null)
             {
                 var askIcon = FindChildByName("ask_ico");
